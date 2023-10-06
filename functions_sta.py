@@ -71,3 +71,30 @@ def get_stereoa_merged(fp):
         print('ERROR:', e, fp)
         df = None
     return df
+
+
+# uses get_stereoa_merged function to load multiple years of data 
+# end timestamp can be modified, but default is set as now 
+def get_stereoa_merged_range(start_timestamp, end_timestamp=datetime.utcnow(), path=stereoa_path+'impact/merged/level2/'):
+    """Pass two datetime objects and grab .cdf files between dates, from
+    directory given."""
+    df=None
+    start = start_timestamp.year
+    end = datetime.utcnow().year + 1
+    while start < end:
+        year = start
+        date_str = f'{year}0101'
+        try: 
+            fn = glob.glob(path+f'sta_l2_magplasma_1m_{date_str}*')[0]
+            _df = get_stereoa_merged(fn)
+            if _df is not None:
+                if df is None:
+                    df = _df.copy(deep=True)
+                else:
+                    df = pd.concat([df, _df])
+        except Exception as e:
+            print('ERROR:', e, f'{date_str} does not exist')
+        start += 1
+    timemask = (df['time']>=start_timestamp) & (df['time']<=end_timestamp)
+    df = df[timemask]
+    return df
