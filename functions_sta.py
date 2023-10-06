@@ -39,3 +39,35 @@ def download_stereoa_merged(start_timestamp, end_timestamp=datetime.utcnow(), pa
         except Exception as e:
             print('ERROR', e, f'.File for {year} does not exist.')
         start+=1
+
+
+#function to read in yearly cdf file 
+#also filters bad data values
+#creates pandas df 
+def get_stereoa_merged(fp):
+    """raw = rtn"""
+    try:
+        cdf = cdflib.CDF(fp)
+        t1 = cdflib.cdfepoch.to_datetime(cdf.varget('Epoch'))
+        df = pd.DataFrame(t1, columns=['time'])
+        bx, by, bz = cdf['BFIELDRTN'][:].T
+        df['bx'] = bx
+        df['by'] = by
+        df['bz'] = bz
+        df['bt'] = cdf['BTOTAL']
+        df['np'] = cdf['Np']
+        df['tp'] = cdf['Tp']
+        df['vt'] = cdf['Vp']
+        cols = ['bx', 'by', 'bz', 'bt', 'np', 'tp', 'vt']
+        for col in cols:
+            df[col].mask(df[col] < -9.999E29 , pd.NA, inplace=True)
+        df['vx'] = cdf['Vr_Over_V_RTN']*df['vt']
+        df['vy'] = cdf['Vt_Over_V_RTN']*df['vt']
+        df['vz'] = cdf['Vn_Over_V_RTN']*df['vt']
+        v_cols = ['vx', 'vy', 'vz']
+        for v_col in v_cols:
+            df[v_col].mask(df[v_col] < -9.999E29 , pd.NA, inplace=True)
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
+    return df
