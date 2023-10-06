@@ -14,3 +14,5 @@ import cdflib
 import pickle
 
 
+stereoa_path='/Users/emmadavies/Documents/Data-test/stereoa/'
+
