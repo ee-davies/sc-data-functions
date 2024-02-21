@@ -98,3 +98,120 @@ def get_stereoa_merged_range(start_timestamp, end_timestamp=datetime.utcnow(), p
     timemask = (df['time']>=start_timestamp) & (df['time']<=end_timestamp)
     df = df[timemask]
     return df
+
+
+def download_sta_beacon_mag(path="/Volumes/External/Data/STEREO-A/beacon/impact"):
+    start = datetime.utcnow().date()-timedelta(days=7)
+    end = datetime.utcnow().date()
+    while start < end:
+        year = start.year
+        date_str = f'{year}{start.month:02}{start.day:02}'
+        data_item_id = f'sta_lb_impact_{date_str}_v02'
+        if os.path.isfile(f"{path}/{data_item_id}.cdf") == True:
+            print(f'{data_item_id}.cdf has already been downloaded.')
+            start += timedelta(days=1)
+        else:
+            try:
+                data_url = f'https://spdf.gsfc.nasa.gov/pub/data/stereo/ahead/beacon/{year}'
+                urllib.request.urlretrieve(data_url, f"{path}/{data_item_id}.cdf")
+                print(f'Successfully downloaded {data_item_id}.cdf')
+                start += timedelta(days=1)
+            except Exception as e:
+                print('ERROR', e, data_item_id)
+                start += timedelta(days=1)
+
+
+def download_sta_beacon_plas(path="/Volumes/External/Data/STEREO-A/beacon/plastic"):
+    start = datetime.utcnow().date()-timedelta(days=7)
+    end = datetime.utcnow().date()
+    while start < end:
+        year = start.year
+        date_str = f'{year}{start.month:02}{start.day:02}'
+        data_item_id = f'sta_lb_pla_browse_{date_str}_v14'
+        if os.path.isfile(f"{path}/{data_item_id}.cdf") == True:
+            print(f'{data_item_id}.cdf has already been downloaded.')
+            start += timedelta(days=1)
+        else:
+            try:
+                data_url = f'https://spdf.gsfc.nasa.gov/pub/data/stereo/ahead/beacon_plastic/{year}'
+                urllib.request.urlretrieve(data_url, f"{path}/{data_item_id}.cdf")
+                print(f'Successfully downloaded {data_item_id}.cdf')
+                start += timedelta(days=1)
+            except Exception as e:
+                print('ERROR', e, data_item_id)
+                start += timedelta(days=1)
+
+
+def get_sta_beacon_plas(fp):
+    """raw = rtn"""
+    try:
+        cdf = pycdf.CDF(fp)
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch1', 'Bulk_Speed', 'Vr_RTN', 'Vt_RTN', 'Vn_RTN', 'Density', 'Temperature_Inst'], ['timestamp', 'v_bulk', 'v_x', 'v_y', 'v_z', 'density', 'temperature'])}
+        df = pd.DataFrame.from_dict(data)
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
+    return df
+
+
+def get_sta_beacon_mag(fp):
+    """raw = rtn"""
+    try:
+        cdf = pycdf.CDF(fp)
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch_MAG'], ['timestamp'])}
+        df = pd.DataFrame.from_dict(data)
+        bx, by, bz = cdf['MAGBField'][:].T
+        df['b_x'] = bx
+        df['b_y'] = by
+        df['b_z'] = bz
+        df['b_tot'] = np.linalg.norm(df[['b_x', 'b_y', 'b_z']], axis=1)
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
+    return df
+
+
+def get_sta_beacon_mag_7days(path="/Volumes/External/Data/STEREO-A/beacon/impact"):
+    """Pass two datetime objects and grab .cdf files between dates, from
+    directory given."""
+    df = None
+    start = datetime.utcnow().date()-timedelta(days=7)
+    end = datetime.utcnow().date()
+    while start < end:
+        year = start.year
+        date_str = f'{year}{start.month:02}{start.day:02}'
+        fn = f'{path}/sta_lb_impact_{date_str}_v02.cdf'
+        _df = get_sta_beacon_mag(fn)
+        if _df is not None:
+            if df is None:
+                df = _df.copy(deep=True)
+            else:
+                df = df.append(_df.copy(deep=True))
+        start += timedelta(days=1)
+    return df
+
+
+def get_sta_beacon_plas_7days(path="/Volumes/External/Data/STEREO-A/beacon/plastic"):
+    """Pass two datetime objects and grab .cdf files between dates, from
+    directory given."""
+    df = None
+    start = datetime.utcnow().date()-timedelta(days=7)
+    end = datetime.utcnow().date()
+    while start < end:
+        year = start.year
+        date_str = f'{year}{start.month:02}{start.day:02}'
+        fn = f'{path}/sta_lb_pla_browse_{date_str}_v14.cdf'
+        _df = get_sta_beacon_plas(fn)
+        if _df is not None:
+            if df is None:
+                df = _df.copy(deep=True)
+            else:
+                df = df.append(_df.copy(deep=True))
+        start += timedelta(days=1)
+    df = filter_bad_data(df, 'temperature', -1E30)
+    df = filter_bad_data(df, 'density', -1E30)
+    df = filter_bad_data(df, 'v_bulk', -1E30)
+    df = filter_bad_data(df, 'v_x', -1E30)
+    df = filter_bad_data(df, 'v_y', -1E30)
+    df = filter_bad_data(df, 'v_z', -1E30)
+    return df
