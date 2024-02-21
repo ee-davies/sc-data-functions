@@ -207,8 +207,8 @@ def get_solomag_range_1sec(start_timestamp, end_timestamp, path=f'{solo_path}'+'
     end = end_timestamp.date() + timedelta(days=1)
     while start < end:
         date_str = f'{start.year}{start.month:02}{start.day:02}'
-        fn = glob.glob(f'{path}/solo_L2_mag-rtn-normal_{date_str}*')
-        _df = get_solomag(fn[0])
+        fn = f'{path}/solo_L2_mag-rtn-normal_{date_str}.cdf'
+        _df = get_solomag(fn)
         if _df is not None:
             if df is None:
                 df = _df.copy(deep=True)
@@ -332,8 +332,8 @@ def get_soloplas_range(start_timestamp, end_timestamp, path=f'{solo_path}'+'swa/
     end = end_timestamp.date() + timedelta(days=1)
     while start < end:
         date_str = f'{start.year}{start.month:02}{start.day:02}'
-        fn = glob.glob(f'{path}/solo_L2_swa-pas-grnd-mom_{date_str}*')
-        _df = get_soloplas(fn[0])
+        fn = f'{path}solo_L2_swa-pas-grnd-mom_{date_str}.cdf'
+        _df = get_soloplas(fn)
         if _df is not None:
             if df is None:
                 df = _df.copy(deep=True)
