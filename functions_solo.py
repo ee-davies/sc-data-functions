@@ -89,6 +89,14 @@ def download_solomag_1sec(start_timestamp, end_timestamp, path=f'{solo_path}'+'m
                 start += timedelta(days=1)
 
 
+#combined solomag download functions to specify resolution of data 
+def download_solomag(start_timestamp, end_timestamp, res="1min"):
+    if res == "1min":
+        download_solomag_1min(start_timestamp, end_timestamp)
+    elif res == "1sec":
+        download_solomag_1sec(start_timestamp, end_timestamp)
+            
+
 #LOAD FUNCTIONS for MAG data 
 
 
