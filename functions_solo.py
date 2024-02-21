@@ -207,6 +207,23 @@ def get_solomag_range_1min(start_timestamp, end_timestamp, path=f'{solo_path}'+'
     return df
 
 
+#combined solomag range function to specify level and resolution of data 
+def get_solomag_range(start_timestamp, end_timestamp, level="l2", res="1min"):
+    if level == "l2":
+        if res == "1min":
+            df = get_solomag_range_1min(start_timestamp, end_timestamp)
+        elif res == "1sec":
+            df = get_solomag_range_1sec(start_timestamp, end_timestamp)
+    elif level == "ll":
+        df = get_solomag_range_formagonly_internal(start_timestamp, end_timestamp)
+    elif level == "formagonly":
+        if res == "full":
+            df = get_solomag_range_formagonly(start_timestamp, end_timestamp)
+        elif res == "1min":
+            df = get_solomag_range_formagonly_1min(start_timestamp, end_timestamp)
+    return df 
+
+
 """
 SOLO PLASMA DATA
 # Level 2 science SWA PLAS grnd moment data
