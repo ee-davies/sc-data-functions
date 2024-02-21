@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
 from spacepy import pycdf
+import cdflib
 import spiceypy
 # import os
 import glob
@@ -91,22 +92,42 @@ def download_solomag_1sec(start_timestamp, end_timestamp, path=f'{solo_path}'+'m
 #LOAD FUNCTIONS for MAG data 
 
 
-#Load single file from specific path
+#Load single file from specific path using pycdf from spacepy
 def get_solomag(fp):
     """raw = rtn"""
     try:
         cdf = pycdf.CDF(fp)
-        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['EPOCH'], ['timestamp'])}
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['EPOCH'], ['time'])}
         df = pd.DataFrame.from_dict(data)
         bx, by, bz = cdf['B_RTN'][:].T
-        df['b_x'] = bx
-        df['b_y'] = by
-        df['b_z'] = bz
-        df['b_tot'] = np.linalg.norm(df[['b_x', 'b_y', 'b_z']], axis=1)
+        df['bx'] = bx
+        df['by'] = by
+        df['bz'] = bz
+        df['bt'] = np.linalg.norm(df[['bx', 'by', 'bz']], axis=1)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
     return df
+
+# #Load single file from specific path using cdflib
+# def get_solomag(fp):
+#     """raw = rtn"""
+#     try:
+#         cdf = cdflib.CDF(fp)
+#         t1 = cdflib.cdfepoch.to_datetime(cdf.varget('EPOCH'))
+#         df = pd.DataFrame(t1, columns=['time'])
+#         bx, by, bz = cdf['B_RTN'][:].T
+#         df['bx'] = bx
+#         df['by'] = by
+#         df['bz'] = bz
+#         df['bt'] = np.linalg.norm(df[['bx', 'by', 'bz']], axis=1)
+#         cols = ['bx', 'by', 'bz', 'bt']
+#         for col in cols:
+#             df[col].mask(df[col] < -9.999E29 , pd.NA, inplace=True)
+#     except Exception as e:
+#         print('ERROR:', e, fp)
+#         df = None
+#     return df
 
 
 #Load range of files using specified start and end dates/ timestamps
@@ -252,23 +273,46 @@ def download_soloplas(start_timestamp, end_timestamp, path=f'{solo_path}'+'swa/p
                 start += timedelta(days=1)
 
 
-#Load single file from specific path
+#Load single file from specific path using pycdf from spacepy
 def get_soloplas(fp):
     """raw = rtn"""
     try:
         cdf = pycdf.CDF(fp)
-        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'N', 'T'], ['timestamp', 'density', 'temperature'])}
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'N', 'T'], ['time', 'np', 'tp'])}
         df = pd.DataFrame.from_dict(data)
-        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        df['time'] = pd.to_datetime(df['time'])
         vx, vy, vz = cdf['V_RTN'][:].T
-        df['v_x'] = vx
-        df['v_y'] = vy
-        df['v_z'] = vz
-        df['v_bulk'] = np.linalg.norm(df[['v_x', 'v_y', 'v_z']], axis=1)
+        df['vx'] = vx
+        df['vy'] = vy
+        df['vz'] = vz
+        df['vt'] = np.linalg.norm(df[['vx', 'vy', 'vz']], axis=1)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
     return df
+
+
+# #Load single file from specific path using cdflib
+# def get_soloplas(fp):
+#     """raw = rtn"""
+#     try:
+#         cdf = cdflib.CDF(fp)
+#         t1 = cdflib.cdfepoch.to_datetime(cdf.varget('EPOCH'))
+#         df = pd.DataFrame(t1, columns=['time'])
+#         df['np'] = cdf['N']
+#         df['tp'] = cdf['T']
+#         vx, vy, vz = cdf['V_RTN'][:].T
+#         df['vx'] = vx
+#         df['vy'] = vy
+#         df['vz'] = vz
+#         df['vt'] = np.linalg.norm(df[['vx', 'vy', 'vz']], axis=1)
+#         cols = ['np', 'tp', 'vx', 'vy', 'vz', 'vt']
+#         for col in cols:
+#             df[col].mask(df[col] < -9.999E29 , pd.NA, inplace=True)
+#     except Exception as e:
+#         print('ERROR:', e, fp)
+#         df = None
+#     return df
 
 
 #Load range of files using specified start and end dates/ timestamps
