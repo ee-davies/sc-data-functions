@@ -13,8 +13,8 @@ import os.path
 SOLAR ORBITER SERVER DATA PATH
 """
 
-solo_path='/Users/emmadavies/Documents/Data-test/solo/'
-kernels_path='/Users/emmadavies/Documents/Data-test/kernels/'
+solo_path='/Volumes/External/data/solo/'
+kernels_path='/Volumes/External/data/kernels/'
 
 
 """
@@ -47,7 +47,7 @@ e.g.
 #DOWNLOAD FUNCTIONS for 1min or 1sec data
 
 
-def download_solomag_1min(start_timestamp, end_timestamp, path="/Volumes/External/Data/SolarOrbiter/mag/1_min"):
+def download_solomag_1min(start_timestamp, end_timestamp, path=f'{solo_path}'+'mag/l2/1min'): 
     start = start_timestamp.date()
     end = end_timestamp.date() + timedelta(days=1)
     while start < end:
@@ -67,7 +67,7 @@ def download_solomag_1min(start_timestamp, end_timestamp, path="/Volumes/Externa
                 start += timedelta(days=1)
 
 
-def download_solomag_1sec(start_timestamp, end_timestamp, path="/Volumes/External/Data/SolarOrbiter/mag/1_sec"):
+def download_solomag_1sec(start_timestamp, end_timestamp, path=f'{solo_path}'+'mag/l2/1sec'):
     start = start_timestamp.date()
     end = end_timestamp.date() + timedelta(days=1)
     while start < end:
@@ -109,7 +109,7 @@ def get_solomag(fp):
 
 
 #Load range of files using specified start and end dates/ timestamps
-def get_solomag_range_formagonly_internal(start_timestamp, end_timestamp, path="/Volumes/External/Data/SolarOrbiter/formagonly/mag_internal"):
+def get_solomag_range_formagonly_internal(start_timestamp, end_timestamp, path=f'{solo_path}'+'mag/ll'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df = None
@@ -129,7 +129,7 @@ def get_solomag_range_formagonly_internal(start_timestamp, end_timestamp, path="
     return df
 
 
-def get_solomag_range_formagonly(start_timestamp, end_timestamp, path="/Volumes/External/Data/SolarOrbiter/formagonly/mag"):
+def get_solomag_range_formagonly(start_timestamp, end_timestamp, path=f'{solo_path}'+'mag/formagonly/full'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df = None
@@ -149,7 +149,7 @@ def get_solomag_range_formagonly(start_timestamp, end_timestamp, path="/Volumes/
     return df
 
 
-def get_solomag_range_formagonly_1min(start_timestamp, end_timestamp, path="/Volumes/External/Data/SolarOrbiter/formagonly/mag_1min"):
+def get_solomag_range_formagonly_1min(start_timestamp, end_timestamp, path=f'{solo_path}'+'mag/formagonly/1min'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df = None
@@ -169,7 +169,7 @@ def get_solomag_range_formagonly_1min(start_timestamp, end_timestamp, path="/Vol
     return df
 
 
-def get_solomag_range_1sec(start_timestamp, end_timestamp, path="/Volumes/External/Data/SolarOrbiter/mag/1_sec"):
+def get_solomag_range_1sec(start_timestamp, end_timestamp, path=f'{solo_path}'+'mag/l2/1sec'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df = None
@@ -188,7 +188,7 @@ def get_solomag_range_1sec(start_timestamp, end_timestamp, path="/Volumes/Extern
     return df
 
 
-def get_solomag_range_1min(start_timestamp, end_timestamp, path="/Volumes/External/Data/SolarOrbiter/mag/1_min"):
+def get_solomag_range_1min(start_timestamp, end_timestamp, path=f'{solo_path}'+'mag/l2/1min'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df = None
@@ -214,7 +214,7 @@ SOLO PLASMA DATA
 
 
 #DOWNLOAD FUNCTION for swa/plas data
-def download_soloplas(start_timestamp, end_timestamp, path="/Volumes/External/Data/SolarOrbiter/swa/plas"):
+def download_soloplas(start_timestamp, end_timestamp, path=f'{solo_path}'+'swa/plas/l2'):
     start = start_timestamp.date()
     end = end_timestamp.date() + timedelta(days=1)
     while start < end:
@@ -254,7 +254,7 @@ def get_soloplas(fp):
 
 
 #Load range of files using specified start and end dates/ timestamps
-def get_soloplas_range(start_timestamp, end_timestamp, path="/Volumes/External/Data/SolarOrbiter/swa/plas"):
+def get_soloplas_range(start_timestamp, end_timestamp, path=f'{solo_path}'+'swa/plas/l2'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df = None
