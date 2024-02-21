@@ -146,7 +146,7 @@ def get_solomag_range_formagonly_internal(start_timestamp, end_timestamp, path=f
             if df is None:
                 df = _df.copy(deep=True)
             else:
-                df = df.append(_df.copy(deep=True))
+                df = pd.concat([df, _df])
         start += timedelta(days=1)
     return df
 
@@ -166,7 +166,7 @@ def get_solomag_range_formagonly(start_timestamp, end_timestamp, path=f'{solo_pa
             if df is None:
                 df = _df.copy(deep=True)
             else:
-                df = df.append(_df.copy(deep=True))
+                df = pd.concat([df, _df])
         start += timedelta(days=1)
     return df
 
@@ -186,7 +186,7 @@ def get_solomag_range_formagonly_1min(start_timestamp, end_timestamp, path=f'{so
             if df is None:
                 df = _df.copy(deep=True)
             else:
-                df = df.append(_df.copy(deep=True))
+                df = pd.concat([df, _df])
         start += timedelta(days=1)
     return df
 
@@ -205,7 +205,7 @@ def get_solomag_range_1sec(start_timestamp, end_timestamp, path=f'{solo_path}'+'
             if df is None:
                 df = _df.copy(deep=True)
             else:
-                df = df.append(_df.copy(deep=True))
+                df = pd.concat([df, _df])
         start += timedelta(days=1)
     return df
 
@@ -224,7 +224,7 @@ def get_solomag_range_1min(start_timestamp, end_timestamp, path=f'{solo_path}'+'
             if df is None:
                 df = _df.copy(deep=True)
             else:
-                df = df.append(_df.copy(deep=True))
+                df = pd.concat([df, _df])
         start += timedelta(days=1)
     return df
 
@@ -330,7 +330,7 @@ def get_soloplas_range(start_timestamp, end_timestamp, path=f'{solo_path}'+'swa/
             if df is None:
                 df = _df.copy(deep=True)
             else:
-                df = df.append(_df.copy(deep=True))
+                df = pd.concat([df, _df])
         start += timedelta(days=1)
     return df
 
