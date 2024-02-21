@@ -271,3 +271,50 @@ def get_soloplas_range(start_timestamp, end_timestamp, path=f'{solo_path}'+'swa/
                 df = df.append(_df.copy(deep=True))
         start += timedelta(days=1)
     return df
+
+
+"""
+SOLO POSITION FUNCTIONS: coord maths, furnish kernels, and call position for each timestamp
+Currently set to HEEQ, but will implement options to change
+"""
+
+
+def cart2sphere(x,y,z):
+    r = np.sqrt(x**2+ y**2 + z**2) /1.495978707E8         
+    theta = np.arctan2(z,np.sqrt(x**2+ y**2)) * 360 / 2 / np.pi
+    phi = np.arctan2(y,x) * 360 / 2 / np.pi                   
+    return (r, theta, phi)
+
+
+#http://spiftp.esac.esa.int/data/SPICE/SOLAR-ORBITER/kernels/fk/ for solo_ANC_soc-sci-fk_V08.tf
+#http://spiftp.esac.esa.int/data/SPICE/SOLAR-ORBITER/kernels/spk/ for solo orbit .bsp
+
+
+def solo_furnish():
+    """Main"""
+    solo_path = kernels_path+'solo/'
+    generic_path = kernels_path+'generic/'
+    solo_kernels = os.listdir(solo_path)
+    generic_kernels = os.listdir(generic_path)
+    for kernel in solo_kernels:
+        spiceypy.furnsh(os.path.join(solo_path, kernel))
+    for kernel in generic_kernels:
+        spiceypy.furnsh(os.path.join(generic_path, kernel))
+
+
+def get_solo_pos(t):
+    if spiceypy.ktotal('ALL') < 1:
+        solo_furnish()
+    pos = spiceypy.spkpos("SOLAR ORBITER", spiceypy.datetime2et(t), "HEEQ", "NONE", "SUN")[0] #calls positions in HEEQ; can be changed
+    r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
+    position = t, pos[0], pos[1], pos[2], r, lat, lon
+    return position
+
+
+def get_solo_positions(time_series):
+    positions = []
+    for t in time_series:
+        position = get_solo_pos(t)
+        positions.append(position)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    return df_positions
