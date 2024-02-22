@@ -87,3 +87,13 @@ def GSM_to_RTN_approx(df):
     df_gse = GSM_to_GSE(df)
     df_transformed = GSE_to_RTN_approx(df_gse)
     return df_transformed
+
+
+def GSE_to_HEE(df):
+    df_transformed = pd.DataFrame()
+    df_transformed['time'] = df['time']
+    df_transformed['bt'] = df['bt']
+    df_transformed['bx'] = -df['bx']
+    df_transformed['by'] = -df['by']
+    df_transformed['bz'] = df['bz']
+    return df_transformed
