@@ -95,6 +95,33 @@ def get_noaa_realtime_alt(path=f'{dscovr_path}'):
     return noaa_alt
 
 
+"""
+DSCOVR POSITIONS
+# Can call POS from last 7 days directly from https://services.swpc.noaa.gov/products/solar-wind/
+# If those files aren't working, can download manually from https://www.ngdc.noaa.gov/dscovr/portal/index.html#/download/pop 
+# Raw data is in GSE coordinates; will implement transform to HEEQ etc
+"""
+
+
+def get_noaa_pos_realtime_7days():
+    #position data request returns gse coordinates
+    request_pos=urllib.request.urlopen('https://services.swpc.noaa.gov/products/solar-wind/ephemerides.json')
+    file_pos = request_pos.read()
+    data_pos = json.loads(file_pos)
+    cols = ['time', 'x', 'y', 'z', 'vx_gse', 'vy_gse', 'vz_gse', "x_gsm", "y_gsm", "z_gsm", "vx_gsm", "vy_gsm", "vz_gsm"]
+    noaa_pos = pd.DataFrame(data_pos[1:], columns=cols)
+
+    noaa_pos['time'] = pd.to_datetime(noaa_pos['time'])
+    noaa_pos['x'] = noaa_pos['x'].astype('float')
+    noaa_pos['y'] = noaa_pos['y'].astype('float')
+    noaa_pos['z'] = noaa_pos['z'].astype('float')
+
+    noaa_pos.drop(columns = ['vx_gse', 'vy_gse', 'vz_gse', "x_gsm", "y_gsm", "z_gsm", "vx_gsm", "vy_gsm", "vz_gsm"], inplace=True)
+
+    return noaa_pos
+
+
+#If realtime doesn't work, 2nd best is download files manually (2 day behind)
 #Load single position file from specific path using netcdf from scipy.io
 #Will show depreciated warning message for netcdf namespace
 def get_dscovrpos(fp):
