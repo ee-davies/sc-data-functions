@@ -332,7 +332,7 @@ def get_soloplas_range(start_timestamp, end_timestamp, path=f'{solo_path}'+'swa/
     end = end_timestamp.date() + timedelta(days=1)
     while start < end:
         date_str = f'{start.year}{start.month:02}{start.day:02}'
-        fn = f'{path}solo_L2_swa-pas-grnd-mom_{date_str}.cdf'
+        fn = f'{path}/solo_L2_swa-pas-grnd-mom_{date_str}.cdf'
         _df = get_soloplas(fn)
         if _df is not None:
             if df is None:
