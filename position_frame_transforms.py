@@ -4,6 +4,13 @@ from datetime import datetime, timedelta
 import itertools
 
 
+def cart2sphere(x,y,z):
+    r = np.sqrt(x**2+ y**2 + z**2) /1.495978707E8         
+    theta = np.arctan2(z,np.sqrt(x**2+ y**2)) * 360 / 2 / np.pi
+    phi = np.arctan2(y,x) * 360 / 2 / np.pi                   
+    return (r, theta, phi)
+
+
 #input datetime to return T1, T2 and T3 based on Hapgood 1992
 #http://www.igpp.ucla.edu/public/vassilis/ESS261/Lecture03/Hapgood_sdarticle.pdf
 def get_geocentric_transformation_matrices(time):
@@ -84,9 +91,10 @@ def GSE_to_GSM(df):
         B_GSM_i = np.dot(T3,B_GSE_i)
         B_GSM_i_list = B_GSM_i.tolist()
         flat_B_GSM_i = list(itertools.chain(*B_GSM_i_list))
-        B_GSM.append(flat_B_GSM_i)
-    df_transformed = pd.DataFrame(B_GSM, columns=['x', 'y', 'z'])
-    df_transformed['r'] = np.linalg.norm(df_transformed[['x', 'y', 'z']], axis=1)
+        r, lat, lon = cart2sphere(flat_B_GSM_i[0], flat_B_GSM_i[1], flat_B_GSM_i[2])
+        position = flat_B_GSM_i[0], flat_B_GSM_i[1], flat_B_GSM_i[2], r, lat, lon
+        B_GSM.append(position)
+    df_transformed = pd.DataFrame(B_GSM, columns=['x', 'y', 'z', 'r', 'lat', 'lon'])
     df_transformed['time'] = df['time']
     return df_transformed
 
@@ -100,9 +108,10 @@ def GSM_to_GSE(df):
         B_GSE_i = np.dot(T3_inv,B_GSM_i)
         B_GSE_i_list = B_GSE_i.tolist()
         flat_B_GSE_i = list(itertools.chain(*B_GSE_i_list))
-        B_GSE.append(flat_B_GSE_i)
-    df_transformed = pd.DataFrame(B_GSE, columns=['x', 'y', 'z'])
-    df_transformed['r'] = np.linalg.norm(df_transformed[['x', 'y', 'z']], axis=1)
+        r, lat, lon = cart2sphere(flat_B_GSE_i[0], flat_B_GSE_i[1], flat_B_GSE_i[2])
+        position = flat_B_GSE_i[0], flat_B_GSE_i[1], flat_B_GSE_i[2], r, lat, lon
+        B_GSE.append(position)
+    df_transformed = pd.DataFrame(B_GSE, columns=['x', 'y', 'z', 'r', 'lat', 'lon'])
     df_transformed['time'] = df['time']
     return df_transformed
 
@@ -121,9 +130,10 @@ def HEE_to_HAE(df):
         B_HEA_i = np.dot(S1_inv,B_HEE_i)
         B_HAE_i_list = B_HEA_i.tolist()
         flat_B_HAE_i = list(itertools.chain(*B_HAE_i_list))
-        B_HAE.append(flat_B_HAE_i)
-    df_transformed = pd.DataFrame(B_HAE, columns=['x', 'y', 'z'])
-    df_transformed['r'] = np.linalg.norm(df_transformed[['x', 'y', 'z']], axis=1)
+        r, lat, lon = cart2sphere(flat_B_HAE_i[0], flat_B_HAE_i[1], flat_B_HAE_i[2])
+        position = flat_B_HAE_i[0], flat_B_HAE_i[1], flat_B_HAE_i[2], r, lat, lon
+        B_HAE.append(position)
+    df_transformed = pd.DataFrame(B_HAE, columns=['x', 'y', 'z', 'r', 'lat', 'lon'])
     df_transformed['time'] = df['time']
     return df_transformed
 
@@ -136,9 +146,10 @@ def HAE_to_HEE(df):
         B_HEE_i = np.dot(S1,B_HAE_i)
         B_HEE_i_list = B_HEE_i.tolist()
         flat_B_HEE_i = list(itertools.chain(*B_HEE_i_list))
-        B_HEE.append(flat_B_HEE_i)
-    df_transformed = pd.DataFrame(B_HEE, columns=['x', 'y', 'z'])
-    df_transformed['r'] = np.linalg.norm(df_transformed[['x', 'y', 'z']], axis=1)
+        r, lat, lon = cart2sphere(flat_B_HEE_i[0], flat_B_HEE_i[1], flat_B_HEE_i[2])
+        position = flat_B_HEE_i[0], flat_B_HEE_i[1], flat_B_HEE_i[2], r, lat, lon
+        B_HEE.append(position)
+    df_transformed = pd.DataFrame(B_HEE, columns=['x', 'y', 'z', 'r', 'lat', 'lon'])
     df_transformed['time'] = df['time']
     return df_transformed
 
@@ -151,9 +162,10 @@ def HAE_to_HEEQ(df):
         B_HEEQ_i = np.dot(S2,B_HAE_i)
         B_HEEQ_i_list = B_HEEQ_i.tolist()
         flat_B_HEEQ_i = list(itertools.chain(*B_HEEQ_i_list))
-        B_HEEQ.append(flat_B_HEEQ_i)
-    df_transformed = pd.DataFrame(B_HEEQ, columns=['x', 'y', 'z'])
-    df_transformed['r'] = np.linalg.norm(df_transformed[['x', 'y', 'z']], axis=1)
+        r, lat, lon = cart2sphere(flat_B_HEEQ_i[0], flat_B_HEEQ_i[1], flat_B_HEEQ_i[2])
+        position = flat_B_HEEQ_i[0], flat_B_HEEQ_i[1], flat_B_HEEQ_i[2], r, lat, lon
+        B_HEEQ.append(position)
+    df_transformed = pd.DataFrame(B_HEEQ, columns=['x', 'y', 'z', 'r', 'lat', 'lon'])
     df_transformed['time'] = df['time']
     return df_transformed
 
@@ -167,9 +179,10 @@ def HEEQ_to_HAE(df):
         B_HEA_i = np.dot(S2_inv,B_HEEQ_i)
         B_HAE_i_list = B_HEA_i.tolist()
         flat_B_HAE_i = list(itertools.chain(*B_HAE_i_list))
-        B_HAE.append(flat_B_HAE_i)
-    df_transformed = pd.DataFrame(B_HAE, columns=['x', 'y', 'z'])
-    df_transformed['r'] = np.linalg.norm(df_transformed[['x', 'y', 'z']], axis=1)
+        r, lat, lon = cart2sphere(flat_B_HAE_i[0], flat_B_HAE_i[1], flat_B_HAE_i[2])
+        position = flat_B_HAE_i[0], flat_B_HAE_i[1], flat_B_HAE_i[2], r, lat, lon
+        B_HAE.append(position)
+    df_transformed = pd.DataFrame(B_HAE, columns=['x', 'y', 'z', 'r', 'lat', 'lon'])
     df_transformed['time'] = df['time']
     return df_transformed
 
@@ -221,8 +234,9 @@ def GSE_to_HEE(df):
         B_HEE_i = R_sun + np.dot(z_rot_180,B_GSE_i)
         B_HEE_i_list = B_HEE_i.tolist()
         flat_B_HEE_i = list(itertools.chain(*B_HEE_i_list))
-        B_HEE.append(flat_B_HEE_i)
-    df_transformed = pd.DataFrame(B_HEE, columns=['x', 'y', 'z'])
-    df_transformed['r'] = np.linalg.norm(df_transformed[['x', 'y', 'z']], axis=1)
+        r, lat, lon = cart2sphere(flat_B_HEE_i[0], flat_B_HEE_i[1], flat_B_HEE_i[2])
+        position = flat_B_HEE_i[0], flat_B_HEE_i[1], flat_B_HEE_i[2], r, lat, lon
+        B_HEE.append(position)
+    df_transformed = pd.DataFrame(B_HEE, columns=['x', 'y', 'z', 'r', 'lat', 'lon'])
     df_transformed['time'] = df['time']
     return df_transformed
