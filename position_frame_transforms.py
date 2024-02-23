@@ -80,13 +80,13 @@ def GSE_to_GSM(df):
     B_GSM = []
     for i in range(df.shape[0]):
         T1, T2, T3 = get_geocentric_transformation_matrices(df['time'].iloc[0])
-        B_GSE_i = np.matrix([[df['bx'].iloc[i]],[df['by'].iloc[i]],[df['bz'].iloc[i]]]) 
+        B_GSE_i = np.matrix([[df['x'].iloc[i]],[df['y'].iloc[i]],[df['z'].iloc[i]]]) 
         B_GSM_i = np.dot(T3,B_GSE_i)
         B_GSM_i_list = B_GSM_i.tolist()
         flat_B_GSM_i = list(itertools.chain(*B_GSM_i_list))
         B_GSM.append(flat_B_GSM_i)
-    df_transformed = pd.DataFrame(B_GSM, columns=['bx', 'by', 'bz'])
-    df_transformed['bt'] = np.linalg.norm(df_transformed[['bx', 'by', 'bz']], axis=1)
+    df_transformed = pd.DataFrame(B_GSM, columns=['x', 'y', 'z'])
+    df_transformed['r'] = np.linalg.norm(df_transformed[['x', 'y', 'z']], axis=1)
     df_transformed['time'] = df['time']
     return df_transformed
 
@@ -96,13 +96,13 @@ def GSM_to_GSE(df):
     for i in range(df.shape[0]):
         T1, T2, T3 = get_geocentric_transformation_matrices(df['time'].iloc[0])
         T3_inv = np.linalg.inv(T3)
-        B_GSM_i = np.matrix([[df['bx'].iloc[i]],[df['by'].iloc[i]],[df['bz'].iloc[i]]]) 
+        B_GSM_i = np.matrix([[df['x'].iloc[i]],[df['y'].iloc[i]],[df['z'].iloc[i]]]) 
         B_GSE_i = np.dot(T3_inv,B_GSM_i)
         B_GSE_i_list = B_GSE_i.tolist()
         flat_B_GSE_i = list(itertools.chain(*B_GSE_i_list))
         B_GSE.append(flat_B_GSE_i)
-    df_transformed = pd.DataFrame(B_GSE, columns=['bx', 'by', 'bz'])
-    df_transformed['bt'] = np.linalg.norm(df_transformed[['bx', 'by', 'bz']], axis=1)
+    df_transformed = pd.DataFrame(B_GSE, columns=['x', 'y', 'z'])
+    df_transformed['r'] = np.linalg.norm(df_transformed[['x', 'y', 'z']], axis=1)
     df_transformed['time'] = df['time']
     return df_transformed
 
@@ -117,13 +117,13 @@ def HEE_to_HAE(df):
     for i in range(df.shape[0]):
         S1, S2 = get_heliocentric_transformation_matrices(df['time'].iloc[0])
         S1_inv = np.linalg.inv(S1)
-        B_HEE_i = np.matrix([[df['bx'].iloc[i]],[df['by'].iloc[i]],[df['bz'].iloc[i]]]) 
+        B_HEE_i = np.matrix([[df['x'].iloc[i]],[df['y'].iloc[i]],[df['z'].iloc[i]]]) 
         B_HEA_i = np.dot(S1_inv,B_HEE_i)
         B_HAE_i_list = B_HEA_i.tolist()
         flat_B_HAE_i = list(itertools.chain(*B_HAE_i_list))
         B_HAE.append(flat_B_HAE_i)
-    df_transformed = pd.DataFrame(B_HAE, columns=['bx', 'by', 'bz'])
-    df_transformed['bt'] = np.linalg.norm(df_transformed[['bx', 'by', 'bz']], axis=1)
+    df_transformed = pd.DataFrame(B_HAE, columns=['x', 'y', 'z'])
+    df_transformed['r'] = np.linalg.norm(df_transformed[['x', 'y', 'z']], axis=1)
     df_transformed['time'] = df['time']
     return df_transformed
 
@@ -132,13 +132,13 @@ def HAE_to_HEE(df):
     B_HEE = []
     for i in range(df.shape[0]):
         S1, S2 = get_heliocentric_transformation_matrices(df['time'].iloc[0])
-        B_HAE_i = np.matrix([[df['bx'].iloc[i]],[df['by'].iloc[i]],[df['bz'].iloc[i]]]) 
+        B_HAE_i = np.matrix([[df['x'].iloc[i]],[df['y'].iloc[i]],[df['z'].iloc[i]]]) 
         B_HEE_i = np.dot(S1,B_HAE_i)
         B_HEE_i_list = B_HEE_i.tolist()
         flat_B_HEE_i = list(itertools.chain(*B_HEE_i_list))
         B_HEE.append(flat_B_HEE_i)
-    df_transformed = pd.DataFrame(B_HEE, columns=['bx', 'by', 'bz'])
-    df_transformed['bt'] = np.linalg.norm(df_transformed[['bx', 'by', 'bz']], axis=1)
+    df_transformed = pd.DataFrame(B_HEE, columns=['x', 'y', 'z'])
+    df_transformed['r'] = np.linalg.norm(df_transformed[['x', 'y', 'z']], axis=1)
     df_transformed['time'] = df['time']
     return df_transformed
 
@@ -147,13 +147,13 @@ def HAE_to_HEEQ(df):
     B_HEEQ = []
     for i in range(df.shape[0]):
         S1, S2 = get_heliocentric_transformation_matrices(df['time'].iloc[0])
-        B_HAE_i = np.matrix([[df['bx'].iloc[i]],[df['by'].iloc[i]],[df['bz'].iloc[i]]]) 
+        B_HAE_i = np.matrix([[df['x'].iloc[i]],[df['y'].iloc[i]],[df['z'].iloc[i]]]) 
         B_HEEQ_i = np.dot(S2,B_HAE_i)
         B_HEEQ_i_list = B_HEEQ_i.tolist()
         flat_B_HEEQ_i = list(itertools.chain(*B_HEEQ_i_list))
         B_HEEQ.append(flat_B_HEEQ_i)
-    df_transformed = pd.DataFrame(B_HEEQ, columns=['bx', 'by', 'bz'])
-    df_transformed['bt'] = np.linalg.norm(df_transformed[['bx', 'by', 'bz']], axis=1)
+    df_transformed = pd.DataFrame(B_HEEQ, columns=['x', 'y', 'z'])
+    df_transformed['r'] = np.linalg.norm(df_transformed[['x', 'y', 'z']], axis=1)
     df_transformed['time'] = df['time']
     return df_transformed
 
@@ -163,13 +163,13 @@ def HEEQ_to_HAE(df):
     for i in range(df.shape[0]):
         S1, S2 = get_heliocentric_transformation_matrices(df['time'].iloc[0])
         S2_inv = np.linalg.inv(S2)
-        B_HEEQ_i = np.matrix([[df['bx'].iloc[i]],[df['by'].iloc[i]],[df['bz'].iloc[i]]]) 
+        B_HEEQ_i = np.matrix([[df['x'].iloc[i]],[df['y'].iloc[i]],[df['z'].iloc[i]]]) 
         B_HEA_i = np.dot(S2_inv,B_HEEQ_i)
         B_HAE_i_list = B_HEA_i.tolist()
         flat_B_HAE_i = list(itertools.chain(*B_HAE_i_list))
         B_HAE.append(flat_B_HAE_i)
-    df_transformed = pd.DataFrame(B_HAE, columns=['bx', 'by', 'bz'])
-    df_transformed['bt'] = np.linalg.norm(df_transformed[['bx', 'by', 'bz']], axis=1)
+    df_transformed = pd.DataFrame(B_HAE, columns=['x', 'y', 'z'])
+    df_transformed['r'] = np.linalg.norm(df_transformed[['x', 'y', 'z']], axis=1)
     df_transformed['time'] = df['time']
     return df_transformed
 
