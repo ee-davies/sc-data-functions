@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 from spacepy import pycdf
 import spiceypy
-# import os
+import os.path
 import glob
 
 def format_path(fp):
@@ -79,77 +79,71 @@ def get_junomag_range(start_timestamp, end_timestamp, path=juno_path+'fgm/1min')
     return df
 
 
-def furnish():
+"""
+JUNO POSITION FUNCTIONS: coord maths, furnish kernels, and call position for each timestamp
+Currently set to HEEQ, but will implement options to change
+"""
+
+
+def cart2sphere(x,y,z):
+    r = np.sqrt(x**2+ y**2 + z**2) /1.495978707E8         
+    theta = np.arctan2(z,np.sqrt(x**2+ y**2)) * 360 / 2 / np.pi
+    phi = np.arctan2(y,x) * 360 / 2 / np.pi                   
+    return (r, theta, phi)
+
+
+def juno_furnish():
     """Main"""
-    base = r"kernels\juno\*"
-    # kernels = ["naif0012.tls", "pck00010.tpc", "juno_struct_v02.bsp", "de434s.bsp", 
-    #            "JNO_SCLKSCET.00047.tsc", "juno_v09.tf", "jup310.bsp", "heliospheric_v004u.tf", 
-    #            "spk_rec_110805_111026_120302.bsp", "spk_rec_111026_120308_120726.bsp", "spk_rec_120308_120825_121109.bsp",
-    #            "spk_rec_120825_130515_130708.bsp", "spk_rec_130515_131005_131031.bsp", "spk_rec_130515_131005_151210.bsp",
-    #            "spk_rec_131005_131014_131101.bsp", "spk_rec_131014_131114_140222.bsp", "spk_rec_131114_140918_141208.bsp",
-    #            "spk_rec_140903_151003_160118.bsp", "spk_rec_151003_160312_160418.bsp", "spk_rec_160312_160522_160614.bsp",
-    #            "spk_rec_160522_160729_160909.bsp", "spk_rec_160729_160923_161027.bsp"]
-    # for kernel in kernels:
-        # spiceypy.furnsh(os.path.join(base, kernel))
-    kernels = glob.glob(base)
-    for kernel in kernels:
-        spiceypy.furnsh(kernel)
+    juno_path = kernels_path+'juno/'
+    generic_path = kernels_path+'generic/'
+    juno_kernels = os.listdir(juno_path)
+    generic_kernels = os.listdir(generic_path)
+    for kernel in juno_kernels:
+        spiceypy.furnsh(os.path.join(juno_path, kernel))
+    for kernel in generic_kernels:
+        spiceypy.furnsh(os.path.join(generic_path, kernel))
     
 
-
-def get_juno_position(timestamp, prefurnished=False):
-    if not prefurnished: 
-        if spiceypy.ktotal('ALL') < 1:
-            furnish()
+def get_juno_pos(t):
+    if spiceypy.ktotal('ALL') < 1:
+        juno_furnish()
     try:
-        juno_pos = spiceypy.spkpos("JUNO", spiceypy.datetime2et(timestamp), "HEEQ", "NONE", "SUN")[0]
-        r = np.linalg.norm(juno_pos)
-        r_au = r/1.495978707E8
-        lat = np.arcsin(juno_pos[2]/ r) * 360 / 2 / np.pi
-        lon = np.arctan2(juno_pos[1], juno_pos[0]) * 360 / 2 / np.pi
-        return [timestamp, juno_pos, r_au, lat, lon]
+        pos = spiceypy.spkpos("JUNO", spiceypy.datetime2et(t), "HEEQ", "NONE", "SUN")[0] #calls positions in HEEQ; can be changed
+        r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
+        position = t, pos[0], pos[1], pos[2], r, lat, lon
+        return position
     except Exception as e:
         print(e)
-        return [None, None, None, None]
+        return [None, None, None, None]   
 
 
-def get_juno_positions(start, end):
-    if spiceypy.ktotal('ALL') < 1:
-        furnish()
+def get_juno_positions(time_series):
+    positions = []
+    for t in time_series:
+        position = get_juno_pos(t)
+        positions.append(position)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    return df_positions
+
+
+def get_juno_positions_daily(start, end):
     t = start
     positions = []
     while t < end:
-        juno_pos = spiceypy.spkpos("JUNO", spiceypy.datetime2et(t), "HEEQ", "NONE", "SUN")[0]
-        r = np.linalg.norm(juno_pos)
-        r_au = r/1.495978707E8
-        lat = np.arcsin(juno_pos[2]/ r) * 360 / 2 / np.pi
-        lon = np.arctan2(juno_pos[1], juno_pos[0]) * 360 / 2 / np.pi
-        positions.append([t, juno_pos, r_au, lat, lon])
+        position = get_juno_pos(t)
+        positions.append(position)
         t += timedelta(days=1)
-    return positions
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    return df_positions
 
-
-def get_juno_positions_loop(col):
-    if spiceypy.ktotal('ALL') < 1:
-        furnish()
-    positions = []
-    for i in range(0,col.shape[0]):
-        t = col.iloc[i]
-        juno_pos = spiceypy.spkpos("JUNO", spiceypy.datetime2et(t), "HEEQ", "NONE", "SUN")[0]
-        r = np.linalg.norm(juno_pos)
-        r_au = r/1.495978707E8
-        lat = np.arcsin(juno_pos[2]/ r) * 360 / 2 / np.pi
-        lon = np.arctan2(juno_pos[1], juno_pos[0]) * 360 / 2 / np.pi
-        positions.append([t, juno_pos, r_au, lat, lon])
-        i += 1
-    return positions
 
 def get_juno_transform(epoch: datetime, base_frame: str, to_frame: str):
     """Return transformation matrix at a given epoch."""
     if spiceypy.ktotal('ALL') < 1:
-        furnish()
+        juno_furnish()
     transform = spiceypy.pxform(base_frame, to_frame, spiceypy.datetime2et(epoch))
     return transform
+
 
 def transform_data(df, to_frame):
     pass
