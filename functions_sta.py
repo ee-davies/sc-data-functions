@@ -225,7 +225,7 @@ def get_sta_beacon_mag_7days(path=f'{stereoa_path}'+'beacon/mag/'):
             if df is None:
                 df = _df.copy(deep=True)
             else:
-                df = df.append(_df.copy(deep=True))
+                df = pd.concat([df, _df])
         start += timedelta(days=1)
     return df
 
@@ -245,9 +245,9 @@ def get_sta_beacon_plas_7days(path=f'{stereoa_path}'+'beacon/plas/'):
             if df is None:
                 df = _df.copy(deep=True)
             else:
-                df = df.append(_df.copy(deep=True))
+                df = pd.concat([df, _df])
         start += timedelta(days=1)
-    df = filter_bad_data(df, 'tp', -1E30)
+    df = filter_bad_data(df, 'tp', -1E30) #need to change to only filter within column
     df = filter_bad_data(df, 'np', -1E30)
     df = filter_bad_data(df, 'vt', -1E30)
     df = filter_bad_data(df, 'vx', -1E30)
