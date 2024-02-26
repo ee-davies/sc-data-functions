@@ -324,7 +324,8 @@ def cart2sphere(x,y,z):
     return (r, theta, phi)
 
 
-#kernels from https://soho.nascom.nasa.gov/solarsoft/stereo/gen/data/spice/depm/ahead/
+#kernels from https://soho.nascom.nasa.gov/solarsoft/stereo/gen/data/spice/depm/ahead/ 
+#and https://soho.nascom.nasa.gov/solarsoft/stereo/gen/data/spice/epm/ahead/ for predicted orbit kernel
 def stereoa_furnish():
     """Main"""
     stereoa_path = kernels_path+'stereoa/'
@@ -526,4 +527,4 @@ def create_sta_pkl(start_timestamp, end_timestamp):
     'Made with script by E.E. Davies (github @ee-davies, twitter @spacedavies). File creation date: '+\
     datetime.utcnow().strftime("%Y-%b-%d %H:%M")+' UTC'
 
-    pickle.dump([stereoa,header], open(stereoa_path+'sta_beacon_rtn.p', "wb"))
+    pickle.dump([stereoa,header], open(stereoa_path+'sta_rtn.p', "wb"))
