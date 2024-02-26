@@ -40,7 +40,7 @@ JUNO MAG DATA
 def get_junomag(fp):
     """Get data and return pd.DataFrame."""
     cols = ['Year', 'DoY', 'Hour', 'Minute', 'Second', 'Millisecond',
-            'Decimal Day', 'b_x', 'b_y', 'b_z', 'Range', 'POS_X', 'POS_Y', 'POS_Z']
+            'Decimal Day', 'bx', 'by', 'bz', 'Range', 'POS_X', 'POS_Y', 'POS_Z']
     try:
         with open(fp, 'r') as f:
             for i, line in enumerate(f):
@@ -55,10 +55,11 @@ def get_junomag(fp):
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
+    df.drop(columns = ['Year', 'DoY', 'Hour', 'Minute', 'Second', 'Millisecond', 'Decimal Day', 'Range', 'POS_X', 'POS_Y', 'POS_Z'], inplace=True)
     return df
 
 
-def get_junomag_range(start_timestamp, end_timestamp, path=f'{juno_path}'+'fgm/1min'):
+def get_junomag_range(start_timestamp, end_timestamp, path=juno_path+'fgm/1min'):
     """Pass two datetime objects and grab .STS files between dates, from
     directory given."""
     df = None
@@ -67,13 +68,13 @@ def get_junomag_range(start_timestamp, end_timestamp, path=f'{juno_path}'+'fgm/1
     while start < end:
         year = start.year
         doy = start.strftime('%j')
-        fn = f'fgm_jno_l3_{year}{doy}_r60s_v01.sts'
+        fn = f'fgm_jno_l3_{year}{doy}se_r60s_v01.sts'
         _df = get_junomag(f'{path}/{fn}')
         if _df is not None:
             if df is None:
                 df = _df.copy(deep=True)
             else:
-                df = df.append(_df.copy(deep=True))
+                df = pd.concat([df, _df])
         start += timedelta(days=1)
     return df
 
