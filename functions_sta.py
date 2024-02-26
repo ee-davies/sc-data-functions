@@ -25,17 +25,26 @@ kernels_path='/Volumes/External/data/kernels/'
 
 
 """
-SOLO BAD DATA FILTER
+STEREO-A BAD DATA FILTER
 """
 
 
-def filter_bad_data(df, col, bad_val):
+def filter_bad_df(df, col, bad_val):
     if bad_val < 0:
         mask = df[col] < bad_val  # boolean mask for all bad values
     else:
         mask = df[col] > bad_val  # boolean mask for all bad values
     cols = [x for x in df.columns if x != 'timestamp']
     df.loc[mask, cols] = np.nan
+    return df
+
+
+def filter_bad_col(df, col, bad_val):
+    if bad_val < 0:
+        mask = df[col] < bad_val  # boolean mask for all bad values
+    else:
+        mask = df[col] > bad_val  # boolean mask for all bad values
+    df[col][mask] = np.nan
     return df
 
 
@@ -247,10 +256,10 @@ def get_sta_beacon_plas_7days(path=f'{stereoa_path}'+'beacon/plas/'):
             else:
                 df = pd.concat([df, _df])
         start += timedelta(days=1)
-    df = filter_bad_data(df, 'tp', -1E30) #need to change to only filter within column
-    df = filter_bad_data(df, 'np', -1E30)
-    df = filter_bad_data(df, 'vt', -1E30)
-    df = filter_bad_data(df, 'vx', -1E30)
-    df = filter_bad_data(df, 'vy', -1E30)
-    df = filter_bad_data(df, 'vz', -1E30)
+    df = filter_bad_col(df, 'tp', -1E30) #will give slice warnings
+    df = filter_bad_col(df, 'np', -1E30)
+    df = filter_bad_col(df, 'vt', -1E30)
+    df = filter_bad_col(df, 'vx', -1E30)
+    df = filter_bad_col(df, 'vy', -1E30)
+    df = filter_bad_col(df, 'vz', -1E30)
     return df
