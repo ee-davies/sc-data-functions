@@ -239,12 +239,58 @@ def get_sta_beacon_mag_7days(path=f'{stereoa_path}'+'beacon/mag/'):
     return df
 
 
+def get_sta_beacon_mag_range(start_timestamp, end_timestamp, path=f'{stereoa_path}'+'beacon/mag/'):
+    """Pass two datetime objects and grab .cdf files between dates, from
+    directory given."""
+    df = None
+    start = start_timestamp.date()
+    end = end_timestamp.date() + timedelta(days=1)
+    while start < end:
+        year = start.year
+        date_str = f'{year}{start.month:02}{start.day:02}'
+        fn = f'{path}/sta_lb_impact_{date_str}_v02.cdf'
+        _df = get_sta_beacon_mag(fn)
+        if _df is not None:
+            if df is None:
+                df = _df.copy(deep=True)
+            else:
+                df = pd.concat([df, _df])
+        start += timedelta(days=1)
+    return df
+
+
 def get_sta_beacon_plas_7days(path=f'{stereoa_path}'+'beacon/plas/'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df = None
     start = datetime.utcnow().date()-timedelta(days=7)
     end = datetime.utcnow().date()
+    while start < end:
+        year = start.year
+        date_str = f'{year}{start.month:02}{start.day:02}'
+        fn = f'{path}/sta_lb_pla_browse_{date_str}_v14.cdf'
+        _df = get_sta_beacon_plas(fn)
+        if _df is not None:
+            if df is None:
+                df = _df.copy(deep=True)
+            else:
+                df = pd.concat([df, _df])
+        start += timedelta(days=1)
+    df = filter_bad_col(df, 'tp', -1E30) #will give slice warnings
+    df = filter_bad_col(df, 'np', -1E30)
+    df = filter_bad_col(df, 'vt', -1E30)
+    df = filter_bad_col(df, 'vx', -1E30)
+    df = filter_bad_col(df, 'vy', -1E30)
+    df = filter_bad_col(df, 'vz', -1E30)
+    return df
+
+
+def get_sta_beacon_plas_range(start_timestamp, end_timestamp, path=f'{stereoa_path}'+'beacon/plas/'):
+    """Pass two datetime objects and grab .cdf files between dates, from
+    directory given."""
+    df = None
+    start = start_timestamp.date()
+    end = end_timestamp.date() + timedelta(days=1)
     while start < end:
         year = start.year
         date_str = f'{year}{start.month:02}{start.day:02}'
