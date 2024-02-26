@@ -12,9 +12,24 @@ from sunpy.coordinates import HeliocentricInertial, HeliographicStonyhurst
 from bs4 import BeautifulSoup
 import cdflib
 import pickle
+from spacepy import pycdf
 
 
-stereoa_path='/Users/emmadavies/Documents/Data-test/stereoa/'
+"""
+STEREO-A DATA PATH
+"""
+
+
+stereoa_path='/Volumes/External/data/stereoa/'
+kernels_path='/Volumes/External/data/kernels/'
+
+
+"""
+STEREO-A DOWNLOAD DATA
+#can download yearly merged IMPACT files or beacon data
+#beacon data files downloaded may be corrupt
+"""
+
 
 ## function to download stereo merged impact data from nasa spdf service
 ## files are yearly
@@ -39,6 +54,50 @@ def download_stereoa_merged(start_timestamp, end_timestamp=datetime.utcnow(), pa
         except Exception as e:
             print('ERROR', e, f'.File for {year} does not exist.')
         start+=1
+
+
+#download data from https://spdf.gsfc.nasa.gov/pub/data/stereo/ahead/beacon/
+#download functions work but seem to download corrupt files: may need to manually download cdfs instead
+def download_sta_beacon_mag(path=stereoa_path+'beacon/mag'):
+    start = datetime.utcnow().date()-timedelta(days=7)
+    end = datetime.utcnow().date()
+    while start < end:
+        year = start.year
+        date_str = f'{year}{start.month:02}{start.day:02}'
+        data_item_id = f'sta_lb_impact_{date_str}_v02'
+        if os.path.isfile(f"{path}/{data_item_id}.cdf") == True:
+            print(f'{data_item_id}.cdf has already been downloaded.') 
+        else:
+            try:
+                data_url = f'https://spdf.gsfc.nasa.gov/pub/data/stereo/ahead/beacon/{year}'
+                urllib.request.urlretrieve(data_url, f"{path}/{data_item_id}.cdf")
+                print(f'Successfully downloaded {data_item_id}.cdf')
+            except Exception as e:
+                print('ERROR', e, data_item_id)
+        start += timedelta(days=1)
+
+
+#download data from https://spdf.gsfc.nasa.gov/pub/data/stereo/ahead/beacon_plastic/
+#download functions work but seem to download corrupt files: may need to manually download cdfs instead
+def download_sta_beacon_plas(path=stereoa_path+'beacon/plas'):
+    start = datetime.utcnow().date()-timedelta(days=7)
+    end = datetime.utcnow().date()
+    while start < end:
+        year = start.year
+        date_str = f'{year}{start.month:02}{start.day:02}'
+        data_item_id = f'sta_lb_pla_browse_{date_str}_v14'
+        if os.path.isfile(f"{path}/{data_item_id}.cdf") == True:
+            print(f'{data_item_id}.cdf has already been downloaded.')
+            start += timedelta(days=1)
+        else:
+            try:
+                data_url = f'https://spdf.gsfc.nasa.gov/pub/data/stereo/ahead/beacon_plastic/{year}'
+                urllib.request.urlretrieve(data_url, f"{path}/{data_item_id}.cdf")
+                print(f'Successfully downloaded {data_item_id}.cdf')
+                start += timedelta(days=1)
+            except Exception as e:
+                print('ERROR', e, data_item_id)
+                start += timedelta(days=1)
 
 
 #function to read in yearly cdf file 
@@ -98,48 +157,6 @@ def get_stereoa_merged_range(start_timestamp, end_timestamp=datetime.utcnow(), p
     timemask = (df['time']>=start_timestamp) & (df['time']<=end_timestamp)
     df = df[timemask]
     return df
-
-
-def download_sta_beacon_mag(path="/Volumes/External/Data/STEREO-A/beacon/impact"):
-    start = datetime.utcnow().date()-timedelta(days=7)
-    end = datetime.utcnow().date()
-    while start < end:
-        year = start.year
-        date_str = f'{year}{start.month:02}{start.day:02}'
-        data_item_id = f'sta_lb_impact_{date_str}_v02'
-        if os.path.isfile(f"{path}/{data_item_id}.cdf") == True:
-            print(f'{data_item_id}.cdf has already been downloaded.')
-            start += timedelta(days=1)
-        else:
-            try:
-                data_url = f'https://spdf.gsfc.nasa.gov/pub/data/stereo/ahead/beacon/{year}'
-                urllib.request.urlretrieve(data_url, f"{path}/{data_item_id}.cdf")
-                print(f'Successfully downloaded {data_item_id}.cdf')
-                start += timedelta(days=1)
-            except Exception as e:
-                print('ERROR', e, data_item_id)
-                start += timedelta(days=1)
-
-
-def download_sta_beacon_plas(path="/Volumes/External/Data/STEREO-A/beacon/plastic"):
-    start = datetime.utcnow().date()-timedelta(days=7)
-    end = datetime.utcnow().date()
-    while start < end:
-        year = start.year
-        date_str = f'{year}{start.month:02}{start.day:02}'
-        data_item_id = f'sta_lb_pla_browse_{date_str}_v14'
-        if os.path.isfile(f"{path}/{data_item_id}.cdf") == True:
-            print(f'{data_item_id}.cdf has already been downloaded.')
-            start += timedelta(days=1)
-        else:
-            try:
-                data_url = f'https://spdf.gsfc.nasa.gov/pub/data/stereo/ahead/beacon_plastic/{year}'
-                urllib.request.urlretrieve(data_url, f"{path}/{data_item_id}.cdf")
-                print(f'Successfully downloaded {data_item_id}.cdf')
-                start += timedelta(days=1)
-            except Exception as e:
-                print('ERROR', e, data_item_id)
-                start += timedelta(days=1)
 
 
 def get_sta_beacon_plas(fp):
