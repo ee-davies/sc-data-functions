@@ -21,6 +21,22 @@ def filter_bad_data(df, col, bad_val):
     return df
 
 
+"""
+JUNO DATA PATH
+"""
+
+juno_path='/Volumes/External/data/juno/'
+kernels_path='/Volumes/External/data/kernels/'
+
+
+"""
+JUNO MAG DATA
+# Cruise phase FGM data, https://pds-ppi.igpp.ucla.edu/search/view/?f=yes&id=pds://PPI/JNO-SS-3-FGM-CAL-V1.0
+# 1 min resolution, SE coordinates (equivalent to RTN)
+# .sts files, not .cdf
+"""
+
+
 def get_junomag(fp):
     """Get data and return pd.DataFrame."""
     cols = ['Year', 'DoY', 'Hour', 'Minute', 'Second', 'Millisecond',
@@ -32,17 +48,17 @@ def get_junomag(fp):
                     break
 
         df = pd.read_csv(fp, skiprows=i, sep=r'\s+', names=cols)
-        df['timestamp'] = df[['Year', 'DoY', 'Hour', 'Minute', 'Second', 'Millisecond']]\
+        df['time'] = df[['Year', 'DoY', 'Hour', 'Minute', 'Second', 'Millisecond']]\
             .apply(lambda x: datetime.strptime(' '.join(str(y) for y in x),
                                                r'%Y %j %H %M %S %f'), axis=1)
-        df['b_tot'] = np.linalg.norm(df[['b_x', 'b_y', 'b_z']], axis=1)
+        df['bt'] = np.linalg.norm(df[['bx', 'by', 'bz']], axis=1)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
     return df
 
 
-def get_junomag_range(start_timestamp, end_timestamp, path):
+def get_junomag_range(start_timestamp, end_timestamp, path=f'{juno_path}'+'fgm/1min'):
     """Pass two datetime objects and grab .STS files between dates, from
     directory given."""
     df = None
@@ -51,8 +67,8 @@ def get_junomag_range(start_timestamp, end_timestamp, path):
     while start < end:
         year = start.year
         doy = start.strftime('%j')
-        fn = f'fgm_jno_l3_{year}_{doy}_r60s_v01.sts'
-        _df = get_junomag(f'{path}/{year}/{fn}')
+        fn = f'fgm_jno_l3_{year}{doy}_r60s_v01.sts'
+        _df = get_junomag(f'{path}/{fn}')
         if _df is not None:
             if df is None:
                 df = _df.copy(deep=True)
