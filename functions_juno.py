@@ -5,6 +5,8 @@ from spacepy import pycdf
 import spiceypy
 import os.path
 import glob
+import pickle
+
 
 def format_path(fp):
     """Formatting required for CDF package."""
@@ -52,10 +54,10 @@ def get_junomag(fp):
             .apply(lambda x: datetime.strptime(' '.join(str(y) for y in x),
                                                r'%Y %j %H %M %S %f'), axis=1)
         df['bt'] = np.linalg.norm(df[['bx', 'by', 'bz']], axis=1)
+        df.drop(columns = ['Year', 'DoY', 'Hour', 'Minute', 'Second', 'Millisecond', 'Decimal Day', 'Range', 'POS_X', 'POS_Y', 'POS_Z'], inplace=True)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
-    df.drop(columns = ['Year', 'DoY', 'Hour', 'Minute', 'Second', 'Millisecond', 'Decimal Day', 'Range', 'POS_X', 'POS_Y', 'POS_Z'], inplace=True)
     return df
 
 
@@ -147,3 +149,82 @@ def get_juno_transform(epoch: datetime, base_frame: str, to_frame: str):
 
 def transform_data(df, to_frame):
     pass
+
+
+"""
+OUTPUT COMBINED PICKLE FILE
+including MAG, empty PLAS, and POSITION data
+"""
+
+
+def create_juno_pkl(start_timestamp, end_timestamp):
+
+    #create mag df, resampled to nearest 1 min
+    df_mag = get_junomag_range(start_timestamp, end_timestamp)
+    if df_mag is None:
+        print(f'Juno MAG data is empty for this timerange')
+        df_mag = pd.DataFrame({'time':[], 'bt':[], 'bx':[], 'by':[], 'bz':[]})
+        mag_rdf = df_mag.drop(columns=['time'])
+    else:
+        mag_rdf = df_mag.set_index('time').resample('1min').mean().reset_index(drop=False)
+        mag_rdf.set_index(pd.to_datetime(mag_rdf['time']), inplace=True)
+        mag_rdf = mag_rdf.dropna() #need to drop NaN values for plotly...
+
+    #create empty plasma df    
+    print(f'Note: Juno plasma data is unavailable during cruise phase')
+    df_plas = pd.DataFrame({'time':[], 'vt':[], 'vx':[], 'vy':[], 'vz':[], 'np':[], 'tp':[]})
+    plas_rdf = df_plas
+
+    #need to combine mag and plasma dfs to get complete set of timestamps for position calculation
+    magplas_rdf = pd.concat([mag_rdf, plas_rdf], axis=1)
+    #some timestamps may be NaT so after joining, drop time column and reinstate from combined index col
+    magplas_rdf = magplas_rdf.drop(columns=['time'])
+    magplas_rdf['time'] = magplas_rdf.index
+
+    #get juno positions for corresponding timestamps
+    juno_pos = get_juno_positions(magplas_rdf['time'])
+    juno_pos.set_index(pd.to_datetime(juno_pos['time']), inplace=True)
+    juno_pos = juno_pos.drop(columns=['time'])
+
+    #produce final combined DataFrame with correct ordering of columns 
+    comb_df = pd.concat([magplas_rdf, juno_pos], axis=1)
+
+    #produce recarray with correct datatypes
+    time_stamps = comb_df['time']
+    dt_lst= [element.to_pydatetime() for element in list(time_stamps)] #extract timestamps in datetime.datetime format
+
+    juno=np.zeros(len(dt_lst),dtype=[('time',object),('bx', float),('by', float),('bz', float),('bt', float),\
+                ('vx', float),('vy', float),('vz', float),('vt', float),('np', float),('tp', float),\
+                ('x', float),('y', float),('z', float), ('r', float),('lat', float),('lon', float)])
+    juno = juno.view(np.recarray) 
+
+    juno.time=dt_lst
+    juno.bx=comb_df['bx']
+    juno.by=comb_df['by']
+    juno.bz=comb_df['bz']
+    juno.bt=comb_df['bt']
+    juno.vx=comb_df['vx']
+    juno.vy=comb_df['vy']
+    juno.vz=comb_df['vz']
+    juno.vt=comb_df['vt']
+    juno.np=comb_df['np']
+    juno.tp=comb_df['tp']
+    juno.x=comb_df['x']
+    juno.y=comb_df['y']
+    juno.z=comb_df['z']
+    juno.r=comb_df['r']
+    juno.lat=comb_df['lat']
+    juno.lon=comb_df['lon']
+
+    #dump to pickle file
+    header='Science level 2 solar wind magnetic field (FGM) from Juno Mission Cruise Phase, ' + \
+    'obtained from https://pds-ppi.igpp.ucla.edu/search/view/?f=yes&id=pds://PPI/JNO-SS-3-FGM-CAL-V1.0/DATA/CRUISE/SE/1MIN '+ \
+    'Timerange: '+juno.time[0].strftime("%Y-%b-%d %H:%M")+' to '+juno.time[-1].strftime("%Y-%b-%d %H:%M")+\
+    ', resampled to a time resolution of 1 min. '+\
+    'The data are available in a numpy recarray, fields can be accessed by juno.time, juno.bx, etc. '+\
+    'Total number of data points: '+str(juno.size)+'. '+\
+    'Units are btxyz [nT, RTN], heliospheric position x/y/z/r/lon/lat [AU, degree, HEEQ]. '+\
+    'Made with script by E.E. Davies (github @ee-davies, twitter @spacedavies). File creation date: '+\
+    datetime.utcnow().strftime("%Y-%b-%d %H:%M")+' UTC'
+
+    pickle.dump([juno,header], open(juno_path+'juno_rtn.p', "wb"))
