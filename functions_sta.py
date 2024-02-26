@@ -263,3 +263,70 @@ def get_sta_beacon_plas_7days(path=f'{stereoa_path}'+'beacon/plas/'):
     df = filter_bad_col(df, 'vy', -1E30)
     df = filter_bad_col(df, 'vz', -1E30)
     return df
+
+
+"""
+STEREO A POSITION FUNCTIONS: coord maths, furnish kernels, and call position for each timestamp
+Currently set to HEEQ, but will implement options to change
+"""
+
+
+def cart2sphere(x,y,z):
+    r = np.sqrt(x**2+ y**2 + z**2) /1.495978707E8         
+    theta = np.arctan2(z,np.sqrt(x**2+ y**2)) * 360 / 2 / np.pi
+    phi = np.arctan2(y,x) * 360 / 2 / np.pi                   
+    return (r, theta, phi)
+
+
+#kernels from https://soho.nascom.nasa.gov/solarsoft/stereo/gen/data/spice/depm/ahead/
+def stereoa_furnish():
+    """Main"""
+    stereoa_path = kernels_path+'stereoa/'
+    generic_path = kernels_path+'generic/'
+    stereoa_kernels = os.listdir(stereoa_path)
+    generic_kernels = os.listdir(generic_path)
+    for kernel in stereoa_kernels:
+        spiceypy.furnsh(os.path.join(stereoa_path, kernel))
+    for kernel in generic_kernels:
+        spiceypy.furnsh(os.path.join(generic_path, kernel))
+
+
+def get_sta_pos(t):
+    if spiceypy.ktotal('ALL') < 1:
+        stereoa_furnish()
+    pos = spiceypy.spkpos("STEREO AHEAD", spiceypy.datetime2et(t), "HEEQ", "NONE", "SUN")[0]
+    r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
+    position = t, pos[0], pos[1], pos[2], r, lat, lon
+    return position
+
+
+def get_sta_positions(time_series):
+    positions = []
+    for t in time_series:
+        position = get_sta_pos(t)
+        positions.append(position)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    return df_positions
+
+
+def get_sta_pos_range(start, end, cadence=1):
+    """Cadence in minutes"""
+    t = start
+    positions = []
+    while t < end:
+        position = get_sta_pos(t)
+        positions.append(position)  
+        t += timedelta(minutes=cadence)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    return df_positions
+
+
+def main():
+    tfmt = r'%Y%m%dT%H%M%S'
+    start = datetime.strptime(input('->'), tfmt)
+    end = datetime.strptime(input('->'), tfmt)
+    x = get_sta_pos(start, end)
+    print(x)
+
+if __name__ == '__main__':
+    main()
