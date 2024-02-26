@@ -25,6 +25,21 @@ kernels_path='/Volumes/External/data/kernels/'
 
 
 """
+SOLO BAD DATA FILTER
+"""
+
+
+def filter_bad_data(df, col, bad_val):
+    if bad_val < 0:
+        mask = df[col] < bad_val  # boolean mask for all bad values
+    else:
+        mask = df[col] > bad_val  # boolean mask for all bad values
+    cols = [x for x in df.columns if x != 'timestamp']
+    df.loc[mask, cols] = np.nan
+    return df
+
+
+"""
 STEREO-A DOWNLOAD DATA
 #can download yearly merged IMPACT files or beacon data
 #beacon data files downloaded may be corrupt
@@ -100,6 +115,13 @@ def download_sta_beacon_plas(path=stereoa_path+'beacon/plas'):
                 start += timedelta(days=1)
 
 
+"""
+STEREO-A MAG AND PLAS DATA 
+# Option to load in merged mag and plas data files
+# Can also load separate MAG and PLAS beacon data files for real-time use
+"""
+
+
 #function to read in yearly cdf file 
 #also filters bad data values
 #creates pandas df 
@@ -163,7 +185,7 @@ def get_sta_beacon_plas(fp):
     """raw = rtn"""
     try:
         cdf = pycdf.CDF(fp)
-        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch1', 'Bulk_Speed', 'Vr_RTN', 'Vt_RTN', 'Vn_RTN', 'Density', 'Temperature_Inst'], ['timestamp', 'v_bulk', 'v_x', 'v_y', 'v_z', 'density', 'temperature'])}
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch1', 'Bulk_Speed', 'Vr_RTN', 'Vt_RTN', 'Vn_RTN', 'Density', 'Temperature_Inst'], ['time', 'vt', 'vx', 'vy', 'vz', 'np', 'tp'])}
         df = pd.DataFrame.from_dict(data)
     except Exception as e:
         print('ERROR:', e, fp)
@@ -175,20 +197,20 @@ def get_sta_beacon_mag(fp):
     """raw = rtn"""
     try:
         cdf = pycdf.CDF(fp)
-        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch_MAG'], ['timestamp'])}
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch_MAG'], ['time'])}
         df = pd.DataFrame.from_dict(data)
         bx, by, bz = cdf['MAGBField'][:].T
-        df['b_x'] = bx
-        df['b_y'] = by
-        df['b_z'] = bz
-        df['b_tot'] = np.linalg.norm(df[['b_x', 'b_y', 'b_z']], axis=1)
+        df['bx'] = bx
+        df['by'] = by
+        df['bz'] = bz
+        df['bt'] = np.linalg.norm(df[['bx', 'by', 'bz']], axis=1)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
     return df
 
 
-def get_sta_beacon_mag_7days(path="/Volumes/External/Data/STEREO-A/beacon/impact"):
+def get_sta_beacon_mag_7days(path=f'{stereoa_path}'+'beacon/mag/'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df = None
@@ -208,7 +230,7 @@ def get_sta_beacon_mag_7days(path="/Volumes/External/Data/STEREO-A/beacon/impact
     return df
 
 
-def get_sta_beacon_plas_7days(path="/Volumes/External/Data/STEREO-A/beacon/plastic"):
+def get_sta_beacon_plas_7days(path=f'{stereoa_path}'+'beacon/plas/'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df = None
@@ -225,10 +247,10 @@ def get_sta_beacon_plas_7days(path="/Volumes/External/Data/STEREO-A/beacon/plast
             else:
                 df = df.append(_df.copy(deep=True))
         start += timedelta(days=1)
-    df = filter_bad_data(df, 'temperature', -1E30)
-    df = filter_bad_data(df, 'density', -1E30)
-    df = filter_bad_data(df, 'v_bulk', -1E30)
-    df = filter_bad_data(df, 'v_x', -1E30)
-    df = filter_bad_data(df, 'v_y', -1E30)
-    df = filter_bad_data(df, 'v_z', -1E30)
+    df = filter_bad_data(df, 'tp', -1E30)
+    df = filter_bad_data(df, 'np', -1E30)
+    df = filter_bad_data(df, 'vt', -1E30)
+    df = filter_bad_data(df, 'vx', -1E30)
+    df = filter_bad_data(df, 'vy', -1E30)
+    df = filter_bad_data(df, 'vz', -1E30)
     return df
