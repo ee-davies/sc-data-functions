@@ -376,3 +376,154 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+"""
+OUTPUT COMBINED PICKLE FILES
+including MAG, PLAS, and POSITION data
+"""
+
+def create_sta_beacon_pkl():
+
+    start_timestamp=datetime.utcnow()-timedelta(days=7)
+    end_timestamp=datetime.utcnow()
+
+    #load in mag data to DataFrame and resample, create empty mag and resampled DataFrame if no data
+    # if empty, drop time column ready for concat
+    df_mag = get_sta_beacon_mag_range(start_timestamp, end_timestamp)
+    if df_mag is None:
+        print(f'STA Beacon MAG data is empty for this timerange')
+        df_mag = pd.DataFrame({'time':[], 'bt':[], 'bx':[], 'by':[], 'bz':[]})
+        mag_rdf = df_mag.drop(columns=['time'])
+    else:
+        mag_rdf = df_mag.set_index('time').resample('1min').mean().reset_index(drop=False)
+        mag_rdf.set_index(pd.to_datetime(mag_rdf['time']), inplace=True)
+
+    #load in plasma data to DataFrame and resample, create empty plasma and resampled DataFrame if no data
+    #only drop time column if MAG DataFrame is not empty
+    df_plas = get_sta_beacon_plas_range(start_timestamp, end_timestamp)
+    if df_plas is None:
+        print(f'STA Beacon PLAS data is empty for this timerange')
+        df_plas = pd.DataFrame({'time':[], 'vt':[], 'vx':[], 'vy':[], 'vz':[], 'np':[], 'tp':[]})
+        plas_rdf = df_plas
+    else:
+        plas_rdf = df_plas.set_index('time').resample('1min').mean().reset_index(drop=False)
+        plas_rdf.set_index(pd.to_datetime(plas_rdf['time']), inplace=True)
+        if mag_rdf.shape[0] != 0:
+            plas_rdf = plas_rdf.drop(columns=['time'])
+
+    #need to combine mag and plasma dfs to get complete set of timestamps for position calculation
+    magplas_rdf = pd.concat([mag_rdf, plas_rdf], axis=1)
+    #some timestamps may be NaT so after joining, drop time column and reinstate from combined index col
+    magplas_rdf = magplas_rdf.drop(columns=['time'])
+    magplas_rdf['time'] = magplas_rdf.index
+
+    #get sta positions for corresponding timestamps
+    stereoa_furnish()
+    sta_pos = get_sta_positions(magplas_rdf['time'])
+    sta_pos.set_index(pd.to_datetime(sta_pos['time']), inplace=True)
+    sta_pos = sta_pos.drop(columns=['time'])
+
+    #produce final combined DataFrame with correct ordering of columns 
+    comb_df = pd.concat([magplas_rdf, sta_pos], axis=1)
+
+    #produce recarray with correct datatypes
+    time_stamps = comb_df['time']
+    dt_lst= [element.to_pydatetime() for element in list(time_stamps)] #extract timestamps in datetime.datetime format
+
+    stereoa=np.zeros(len(dt_lst),dtype=[('time',object),('bx', float),('by', float),('bz', float),('bt', float),\
+                ('vx', float),('vy', float),('vz', float),('vt', float),('np', float),('tp', float),\
+                ('x', float),('y', float),('z', float), ('r', float),('lat', float),('lon', float)])
+    stereoa = stereoa.view(np.recarray) 
+
+    stereoa.time=dt_lst
+    stereoa.bx=comb_df['bx']
+    stereoa.by=comb_df['by']
+    stereoa.bz=comb_df['bz']
+    stereoa.bt=comb_df['bt']
+    stereoa.vx=comb_df['vx']
+    stereoa.vy=comb_df['vy']
+    stereoa.vz=comb_df['vz']
+    stereoa.vt=comb_df['vt']
+    stereoa.np=comb_df['np']
+    stereoa.tp=comb_df['tp']
+    stereoa.x=comb_df['x']
+    stereoa.y=comb_df['y']
+    stereoa.z=comb_df['z']
+    stereoa.r=comb_df['r']
+    stereoa.lat=comb_df['lat']
+    stereoa.lon=comb_df['lon']
+
+    #dump to pickle file
+    header='Beacon solar wind magnetic field (MAG) and plasma (PLAS) data from IMPACT onboard STEREO-A, ' + \
+    'Timerange: '+stereoa.time[0].strftime("%Y-%b-%d %H:%M")+' to '+stereoa.time[-1].strftime("%Y-%b-%d %H:%M")+\
+    ', resampled to a time resolution of 1 min. '+\
+    'The data are available in a numpy recarray, fields can be accessed by stereoa.time, stereoa.bx, stereoa.r etc. '+\
+    'Total number of data points: '+str(stereoa.size)+'. '+\
+    'Units are btxyz [nT, RTN], vtxy  [km s^-1], np[cm^-3], tp [K], heliospheric position x/y/z/r/lon/lat [AU, degree, HEEQ]. '+\
+    'Made with script by E.E. Davies (github @ee-davies, twitter @spacedavies). File creation date: '+\
+    datetime.utcnow().strftime("%Y-%b-%d %H:%M")+' UTC'
+
+    pickle.dump([stereoa,header], open(stereoa_path+'sta_beacon_rtn.p', "wb"))
+
+
+def create_sta_pkl(start_timestamp, end_timestamp):
+
+    #load in mag data to DataFrame and resample, create empty mag and resampled DataFrame if no data
+    # if empty, drop time column ready for concat
+    df_ = get_stereoa_merged_range(start_timestamp, end_timestamp)
+    if df_ is None:
+        print(f'STA merged data is empty for this timerange')
+        df_ = pd.DataFrame({'time':[], 'bt':[], 'bx':[], 'by':[], 'bz':[]})
+        rdf = df_.drop(columns=['time'])
+    else:
+        rdf = df_.set_index('time').resample('1min').mean().reset_index(drop=False)
+        rdf.set_index(pd.to_datetime(rdf['time']), inplace=True)
+
+    #get sta positions for corresponding timestamps
+    stereoa_furnish()
+    sta_pos = get_sta_positions(rdf['time'])
+    sta_pos.set_index(pd.to_datetime(sta_pos['time']), inplace=True)
+    sta_pos = sta_pos.drop(columns=['time'])
+
+    #produce final combined DataFrame with correct ordering of columns 
+    comb_df = pd.concat([rdf, sta_pos], axis=1)
+
+    #produce recarray with correct datatypes
+    time_stamps = comb_df['time']
+    dt_lst= [element.to_pydatetime() for element in list(time_stamps)] #extract timestamps in datetime.datetime format
+
+    stereoa=np.zeros(len(dt_lst),dtype=[('time',object),('bx', float),('by', float),('bz', float),('bt', float),\
+                ('vx', float),('vy', float),('vz', float),('vt', float),('np', float),('tp', float),\
+                ('x', float),('y', float),('z', float), ('r', float),('lat', float),('lon', float)])
+    stereoa = stereoa.view(np.recarray) 
+
+    stereoa.time=dt_lst
+    stereoa.bx=comb_df['bx']
+    stereoa.by=comb_df['by']
+    stereoa.bz=comb_df['bz']
+    stereoa.bt=comb_df['bt']
+    stereoa.vx=comb_df['vx']
+    stereoa.vy=comb_df['vy']
+    stereoa.vz=comb_df['vz']
+    stereoa.vt=comb_df['vt']
+    stereoa.np=comb_df['np']
+    stereoa.tp=comb_df['tp']
+    stereoa.x=comb_df['x']
+    stereoa.y=comb_df['y']
+    stereoa.z=comb_df['z']
+    stereoa.r=comb_df['r']
+    stereoa.lat=comb_df['lat']
+    stereoa.lon=comb_df['lon']
+
+    #dump to pickle file
+    header='Beacon solar wind magnetic field (MAG) and plasma (PLAS) data from IMPACT onboard STEREO-A, ' + \
+    'Timerange: '+stereoa.time[0].strftime("%Y-%b-%d %H:%M")+' to '+stereoa.time[-1].strftime("%Y-%b-%d %H:%M")+\
+    ', resampled to a time resolution of 1 min. '+\
+    'The data are available in a numpy recarray, fields can be accessed by stereoa.time, stereoa.bx, stereoa.r etc. '+\
+    'Total number of data points: '+str(stereoa.size)+'. '+\
+    'Units are btxyz [nT, RTN], vtxy  [km s^-1], np[cm^-3], tp [K], heliospheric position x/y/z/r/lon/lat [AU, degree, HEEQ]. '+\
+    'Made with script by E.E. Davies (github @ee-davies, twitter @spacedavies). File creation date: '+\
+    datetime.utcnow().strftime("%Y-%b-%d %H:%M")+' UTC'
+
+    pickle.dump([stereoa,header], open(stereoa_path+'sta_beacon_rtn.p', "wb"))
