@@ -384,10 +384,10 @@ OUTPUT COMBINED PICKLE FILES
 including MAG, PLAS, and POSITION data
 """
 
-def create_sta_beacon_pkl():
+def create_sta_beacon_pkl(start_timestamp, end_timestamp):
 
-    start_timestamp=datetime.utcnow()-timedelta(days=7)
-    end_timestamp=datetime.utcnow()
+    # start_timestamp=datetime.utcnow()-timedelta(days=7)
+    # end_timestamp=datetime.utcnow()
 
     #load in mag data to DataFrame and resample, create empty mag and resampled DataFrame if no data
     # if empty, drop time column ready for concat
@@ -465,7 +465,7 @@ def create_sta_beacon_pkl():
     'Made with script by E.E. Davies (github @ee-davies, twitter @spacedavies). File creation date: '+\
     datetime.utcnow().strftime("%Y-%b-%d %H:%M")+' UTC'
 
-    pickle.dump([stereoa,header], open(stereoa_path+'sta_beacon_rtn.p', "wb"))
+    pickle.dump([stereoa,header], open(stereoa_path+'stereoa_beacon_rtn.p', "wb"))
 
 
 def create_sta_pkl(start_timestamp, end_timestamp):
@@ -518,7 +518,7 @@ def create_sta_pkl(start_timestamp, end_timestamp):
     stereoa.lon=comb_df['lon']
 
     #dump to pickle file
-    header='Beacon solar wind magnetic field (MAG) and plasma (PLAS) data from IMPACT onboard STEREO-A, ' + \
+    header='Level 2 science solar wind magnetic field (MAG) and plasma (PLAS) data from IMPACT onboard STEREO-A, ' + \
     'Timerange: '+stereoa.time[0].strftime("%Y-%b-%d %H:%M")+' to '+stereoa.time[-1].strftime("%Y-%b-%d %H:%M")+\
     ', resampled to a time resolution of 1 min. '+\
     'The data are available in a numpy recarray, fields can be accessed by stereoa.time, stereoa.bx, stereoa.r etc. '+\
@@ -527,4 +527,4 @@ def create_sta_pkl(start_timestamp, end_timestamp):
     'Made with script by E.E. Davies (github @ee-davies, twitter @spacedavies). File creation date: '+\
     datetime.utcnow().strftime("%Y-%b-%d %H:%M")+' UTC'
 
-    pickle.dump([stereoa,header], open(stereoa_path+'sta_rtn.p', "wb"))
+    pickle.dump([stereoa,header], open(stereoa_path+'stereoa_rtn.p', "wb"))
