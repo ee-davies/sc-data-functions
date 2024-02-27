@@ -52,22 +52,53 @@ def get_heliocentric_transformation_matrices(time):
     #equation 12
     LAMBDA=280.460+36000.772*T0+0.04107*UT
     M=357.528+35999.050*T0+0.04107*UT
-    lt2=(LAMBDA+(1.915-0.0048*T0)*np.sin(M*np.pi/180)+0.020*np.sin(2*M*np.pi/180))*np.pi/180 #lamda sun in radians
-    S1=np.matrix([[np.cos(lt2+np.radians(180)), np.sin(lt2+np.radians(180)),  0], [-np.sin(lt2+np.radians(180)) , np.cos(lt2+np.radians(180)) , 0], [0,  0,  1]])
+    #lamda sun in radians
+    lt2=(LAMBDA+(1.915-0.0048*T0)*np.sin(M*np.pi/180)+0.020*np.sin(2*M*np.pi/180))*np.pi/180
+    #S1 matrix
+    S1=np.matrix([[np.cos(lt2+np.pi), np.sin(lt2+np.pi),  0], [-np.sin(lt2+np.pi) , np.cos(lt2+np.pi) , 0], [0,  0,  1]])
     #equation 13
-    iota=np.radians(7.25)
-    omega=np.radians((73.6667+0.013958*((mjd+3242)/365.25)))                      
+    #create S2 matrix with angles with reversed sign for transformation HEEQ to HAE
+    iota=7.25*np.pi/180
+    omega=(73.6667+0.013958*((mjd+3242)/365.25))*np.pi/180 #in rad         
     theta=np.arctan(np.cos(iota)*np.tan(lt2-omega))
-    #quadrant of theta must be opposite lambda_sun minus omega; Hapgood 1992 end of section 5   
-    #get lambda-omega angle in degree mod 360 and theta in degrees
-    lambda_omega_deg=np.mod(np.degrees(lt2)-np.degrees(omega),360)
-    theta_node_deg=np.degrees(theta)
-    ##if the 2 angles are close to similar, so in the same quadrant, then theta_node = theta_node +pi           
-    if np.logical_or(abs(lambda_omega_deg-theta_node_deg) < 1, abs(lambda_omega_deg-360-theta_node_deg) < 1): theta=theta+np.pi
-    s2_1 = np.matrix([[np.cos(theta), np.sin(theta),  0], [-np.sin(theta) , np.cos(theta) , 0], [0,  0,  1]])
-    s2_2 = np.matrix([[0,  0,  1], [0, np.cos(iota), np.sin(iota)], [0, -np.sin(iota) , np.cos(iota)]])
-    s2_3 = np.matrix([[np.cos(omega), np.sin(omega),  0], [-np.sin(omega) , np.cos(omega) , 0], [0,  0,  1]])
-    S2 = np.dot(np.dot(s2_1,s2_2),s2_3)
+    #quadrant of theta must be opposite lt2 - omega; Hapgood 1992 end of section 5   
+    #get lambda-omega angle in degree mod 360   
+    lambda_omega_deg=np.mod(lt2-omega,2*np.pi)*180/np.pi
+    x = np.cos(np.deg2rad(lambda_omega_deg))
+    y = np.sin(np.deg2rad(lambda_omega_deg))
+    #get theta_node in deg
+    x_theta = np.cos(theta)
+    y_theta = np.sin(theta)
+    #if in same quadrant, then theta_node = theta_node +pi  
+    if (x>=0 and y>=0):
+        if (x_theta>=0 and y_theta>=0): theta = theta - np.pi
+        elif (x_theta<=0 and y_theta<=0): theta = theta
+        elif (x_theta>=0 and y_theta<=0): theta = theta - np.pi/2
+        elif (x_theta<=0 and y_theta>=0): theta = np.pi+(theta-np.pi/2)
+        
+    elif (x<=0 and y<=0):
+        if (x_theta>=0 and y_theta>=0): theta = theta
+        elif (x_theta<=0 and y_theta<=0): theta = theta + np.pi
+        elif (x_theta>=0 and y_theta<=0): theta = theta + np.pi/2
+        elif (x_theta<=0 and y_theta>=0): theta = theta-np.pi/2
+        
+    elif (x>=0 and y<=0):
+        if (x_theta>=0 and y_theta>=0): theta = theta + np.pi/2
+        elif (x_theta<=0 and y_theta<=0): theta = np.pi+(theta-np.pi/2) 
+        elif (x_theta>=0 and y_theta<=0): theta = theta + np.pi
+        elif (x_theta<=0 and y_theta>=0): theta = theta
+
+    elif (x<0 and y>0):
+        if (x_theta>=0 and y_theta>=0): theta = theta - np.pi/2
+        elif (x_theta<=0 and y_theta<=0): theta = theta + np.pi/2
+        elif (x_theta>=0 and y_theta<=0): theta = theta
+        elif (x_theta<=0 and y_theta>=0): theta = theta -np.pi   
+
+    s2_theta = np.matrix([[np.cos(theta), np.sin(theta),  0], [-np.sin(theta) , np.cos(theta) , 0], [0,  0,  1]])
+    s2_iota = np.matrix([[1,  0,  0], [0, np.cos(iota), np.sin(iota)], [0, -np.sin(iota) , np.cos(iota)]])
+    s2_omega = np.matrix([[np.cos(omega), np.sin(omega),  0], [-np.sin(omega) , np.cos(omega) , 0], [0,  0,  1]])
+    S2 = np.dot(np.dot(s2_theta,s2_iota),s2_omega)
+    
     return S1, S2
 
 
