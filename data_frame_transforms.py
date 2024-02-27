@@ -98,7 +98,7 @@ def get_heliocentric_transformation_matrices(time):
     s2_iota = np.matrix([[1,  0,  0], [0, np.cos(iota), np.sin(iota)], [0, -np.sin(iota) , np.cos(iota)]])
     s2_omega = np.matrix([[np.cos(omega), np.sin(omega),  0], [-np.sin(omega) , np.cos(omega) , 0], [0,  0,  1]])
     S2 = np.dot(np.dot(s2_theta,s2_iota),s2_omega)
-    
+
     return S1, S2
 
 
@@ -312,3 +312,27 @@ def RTN_to_HEEQ(df):
     df_transformed['bt'] = np.linalg.norm(df_transformed[['bx', 'by', 'bz']], axis=1)
     df_transformed['time'] = df['time']
     return df_transformed
+
+
+def RTN_to_HAE(df_rtn):
+    df_heeq = RTN_to_HEEQ(df_rtn)
+    df_hae = HEEQ_to_HAE(df_heeq)
+    return df_hae
+
+
+def RTN_to_HEE(df_rtn):
+    df_hae = RTN_to_HAE(df_rtn)
+    df_hee = HAE_to_HEE(df_hae)
+    return df_hee
+
+
+def RTN_to_GSE(df_rtn):
+    df_hee = RTN_to_HEE(df_rtn)
+    df_gse = HEE_to_GSE(df_hee)
+    return df_gse
+
+
+def RTN_to_GSM(df_rtn):
+    df_gse = RTN_to_GSE(df_rtn)
+    df_gsm = GSE_to_GSM(df_gse)
+    return df_gsm
