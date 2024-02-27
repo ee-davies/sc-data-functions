@@ -128,6 +128,16 @@ def GSE_to_HEE(df):
     return df_transformed
 
 
+def HEE_to_GSE(df):
+    df_transformed = pd.DataFrame()
+    df_transformed['time'] = df['time']
+    df_transformed['bt'] = df['bt']
+    df_transformed['bx'] = -df['bx']
+    df_transformed['by'] = -df['by']
+    df_transformed['bz'] = df['bz']
+    return df_transformed
+
+
 def HEE_to_HAE(df):
     B_HAE = []
     for i in range(df.shape[0]):
