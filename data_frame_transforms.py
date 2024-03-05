@@ -114,6 +114,19 @@ def GSE_to_GSM(df):
     df_transformed = pd.DataFrame(B_GSM, columns=['bx', 'by', 'bz'])
     df_transformed['bt'] = np.linalg.norm(df_transformed[['bx', 'by', 'bz']], axis=1)
     df_transformed['time'] = df['time']
+    df_transformed['vx'] = df['vx']
+    df_transformed['vy'] = df['vy']
+    df_transformed['vz'] = df['vz']
+    df_transformed['vt'] = df['vt']
+    df_transformed['np'] = df['np']
+    df_transformed['tp'] = df['tp']
+    df_transformed['x'] = df['x']
+    df_transformed['y'] = df['y']
+    df_transformed['z'] = df['z']
+    df_transformed['y'] = df['y']
+    df_transformed['r'] = df['r']
+    df_transformed['lat'] = df['lat']
+    df_transformed['lon'] = df['lon']
     return df_transformed
 
 
@@ -130,6 +143,19 @@ def GSM_to_GSE(df):
     df_transformed = pd.DataFrame(B_GSE, columns=['bx', 'by', 'bz'])
     df_transformed['bt'] = np.linalg.norm(df_transformed[['bx', 'by', 'bz']], axis=1)
     df_transformed['time'] = df['time']
+    df_transformed['vx'] = df['vx']
+    df_transformed['vy'] = df['vy']
+    df_transformed['vz'] = df['vz']
+    df_transformed['vt'] = df['vt']
+    df_transformed['np'] = df['np']
+    df_transformed['tp'] = df['tp']
+    df_transformed['x'] = df['x']
+    df_transformed['y'] = df['y']
+    df_transformed['z'] = df['z']
+    df_transformed['y'] = df['y']
+    df_transformed['r'] = df['r']
+    df_transformed['lat'] = df['lat']
+    df_transformed['lon'] = df['lon']
     return df_transformed
 
 
@@ -156,6 +182,19 @@ def GSE_to_HEE(df):
     df_transformed['bx'] = -df['bx']
     df_transformed['by'] = -df['by']
     df_transformed['bz'] = df['bz']
+    df_transformed['vx'] = df['vx']
+    df_transformed['vy'] = df['vy']
+    df_transformed['vz'] = df['vz']
+    df_transformed['vt'] = df['vt']
+    df_transformed['np'] = df['np']
+    df_transformed['tp'] = df['tp']
+    df_transformed['x'] = df['x']
+    df_transformed['y'] = df['y']
+    df_transformed['z'] = df['z']
+    df_transformed['y'] = df['y']
+    df_transformed['r'] = df['r']
+    df_transformed['lat'] = df['lat']
+    df_transformed['lon'] = df['lon']
     return df_transformed
 
 
@@ -166,6 +205,19 @@ def HEE_to_GSE(df):
     df_transformed['bx'] = -df['bx']
     df_transformed['by'] = -df['by']
     df_transformed['bz'] = df['bz']
+    df_transformed['vx'] = df['vx']
+    df_transformed['vy'] = df['vy']
+    df_transformed['vz'] = df['vz']
+    df_transformed['vt'] = df['vt']
+    df_transformed['np'] = df['np']
+    df_transformed['tp'] = df['tp']
+    df_transformed['x'] = df['x']
+    df_transformed['y'] = df['y']
+    df_transformed['z'] = df['z']
+    df_transformed['y'] = df['y']
+    df_transformed['r'] = df['r']
+    df_transformed['lat'] = df['lat']
+    df_transformed['lon'] = df['lon']
     return df_transformed
 
 
@@ -182,6 +234,19 @@ def HEE_to_HAE(df):
     df_transformed = pd.DataFrame(B_HAE, columns=['bx', 'by', 'bz'])
     df_transformed['bt'] = np.linalg.norm(df_transformed[['bx', 'by', 'bz']], axis=1)
     df_transformed['time'] = df['time']
+    df_transformed['vx'] = df['vx']
+    df_transformed['vy'] = df['vy']
+    df_transformed['vz'] = df['vz']
+    df_transformed['vt'] = df['vt']
+    df_transformed['np'] = df['np']
+    df_transformed['tp'] = df['tp']
+    df_transformed['x'] = df['x']
+    df_transformed['y'] = df['y']
+    df_transformed['z'] = df['z']
+    df_transformed['y'] = df['y']
+    df_transformed['r'] = df['r']
+    df_transformed['lat'] = df['lat']
+    df_transformed['lon'] = df['lon']
     return df_transformed
 
 
@@ -197,6 +262,19 @@ def HAE_to_HEE(df):
     df_transformed = pd.DataFrame(B_HEE, columns=['bx', 'by', 'bz'])
     df_transformed['bt'] = np.linalg.norm(df_transformed[['bx', 'by', 'bz']], axis=1)
     df_transformed['time'] = df['time']
+    df_transformed['vx'] = df['vx']
+    df_transformed['vy'] = df['vy']
+    df_transformed['vz'] = df['vz']
+    df_transformed['vt'] = df['vt']
+    df_transformed['np'] = df['np']
+    df_transformed['tp'] = df['tp']
+    df_transformed['x'] = df['x']
+    df_transformed['y'] = df['y']
+    df_transformed['z'] = df['z']
+    df_transformed['y'] = df['y']
+    df_transformed['r'] = df['r']
+    df_transformed['lat'] = df['lat']
+    df_transformed['lon'] = df['lon']
     return df_transformed
 
 
@@ -212,6 +290,19 @@ def HAE_to_HEEQ(df):
     df_transformed = pd.DataFrame(B_HEEQ, columns=['bx', 'by', 'bz'])
     df_transformed['bt'] = np.linalg.norm(df_transformed[['bx', 'by', 'bz']], axis=1)
     df_transformed['time'] = df['time']
+    df_transformed['vx'] = df['vx']
+    df_transformed['vy'] = df['vy']
+    df_transformed['vz'] = df['vz']
+    df_transformed['vt'] = df['vt']
+    df_transformed['np'] = df['np']
+    df_transformed['tp'] = df['tp']
+    df_transformed['x'] = df['x']
+    df_transformed['y'] = df['y']
+    df_transformed['z'] = df['z']
+    df_transformed['y'] = df['y']
+    df_transformed['r'] = df['r']
+    df_transformed['lat'] = df['lat']
+    df_transformed['lon'] = df['lon']
     return df_transformed
 
 
@@ -228,6 +319,19 @@ def HEEQ_to_HAE(df):
     df_transformed = pd.DataFrame(B_HAE, columns=['bx', 'by', 'bz'])
     df_transformed['bt'] = np.linalg.norm(df_transformed[['bx', 'by', 'bz']], axis=1)
     df_transformed['time'] = df['time']
+    df_transformed['vx'] = df['vx']
+    df_transformed['vy'] = df['vy']
+    df_transformed['vz'] = df['vz']
+    df_transformed['vt'] = df['vt']
+    df_transformed['np'] = df['np']
+    df_transformed['tp'] = df['tp']
+    df_transformed['x'] = df['x']
+    df_transformed['y'] = df['y']
+    df_transformed['z'] = df['z']
+    df_transformed['y'] = df['y']
+    df_transformed['r'] = df['r']
+    df_transformed['lat'] = df['lat']
+    df_transformed['lon'] = df['lon']
     return df_transformed
 
 
@@ -263,6 +367,19 @@ def HEEQ_to_RTN(df):
     df_transformed = pd.DataFrame(B_RTN, columns=['bx', 'by', 'bz'])
     df_transformed['bt'] = np.linalg.norm(df_transformed[['bx', 'by', 'bz']], axis=1)
     df_transformed['time'] = df['time']
+    df_transformed['vx'] = df['vx']
+    df_transformed['vy'] = df['vy']
+    df_transformed['vz'] = df['vz']
+    df_transformed['vt'] = df['vt']
+    df_transformed['np'] = df['np']
+    df_transformed['tp'] = df['tp']
+    df_transformed['x'] = df['x']
+    df_transformed['y'] = df['y']
+    df_transformed['z'] = df['z']
+    df_transformed['y'] = df['y']
+    df_transformed['r'] = df['r']
+    df_transformed['lat'] = df['lat']
+    df_transformed['lon'] = df['lon']
     return df_transformed
 
 
@@ -311,6 +428,19 @@ def RTN_to_HEEQ(df):
     df_transformed = pd.DataFrame(B_HEEQ, columns=['bx', 'by', 'bz'])
     df_transformed['bt'] = np.linalg.norm(df_transformed[['bx', 'by', 'bz']], axis=1)
     df_transformed['time'] = df['time']
+    df_transformed['vx'] = df['vx']
+    df_transformed['vy'] = df['vy']
+    df_transformed['vz'] = df['vz']
+    df_transformed['vt'] = df['vt']
+    df_transformed['np'] = df['np']
+    df_transformed['tp'] = df['tp']
+    df_transformed['x'] = df['x']
+    df_transformed['y'] = df['y']
+    df_transformed['z'] = df['z']
+    df_transformed['y'] = df['y']
+    df_transformed['r'] = df['r']
+    df_transformed['lat'] = df['lat']
+    df_transformed['lon'] = df['lon']
     return df_transformed
 
 
