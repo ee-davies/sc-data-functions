@@ -148,8 +148,8 @@ def get_solomag_range_formagonly_internal(start_timestamp, end_timestamp, path=f
     while start < end:
         year = start.year
         date_str = f'{year}{start.month:02}{start.day:02}'
-        fn = glob.glob(f'{path}/solo_L2_mag-rtn-ll-internal_{date_str}_*.cdf')
-        _df = get_solomag(fn[0])
+        fn = f'{path}/solo_L2_mag-rtn-ll-internal_{date_str}_V00.cdf'
+        _df = get_solomag(fn)
         if _df is not None:
             if df is None:
                 df = _df.copy(deep=True)
@@ -396,7 +396,7 @@ including MAG, PLAS, and POSITION data
 """
 
 
-def create_solo_pkl(start_timestamp, end_timestamp, level='l2', res='1min'):
+def create_solo_pkl(start_timestamp, end_timestamp=datetime.utcnow(), level='l2', res='1min', output_path='/Users/emmadavies/Documents/Projects/SolO_Realtime_Preparation/March2024/'):
     
     # #download solo mag and plasma data up to now 
     # download_solomag_1min(start_timestamp)
@@ -433,9 +433,11 @@ def create_solo_pkl(start_timestamp, end_timestamp, level='l2', res='1min'):
     magplas_rdf['time'] = magplas_rdf.index
      
     #get solo positions for corresponding timestamps
+    solo_furnish()
     solo_pos = get_solo_positions(magplas_rdf['time'])
     solo_pos.set_index(pd.to_datetime(solo_pos['time']), inplace=True)
     solo_pos = solo_pos.drop(columns=['time'])
+    spiceypy.kclear()
 
     #produce final combined DataFrame with correct ordering of columns 
     comb_df = pd.concat([magplas_rdf, solo_pos], axis=1)
@@ -478,4 +480,5 @@ def create_solo_pkl(start_timestamp, end_timestamp, level='l2', res='1min'):
     'Made with script by E.E. Davies (github @ee-davies, twitter @spacedavies). File creation date: '+\
     datetime.utcnow().strftime("%Y-%b-%d %H:%M")+' UTC'
 
-    pickle.dump([solo,header], open(solo_path+'solo_rtn.p', "wb"))
+    t_now_date = datetime.utcnow().strftime("%Y-%m-%d")
+    pickle.dump([solo,header], open(output_path+f'solo_rtn_{t_now_date}.p', "wb"))
