@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 
 
-def timeshift_dataframe(df, speed):
+def timeshift_dataframe_predspeed(df, speed): #uses predicted constant speed by ELEvoHI 
     df_ts = df.copy(deep=True)
 
     df_ts['r2'] = 0.99285 #create new column of distance to propagate to
@@ -17,6 +17,15 @@ def timeshift_dataframe(df, speed):
         t = np.append(t, new_t)
     df_ts['time_shifted'] = t
     #could add column dropping lines
+    return df_ts
+
+
+def timeshift_dataframe_predtime(df, t_shock, pred_arrival_time): #uses predicted arrival time at L1 ELEvoHI 
+    df_ts = df.copy(deep=True)
+
+    t_delta = pred_arrival_time - t_shock
+    df_ts['t_delta'] = t_delta
+    df_ts['time_shifted'] = df_ts['time'] + df_ts['t_delta']
     return df_ts
 
 
