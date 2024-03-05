@@ -9,6 +9,8 @@ import os.path
 import json
 from scipy.io import netcdf
 import glob
+import pickle
+import position_frame_transforms as pos_transform
 
 
 """
@@ -155,3 +157,98 @@ def get_dscovrpositions(start_timestamp, end_timestamp):
         start += timedelta(days=1)
     df = df.reset_index(drop=True)
     return df
+
+
+def create_dscovr_pkl(output_path='/Users/emmadavies/Documents/Projects/SolO_Realtime_Preparation/March2024/'):
+
+    df_mag = get_noaa_mag_realtime_7days()
+    if df_mag is None:
+        print(f'DSCOVR MAG data is empty for this timerange')
+        df_mag = pd.DataFrame({'time':[], 'bt':[], 'bx':[], 'by':[], 'bz':[]})
+        mag_rdf = df_mag.drop(columns=['time'])
+    else:
+        mag_rdf = df_mag.set_index('time').resample('1min').mean().reset_index(drop=False)
+        mag_rdf.set_index(pd.to_datetime(mag_rdf['time']), inplace=True)
+
+    #load in plasma data to DataFrame and resample, create empty plasma and resampled DataFrame if no data
+    #only drop time column if MAG DataFrame is not empty
+    df_plas = get_noaa_plas_realtime_7days()
+    if df_plas is None:
+        print(f'DSCOVR PLAS data is empty for this timerange')
+        df_plas = pd.DataFrame({'time':[], 'vt':[], 'vx':[], 'vy':[], 'vz':[], 'np':[], 'tp':[]})
+        plas_rdf = df_plas
+    else:
+        plas_rdf = df_plas.set_index('time').resample('1min').mean().reset_index(drop=False)
+        plas_rdf.set_index(pd.to_datetime(plas_rdf['time']), inplace=True)
+        if mag_rdf.shape[0] != 0:
+            plas_rdf = plas_rdf.drop(columns=['time'])
+
+    #need to combine mag and plasma dfs to get complete set of timestamps for position calculation
+    magplas_rdf = pd.concat([mag_rdf, plas_rdf], axis=1)
+    #some timestamps may be NaT so after joining, drop time column and reinstate from combined index col
+    magplas_rdf = magplas_rdf.drop(columns=['time'])
+    magplas_rdf['time'] = magplas_rdf.index
+
+    #get dscovr positions and transform from GSE to HEEQ
+    #also insert empty nan columns for vx, vy, vz
+    #positions are given every hour, so interpolate for 1min res; linear at the moment, can change
+    df_pos = get_noaa_pos_realtime_7days()
+    df_pos_HEE = pos_transform.GSE_to_HEE(df_pos)
+    df_pos_HEEQ = pos_transform.HEE_to_HEEQ(df_pos_HEE)
+    if df_pos_HEEQ is None:
+        print(f'DSCOVR POS data is empty for this timerange')
+        df_pos_HEEQ = pd.DataFrame({'time':[], 'x':[], 'y':[], 'z':[], 'r':[], 'lat':[], 'lon':[]})
+        pos_rdf = df_pos_HEEQ
+    else:
+        pos_rdf = df_pos_HEEQ.set_index('time').resample('1min').interpolate(method='linear').reset_index(drop=False)
+        pos_rdf['vx'] = np.nan
+        pos_rdf['vy'] = np.nan
+        pos_rdf['vz'] = np.nan
+        pos_rdf.set_index(pd.to_datetime(pos_rdf['time']), inplace=True)
+        if pos_rdf.shape[0] != 0:
+            pos_rdf = pos_rdf.drop(columns=['time'])
+
+    #produce final combined DataFrame with correct ordering of columns
+    #position and data files are different lengths; have trimmed to data length (no future positions)
+    comb_df_nans = pd.concat([magplas_rdf, pos_rdf], axis=1)
+    comb_df = comb_df_nans[comb_df_nans['bt'].notna()]
+
+    #produce recarray with correct datatypes
+    time_stamps = comb_df['time']
+    dt_lst= [element.to_pydatetime() for element in list(time_stamps)] #extract timestamps in datetime.datetime format
+
+    dscovr=np.zeros(len(dt_lst),dtype=[('time',object),('bx', float),('by', float),('bz', float),('bt', float),\
+                ('vx', float),('vy', float),('vz', float),('vt', float),('np', float),('tp', float),\
+                ('x', float),('y', float),('z', float), ('r', float),('lat', float),('lon', float)])
+    dscovr = dscovr.view(np.recarray)
+
+    dscovr.time=dt_lst
+    dscovr.bx=comb_df['bx']
+    dscovr.by=comb_df['by']
+    dscovr.bz=comb_df['bz']
+    dscovr.bt=comb_df['bt']
+    dscovr.vx=comb_df['vx']
+    dscovr.vy=comb_df['vy']
+    dscovr.vz=comb_df['vz']
+    dscovr.vt=comb_df['vt']
+    dscovr.np=comb_df['np']
+    dscovr.tp=comb_df['tp']
+    dscovr.x=comb_df['x']
+    dscovr.y=comb_df['y']
+    dscovr.z=comb_df['z']
+    dscovr.r=comb_df['r']
+    dscovr.lat=comb_df['lat']
+    dscovr.lon=comb_df['lon']
+
+    #dump to pickle file
+    header='Realtime past 7 day MAG, PLAS and position data from DSCOVR, sourced from https://services.swpc.noaa.gov/products/solar-wind/' + \
+    'Timerange: '+dscovr.time[0].strftime("%Y-%b-%d %H:%M")+' to '+dscovr.time[-1].strftime("%Y-%b-%d %H:%M")+\
+    ', resampled to a time resolution of 1 min. '+\
+    'The data are available in a numpy recarray, fields can be accessed by dscovr.time, dscovr.bx, dscovr.r etc. '+\
+    'Total number of data points: '+str(dscovr.size)+'. '+\
+    'Units are btxyz [nT, GSM], vtxy [km s^-1], np [cm^-3], tp [K], heliospheric position x/y/z/r/lon/lat [AU, degree, HEEQ]. '+\
+    'Made with script by E.E. Davies (github @ee-davies, twitter @spacedavies). File creation date: '+\
+    datetime.utcnow().strftime("%Y-%b-%d %H:%M")+' UTC'
+
+    t_now_date_hour = datetime.utcnow().strftime("%Y-%m-%d-%H")
+    pickle.dump([dscovr,header], open(output_path+f'dscovr_gsm_{t_now_date_hour}.p', "wb"))
