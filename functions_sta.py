@@ -384,7 +384,7 @@ OUTPUT COMBINED PICKLE FILES
 including MAG, PLAS, and POSITION data
 """
 
-def create_sta_beacon_pkl(start_timestamp, end_timestamp):
+def create_sta_beacon_pkl(start_timestamp, end_timestamp, output_path='/Users/emmadavies/Documents/Projects/SolO_Realtime_Preparation/March2024/'):
 
     # start_timestamp=datetime.utcnow()-timedelta(days=7)
     # end_timestamp=datetime.utcnow()
@@ -465,7 +465,8 @@ def create_sta_beacon_pkl(start_timestamp, end_timestamp):
     'Made with script by E.E. Davies (github @ee-davies, twitter @spacedavies). File creation date: '+\
     datetime.utcnow().strftime("%Y-%b-%d %H:%M")+' UTC'
 
-    pickle.dump([stereoa,header], open(stereoa_path+'stereoa_beacon_rtn.p', "wb"))
+    t_now_date_hour = datetime.utcnow().strftime("%Y-%m-%d-%H")
+    pickle.dump([stereoa,header], open(output_path+f'stereoa_beacon_rtn_{t_now_date_hour}.p', "wb"))
 
 
 def create_sta_pkl(start_timestamp, end_timestamp):
