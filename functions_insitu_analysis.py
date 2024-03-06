@@ -33,6 +33,8 @@ def expand_icme(df_timeshifted, def_ref_sc, t_le, t_te, power=0.8):
 
     df_s = df_timeshifted.copy(deep=True)
 
+    df_s = df_timeshifted.copy(deep=True)
+
     mo_mask = (df_timeshifted['time'] >= t_le) & (df_timeshifted['time'] <= t_te)
     prior_mask = (df_timeshifted['time'] < t_le)
     post_mask = (df_timeshifted['time'] > t_te)
@@ -40,14 +42,13 @@ def expand_icme(df_timeshifted, def_ref_sc, t_le, t_te, power=0.8):
     D1 = (t_te - t_le).total_seconds()
     FR = df_timeshifted[mo_mask]
     r1 = FR['r'].mean()
-    c = np.log(D1) - power*np.log(r1)
 
     idx = df_s.set_index('time').index.get_loc(t_le, method='nearest')
     ts_le = df_s['time_shifted'].iloc[idx]
 
     idx2 = def_ref_sc.set_index('time').index.get_loc(ts_le, method='nearest')
     r2 = def_ref_sc['r'].iloc[idx2]
-    D2 = np.exp(c + power*np.log(r2))
+    D2 = D1 * (r2/r1)**power
 
     expansion_delta = np.linspace(0, len(df_timeshifted[mo_mask])-1, len(df_timeshifted[mo_mask]))*60*(D2/D1)
 
