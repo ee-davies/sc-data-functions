@@ -29,7 +29,93 @@ def timeshift_dataframe_predtime(df, t_shock, pred_arrival_time): #uses predicte
     return df_ts
 
 
-def scale_B_field(df, power=-1.64, power_upper=-1, power_lower=-2): #requires timeshifted dataframe
+def expand_icme(df_timeshifted, def_ref_sc, t_le, t_te, power=0.8):
+
+    df_s = df_timeshifted.copy(deep=True)
+
+    mo_mask = (df_timeshifted['time'] >= t_le) & (df_timeshifted['time'] <= t_te)
+    prior_mask = (df_timeshifted['time'] < t_le)
+    post_mask = (df_timeshifted['time'] > t_te)
+
+    D1 = (t_te - t_le).total_seconds()
+    FR = df_timeshifted[mo_mask]
+    r1 = FR['r'].mean()
+    c = np.log(D1) - power*np.log(r1)
+
+    idx = df_s.set_index('time').index.get_loc(t_le, method='nearest')
+    ts_le = df_s['time_shifted'].iloc[idx]
+
+    idx2 = def_ref_sc.set_index('time').index.get_loc(ts_le, method='nearest')
+    r2 = def_ref_sc['r'].iloc[idx2]
+    D2 = np.exp(c + power*np.log(r2))
+
+    expansion_delta = np.linspace(0, len(df_timeshifted[mo_mask])-1, len(df_timeshifted[mo_mask]))*60*(D2/D1)
+
+    df_timeshifted['expansion_delta'] = np.nan
+    df_mo = df_timeshifted[mo_mask].assign(expansion_delta=expansion_delta)
+    df_prior = df_timeshifted[prior_mask].assign(expansion_delta=expansion_delta.min())
+    df_post = df_timeshifted[post_mask].assign(expansion_delta=expansion_delta.max())
+
+    stitched_df = pd.concat([df_prior, df_mo, df_post])
+
+    t = []
+    for i in range(len(stitched_df)):
+        new_t = stitched_df['time_shifted'].iloc[i] + timedelta(seconds=stitched_df['expansion_delta'].iloc[i])
+        t = np.append(t, new_t)
+    stitched_df['time_shifted_exp'] = t
+
+    return stitched_df
+
+
+def timeshift_boundary_predspeed(datetime, df, speed, speed_uncertainty=50):
+
+    df_timeshifted = timeshift_dataframe_predspeed(df, speed)
+    idx = df_timeshifted.set_index('time').index.get_loc(datetime, method='nearest')
+
+    t_ts = df_timeshifted['time_shifted_exp'].iloc[idx]
+
+    upper_df = timeshift_dataframe_predspeed(df, speed-speed_uncertainty)
+    t_ts_ub = upper_df['time_shifted_exp'].iloc[idx]
+
+    lower_df = timeshift_dataframe_predspeed(df, speed+speed_uncertainty)
+    t_ts_lb = lower_df['time_shifted_exp'].iloc[idx]
+    
+    return t_ts, t_ts_lb, t_ts_ub
+
+
+def timeshift_boundary_predtime(df_timeshifted, boundary_datetime, boundary_uncertainty):
+
+    df_s = df_timeshifted.copy(deep=True)
+
+    idx = df_s.set_index('time').index.get_loc(boundary_datetime, method='nearest')
+    t_ts = df_s['time_shifted_exp'].iloc[idx]
+
+    upper_bound = boundary_datetime - timedelta(hours=boundary_uncertainty)
+    idx2 = df_s.set_index('time').index.get_loc(upper_bound, method='nearest')
+    t_ts_ub = df_s['time_shifted_exp'].iloc[idx2]
+
+    lower_bound = boundary_datetime + timedelta(hours=boundary_uncertainty)
+    idx3 = df_s.set_index('time').index.get_loc(lower_bound, method='nearest')
+    t_ts_lb = df_s['time_shifted_exp'].iloc[idx3]
+    
+    return t_ts, t_ts_lb, t_ts_ub
+
+
+def scale_B_field(df1, df2, power=-1.64, power_upper=-1, power_lower=-2): #requires timeshifted dataframe
+    #observing spacecraft e.g. solo, round timeshifted times to nearest min, set as index to join with reference spaecraft e.g. dscovr
+    df_timeshifted = df1.copy(deep=True)
+    df_timeshifted['time_shifted_round'] = df_timeshifted['time_shifted_exp'].round('1min')
+    df_timeshifted.set_index(pd.to_datetime(df_timeshifted['time_shifted_round']), inplace=True)
+    # reference spacecraft df e.g dscovr -> get r2
+    df_reference = df2.copy(deep=True)
+    df_reference.set_index(pd.to_datetime(df_reference['time']), inplace=True)
+    df_reference = df_reference.rename(columns={"r": "r2", "time":"time2"})
+    df_reference = df_reference.drop(['bx', 'by', 'bz', 'bt', 'vx', 'vy', 'vz', 'vt', 'np', 'tp', 'x', 'y', 'z', 'lat', 'lon'], axis=1)
+    df_reference = df_reference[df_reference['r2'].notna()]
+    #combine dataframes at timeshifted index
+    df = pd.concat([df_timeshifted, df_reference], axis=1)
+    df = df[df['time_shifted_round'].notna()]
+    df = df.reset_index(drop=True)
     #default set to leitner scaling relationship for B field strength
     df['bt_scaled'] = df['bt']*(df['r2']/df['r'])**(power)
     df['bx_scaled'] = df['bx']*(df['r2']/df['r'])**(power)
@@ -45,23 +131,9 @@ def scale_B_field(df, power=-1.64, power_upper=-1, power_lower=-2): #requires ti
     df['bx_scaled_ub'] = df['bx']*(df['r2']/df['r'])**(power_upper)
     df['by_scaled_ub'] = df['by']*(df['r2']/df['r'])**(power_upper)
     df['bz_scaled_ub'] = df['bz']*(df['r2']/df['r'])**(power_upper)
+    #filter data for nans (ruins later plotly shading if not removed)
+    df = df[df['bt_scaled'].notna()]
     return df
-
-
-def timeshift_boundary(datetime, df, speed, speed_uncertainty=50):
-
-    df_timeshifted = timeshift_dataframe(df, speed)
-    idx = df_timeshifted.set_index('time').index.get_loc(datetime, method='nearest')
-
-    t_ts = df_timeshifted['time_shifted'].iloc[idx]
-
-    upper_df = timeshift_dataframe(df, speed-speed_uncertainty)
-    t_ts_ub = upper_df['time_shifted'].iloc[idx]
-
-    lower_df = timeshift_dataframe(df, speed+speed_uncertainty)
-    t_ts_lb = lower_df['time_shifted'].iloc[idx]
-    
-    return t_ts, t_ts_lb, t_ts_ub
 
 
 # def calc_time_delta(resampled_df, icme_df):
@@ -100,8 +172,6 @@ def timeshift_boundary(datetime, df, speed, speed_uncertainty=50):
 #     return final_df
 
 
-
-
 # ##########
 # def timeshift_dataframe_old(df, speed=450, distance_of_object_au=0.992854, sc_name="SolO", ref_name="L1"):
 #     df_ts = df.copy(deep=True)
@@ -125,3 +195,21 @@ def timeshift_boundary(datetime, df, speed, speed_uncertainty=50):
 #     df_ts['time'] = df['time']+timedelta(hours=t_delay)
 #     # final_ts_df = df_ts[0]
 #     return df_ts, r_sep, t_delay
+
+# def scale_B_field_outdated(df, power=-1.64, power_upper=-1, power_lower=-2): #requires timeshifted dataframe
+#     #default set to leitner scaling relationship for B field strength
+#     df['bt_scaled'] = df['bt']*(df['r2']/df['r'])**(power)
+#     df['bx_scaled'] = df['bx']*(df['r2']/df['r'])**(power)
+#     df['by_scaled'] = df['by']*(df['r2']/df['r'])**(power)
+#     df['bz_scaled'] = df['bz']*(df['r2']/df['r'])**(power)
+#     #lower bound
+#     df['bt_scaled_lb'] = df['bt']*(df['r2']/df['r'])**(power_lower)
+#     df['bx_scaled_lb'] = df['bx']*(df['r2']/df['r'])**(power_lower)
+#     df['by_scaled_lb'] = df['by']*(df['r2']/df['r'])**(power_lower)
+#     df['bz_scaled_lb'] = df['bz']*(df['r2']/df['r'])**(power_lower)
+#     #upper bound
+#     df['bt_scaled_ub'] = df['bt']*(df['r2']/df['r'])**(power_upper)
+#     df['bx_scaled_ub'] = df['bx']*(df['r2']/df['r'])**(power_upper)
+#     df['by_scaled_ub'] = df['by']*(df['r2']/df['r'])**(power_upper)
+#     df['bz_scaled_ub'] = df['bz']*(df['r2']/df['r'])**(power_upper)
+#     return df
