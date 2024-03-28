@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
 from spacepy import pycdf
+import glob
 
 
 def format_path(fp):
@@ -17,6 +18,14 @@ def filter_bad_data(df, col, bad_val):
     cols = [x for x in df.columns if x != 'timestamp']
     df.loc[mask, cols] = np.nan
     return df
+
+
+"""
+WIND DATA PATH
+"""
+
+wind_path='/Volumes/External/data/wind/'
+
 
 def get_windmag(fp):
     """raw = gse"""
@@ -35,7 +44,7 @@ def get_windmag(fp):
     return df
 
 
-def get_windmag_range(start_timestamp, end_timestamp, path):
+def get_windmag_range(start_timestamp, end_timestamp, wind_path):
     """Pass two datetime objects and grab .STS files between dates, from
     directory given."""
     df = None
@@ -62,16 +71,36 @@ def get_windmag_rtn(fp):
     """raw = rtn"""
     try:
         cdf = pycdf.CDF(fp)
-        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'BF1'], ['timestamp', 'b_tot'])}
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'BF1'], ['time', 'bt'])}
         df = pd.DataFrame.from_dict(data)
         bx, by, bz = cdf['BRTN'][:].T
-        df['b_x'] = bx
-        df['b_y'] = by
-        df['b_z'] = bz
-        df = filter_bad_data(df, 'b_tot', -9.99e+30)
+        df['bx'] = bx
+        df['by'] = by
+        df['bz'] = bz
+        df = filter_bad_data(df, 'bt', -9.99e+30)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
+    return df
+
+
+def get_windmag_rtn_range(start_timestamp, end_timestamp, path=wind_path+'mfi/rtn'):
+    """Pass two datetime objects and grab .cdf files between dates, from
+    directory given."""
+    df = None
+    start = start_timestamp.date()
+    end = end_timestamp.date() + timedelta(days=1)
+    while start < end:
+        year = start.year
+        date_str = f'{year}{start.month:02}{start.day:02}'
+        fn = f'wi_h3-rtn_mfi_{date_str}_v05.cdf'
+        _df = get_windmag_rtn(f'{path}/{fn}')
+        if _df is not None:
+            if df is None:
+                df = _df.copy(deep=True)
+            else:
+                df = pd.concat([df, _df])
+        start += timedelta(days=1)
     return df
 
 
@@ -164,4 +193,54 @@ def get_windswe_range(start_timestamp, end_timestamp, path):
             else:
                 df = df.append(_df.copy(deep=True))
         start += timedelta(days=1)
+    return df
+
+
+def cart2sphere(x,y,z):
+    r = np.sqrt(x**2+ y**2 + z**2) /1.495978707E8         
+    theta = np.arctan2(z,np.sqrt(x**2+ y**2)) * 360 / 2 / np.pi
+    phi = np.arctan2(y,x) * 360 / 2 / np.pi                   
+    return (r, theta, phi)
+
+
+def get_windorbit_hec(fp):
+    """raw = rtn"""
+    try:
+        cdf = pycdf.CDF(fp)
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch'], ['time'])}
+        df = pd.DataFrame.from_dict(data)
+        x, y, z = cdf['HEC_POS'][:].T
+        df['x'] = x
+        df['y'] = y
+        df['z'] = z
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
+    return df
+
+
+def get_windorbit_hec_range(start_timestamp, end_timestamp, path=wind_path+'orbit/'):
+    """Pass two datetime objects and grab .cdf files between dates, from
+    directory given."""
+    df=None
+    start = start_timestamp.date()
+    end = end_timestamp.date()
+    while start <= end:
+        year = start.year
+        date_str = f'{year}{start.month:02}{start.day:02}'
+        try:
+            fn = glob.glob(path+f'wi_or_pre_{date_str}_*')[0]
+            _df = get_windorbit_hec(fn)
+            if _df is not None:
+                if df is None:
+                    df = _df.copy(deep=True)
+                else:
+                    df = pd.concat([df, _df])
+        except Exception as e:
+            print('ERROR:', e, f'{date_str} does not exist')
+        start += timedelta(days=1)
+    r, theta, phi = cart2sphere(df['x'],df['y'],df['z'])
+    df['r'] = r
+    df['lat'] = theta
+    df['lon'] = phi
     return df
