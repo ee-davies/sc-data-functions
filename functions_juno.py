@@ -106,23 +106,33 @@ def juno_furnish():
         spiceypy.furnsh(os.path.join(generic_path, kernel))
     
 
-def get_juno_pos(t):
+def get_juno_pos(t, frame="HEEQ"):
     if spiceypy.ktotal('ALL') < 1:
         juno_furnish()
-    try:
-        pos = spiceypy.spkpos("JUNO", spiceypy.datetime2et(t), "HEEQ", "NONE", "SUN")[0] #calls positions in HEEQ; can be changed
-        r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
-        position = t, pos[0], pos[1], pos[2], r, lat, lon
-        return position
-    except Exception as e:
-        print(e)
-        return [None, None, None, None]   
+    if frame == "HEEQ":
+        try:
+            pos = spiceypy.spkpos("JUNO", spiceypy.datetime2et(t), "HEEQ", "NONE", "SUN")[0] #calls positions in HEEQ
+            r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
+            position = t, pos[0], pos[1], pos[2], r, lat, lon
+            return position
+        except Exception as e:
+            print(e)
+            return [None, None, None, None]
+    elif frame == "HAE":
+        try:
+            pos = spiceypy.spkpos("JUNO", spiceypy.datetime2et(t), "ECLIPJ2000", "NONE", "SUN")[0] #calls positions in HAE or ECLIPJ2000
+            r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
+            position = t, pos[0], pos[1], pos[2], r, lat, lon
+            return position
+        except Exception as e:
+            print(e)
+            return [None, None, None, None]
 
 
-def get_juno_positions(time_series):
+def get_juno_positions(time_series, frame="HEEQ"):
     positions = []
     for t in time_series:
-        position = get_juno_pos(t)
+        position = get_juno_pos(t, frame)
         positions.append(position)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
     return df_positions
