@@ -44,27 +44,27 @@ def get_windmag(fp):
     return df
 
 
-def get_windmag_range(start_timestamp, end_timestamp, wind_path):
-    """Pass two datetime objects and grab .STS files between dates, from
-    directory given."""
-    df = None
-    start = start_timestamp.date()
-    end = end_timestamp.date() + timedelta(days=1)
-    while start < end:
-        year = start.year
-        date_str = f'{year}{start.month:02}{start.day:02}'
-        if year < 2020:
-            fn = f'wi_h0_mfi_{date_str}_v05.cdf'
-        else:
-            fn = f'wi_h0_mfi_{date_str}_v04.cdf'
-        _df = get_windmag(f'{path}/{year}/{fn}')
-        if _df is not None:
-            if df is None:
-                df = _df.copy(deep=True)
-            else:
-                df = df.append(_df.copy(deep=True))
-        start += timedelta(days=1)
-    return df
+# def get_windmag_range(start_timestamp, end_timestamp, wind_path):
+#     """Pass two datetime objects and grab .STS files between dates, from
+#     directory given."""
+#     df = None
+#     start = start_timestamp.date()
+#     end = end_timestamp.date() + timedelta(days=1)
+#     while start < end:
+#         year = start.year
+#         date_str = f'{year}{start.month:02}{start.day:02}'
+#         if year < 2020:
+#             fn = f'wi_h0_mfi_{date_str}_v05.cdf'
+#         else:
+#             fn = f'wi_h0_mfi_{date_str}_v04.cdf'
+#         _df = get_windmag(f'{path}/{year}/{fn}')
+#         if _df is not None:
+#             if df is None:
+#                 df = _df.copy(deep=True)
+#             else:
+#                 df = df.append(_df.copy(deep=True))
+#         start += timedelta(days=1)
+#     return df
 
 
 def get_windmag_rtn(fp):
@@ -104,55 +104,41 @@ def get_windmag_rtn_range(start_timestamp, end_timestamp, path=wind_path+'mfi/rt
     return df
 
 
-def transform_data(df, instrument, coord_system):
-    #TODO: apply logic to handle b and v data transformations here
-    if instrument == 'mag':
-        prefix = 'b'
-    elif instrument == 'swe' or instrument == '3dp_pm':
-        prefix = 'v'
-    if coord_system == 'rtn_approx':
-        df[f'{prefix}_x'] = -1 * df[f'{prefix}_x']
-        df[f'{prefix}_y'] = -1 * df[f'{prefix}_y']
-    else:
-        raise ValueError('transform does not exist yet, rtn_approx does exist')
-    return df
+# def get_wind3dp_pm(fp):
+#     cdf = pycdf.CDF(fp)
+#     data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'P_DENS', 'P_TEMP'], ['timestamp', 'density', 'v_therm'])}
+#     df = pd.DataFrame.from_dict(data)
+#     df['timestamp'] = pd.to_datetime(df['timestamp'])
+#     vx, vy, vz = cdf['P_VELS'][:].T #proton velocity vector is in GSE coordinates
+#     df['v_x'] = vx
+#     df['v_y'] = vy
+#     df['v_z'] = vz
+#     df['v_bulk'] = np.linalg.norm(df[['v_x', 'v_y', 'v_z']], axis=1)
+#     # for col in cols_new[1:]:
+#     #     df[col] = df[col].astype('float32')
+#     return df
 
 
-def get_wind3dp_pm(fp):
-    cdf = pycdf.CDF(fp)
-    data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'P_DENS', 'P_TEMP'], ['timestamp', 'density', 'v_therm'])}
-    df = pd.DataFrame.from_dict(data)
-    df['timestamp'] = pd.to_datetime(df['timestamp'])
-    vx, vy, vz = cdf['P_VELS'][:].T #proton velocity vector is in GSE coordinates
-    df['v_x'] = vx
-    df['v_y'] = vy
-    df['v_z'] = vz
-    df['v_bulk'] = np.linalg.norm(df[['v_x', 'v_y', 'v_z']], axis=1)
-    # for col in cols_new[1:]:
-    #     df[col] = df[col].astype('float32')
-    return df
-
-
-def get_wind3dp_pm_range(start_timestamp, end_timestamp, path):
-    """Pass two datetime objects and grab .cdf files between dates, from
-    directory given."""
-    df = None
-    start = start_timestamp.date()
-    end = end_timestamp.date()
-    while start <= end:
-        year = start.year
-        month = start.month
-        day = start.day
-        fn = f'wi_pm_3dp_{year}{month:02}{day:02}_v05.cdf'
-        #print(f'{path}/{fn}')
-        _df = get_wind3dp_pm(f'{path}/{fn}')
-        if _df is not None:
-            if df is None:
-                df = _df.copy(deep=True)
-            else:
-                df = df.append(_df.copy(deep=True))
-        start += timedelta(days=1)
-    return df
+# def get_wind3dp_pm_range(start_timestamp, end_timestamp, path):
+#     """Pass two datetime objects and grab .cdf files between dates, from
+#     directory given."""
+#     df = None
+#     start = start_timestamp.date()
+#     end = end_timestamp.date()
+#     while start <= end:
+#         year = start.year
+#         month = start.month
+#         day = start.day
+#         fn = f'wi_pm_3dp_{year}{month:02}{day:02}_v05.cdf'
+#         #print(f'{path}/{fn}')
+#         _df = get_wind3dp_pm(f'{path}/{fn}')
+#         if _df is not None:
+#             if df is None:
+#                 df = _df.copy(deep=True)
+#             else:
+#                 df = df.append(_df.copy(deep=True))
+#         start += timedelta(days=1)
+#     return df
 
 
 def get_windswe(fp):
@@ -160,21 +146,21 @@ def get_windswe(fp):
         cdf = pycdf.CDF(fp)
         cols_raw = ['Epoch', 'Proton_V_nonlin', 'Proton_VX_nonlin', 'Proton_VY_nonlin',
                     'Proton_VZ_nonlin', 'Proton_W_nonlin', 'Proton_Np_nonlin']
-        cols_new = ['timestamp', 'v_bulk', 'v_x', 'v_y', 'v_z', 'v_therm', 'density']
+        cols_new = ['time', 'vt', 'vx', 'vy', 'vz', 'tp', 'np']
         data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(cols_raw, cols_new)}
         df = pd.DataFrame.from_dict(data)
-        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        df['time'] = pd.to_datetime(df['time'])
         for col in cols_new[1:]:
             df[col] = df[col].astype('float32')
-        df = filter_bad_data(df, 'v_bulk', 9.99e+04)
-        df = filter_bad_data(df, 'v_therm', 9.99e+04)
+        df = filter_bad_data(df, 'vt', 9.99e+04)
+        df = filter_bad_data(df, 'tp', 9.99e+04) #called tp but actually is v_therm
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
     return df
 
 
-def get_windswe_range(start_timestamp, end_timestamp, path):
+def get_windswe_range(start_timestamp, end_timestamp, path=wind_path+'swe'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df = None
@@ -185,15 +171,17 @@ def get_windswe_range(start_timestamp, end_timestamp, path):
         month = start.month
         day = start.day
         fn = f'wi_h1_swe_{year}{month:02}{day:02}_v01.cdf'
-        #print(f'{path}/{fn}')
         _df = get_windswe(f'{path}/{fn}')
         if _df is not None:
             if df is None:
                 df = _df.copy(deep=True)
             else:
-                df = df.append(_df.copy(deep=True))
+                df = pd.concat([df, _df])
         start += timedelta(days=1)
     return df
+
+
+#### WIND POSITIONS
 
 
 def cart2sphere(x,y,z):
@@ -244,3 +232,17 @@ def get_windorbit_hec_range(start_timestamp, end_timestamp, path=wind_path+'orbi
     df['lat'] = theta
     df['lon'] = phi
     return df
+
+
+# def transform_data(df, instrument, coord_system):
+#     #TODO: apply logic to handle b and v data transformations here
+#     if instrument == 'mag':
+#         prefix = 'b'
+#     elif instrument == 'swe' or instrument == '3dp_pm':
+#         prefix = 'v'
+#     if coord_system == 'rtn_approx':
+#         df[f'{prefix}_x'] = -1 * df[f'{prefix}_x']
+#         df[f'{prefix}_y'] = -1 * df[f'{prefix}_y']
+#     else:
+#         raise ValueError('transform does not exist yet, rtn_approx does exist')
+#     return df
