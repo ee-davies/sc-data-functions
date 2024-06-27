@@ -159,7 +159,12 @@ def get_pspmag_range_full(start_timestamp, end_timestamp, path="/Volumes/Externa
     return df
 
 
-def download_pspplas(start_timestamp, end_timestamp, path="/Volumes/External/Data/PSP/sweap/spc/l3i"):
+"""
+PSP PLAS DATA
+"""
+
+
+def download_pspplas(start_timestamp, end_timestamp, path=f'{psp_path}'+'sweap/spc/l3i'):
     start = start_timestamp.date()
     end = end_timestamp.date() + timedelta(days=1)
     while start < end:
