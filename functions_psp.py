@@ -2,11 +2,26 @@ import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
 from spacepy import pycdf
+import cdflib
 # import spiceypy
 # import os
 import glob
 import urllib.request
 import os.path
+import pickle
+
+
+"""
+PARKER SOLAR PROBE SERVER DATA PATH
+"""
+
+psp_path='/Volumes/External/data/psp/'
+kernels_path='/Volumes/External/data/kernels/'
+
+
+"""
+PSP BAD DATA FILTER
+"""
 
 
 def filter_bad_data(df, col, bad_val):
@@ -19,7 +34,18 @@ def filter_bad_data(df, col, bad_val):
     return df
 
 
-def download_pspmag_1min(start_timestamp, end_timestamp, path="/Volumes/External/Data/PSP/mag/1_min"):
+"""
+PSP MAG DATA
+# 1 min and full resolution files from https://spdf.gsfc.nasa.gov/pub/data/psp/fields/l2
+# 1min files naming convention: psp_fld_l2_mag_rtn_1min_{date_str}_v02.cdf
+# full res files are split into daily files, 6 hourly intervals, so naming convention: psp_fld_l2_mag_rtn_{date_str}{time}_v02.cdf
+"""
+
+
+#DOWNLOAD FUNCTIONS for 1min or full res data
+
+
+def download_pspmag_1min(start_timestamp, end_timestamp, path=f'{psp_path}'+'mag/l2/1min'):
     start = start_timestamp.date()
     end = end_timestamp.date() + timedelta(days=1)
     while start < end:
@@ -40,7 +66,7 @@ def download_pspmag_1min(start_timestamp, end_timestamp, path="/Volumes/External
                 start += timedelta(days=1)
 
 
-def download_pspmag_full(start_timestamp, end_timestamp, path="/Volumes/External/Data/PSP/mag/full"):
+def download_pspmag_full(start_timestamp, end_timestamp, path=f'{psp_path}'+'mag/l2/full'):
     start = start_timestamp.date()
     end = end_timestamp.date() + timedelta(days=1)
     while start < end:
@@ -289,3 +315,89 @@ def get_pspspi_range_mom(start_timestamp, end_timestamp, path="/Volumes/External
                 df = df.append(_df.copy(deep=True))
         start += timedelta(days=1)
     return df
+
+
+def create_psp_pkl(start_timestamp):
+
+    # #download solo mag and plasma data up to now 
+    download_pspmag_1min(start_timestamp)
+    download_pspplas(start_timestamp)
+
+    #load in mag data to DataFrame and resample, create empty mag and resampled DataFrame if no data
+    # if empty, drop time column ready for concat
+    df_mag = get_pspmag_range_1min(start_timestamp)
+    if df_mag is None:
+        print(f'PSP FIELDS data is empty for this timerange')
+        df_mag = pd.DataFrame({'time':[], 'bt':[], 'bx':[], 'by':[], 'bz':[]})
+        mag_rdf = df_mag.drop(columns=['time'])
+    else:
+        mag_rdf = df_mag.set_index('time').resample('1min').mean().reset_index(drop=False)
+        mag_rdf.set_index(pd.to_datetime(mag_rdf['time']), inplace=True)
+
+    #load in plasma data to DataFrame and resample, create empty plasma and resampled DataFrame if no data
+    #only drop time column if MAG DataFrame is not empty
+    df_plas = get_pspspi_range_mom(start_timestamp)
+    if df_plas is None:
+        print(f'PSP SPI/MOM data is empty for this timerange')
+        df_plas = pd.DataFrame({'time':[], 'vt':[], 'vx':[], 'vy':[], 'vz':[], 'np':[], 'tp':[]})
+        plas_rdf = df_plas
+    else:
+        plas_rdf = df_plas.set_index('time').resample('1min').mean().reset_index(drop=False)
+        plas_rdf.set_index(pd.to_datetime(plas_rdf['time']), inplace=True)
+        if mag_rdf.shape[0] != 0:
+            plas_rdf = plas_rdf.drop(columns=['time'])
+
+    #need to combine mag and plasma dfs to get complete set of timestamps for position calculation
+    magplas_rdf = pd.concat([mag_rdf, plas_rdf], axis=1)
+    #some timestamps may be NaT so after joining, drop time column and reinstate from combined index col
+    magplas_rdf = magplas_rdf.drop(columns=['time'])
+    magplas_rdf['time'] = magplas_rdf.index
+
+    #get solo positions for corresponding timestamps
+    psp_pos = get_psp_positions(magplas_rdf['time'])
+    psp_pos.set_index(pd.to_datetime(psp_pos['time']), inplace=True)
+    psp_pos = psp_pos.drop(columns=['time'])
+
+    #produce final combined DataFrame with correct ordering of columns 
+    comb_df = pd.concat([magplas_rdf, psp_pos], axis=1)
+
+    #produce recarray with correct datatypes
+    time_stamps = comb_df['time']
+    dt_lst= [element.to_pydatetime() for element in list(time_stamps)] #extract timestamps in datetime.datetime format
+
+    psp=np.zeros(len(dt_lst),dtype=[('time',object),('bx', float),('by', float),('bz', float),('bt', float),\
+                ('vx', float),('vy', float),('vz', float),('vt', float),('np', float),('tp', float),\
+                ('x', float),('y', float),('z', float), ('r', float),('lat', float),('lon', float)])
+    psp = psp.view(np.recarray) 
+
+    psp.time=dt_lst
+    psp.bx=comb_df['bx']
+    psp.by=comb_df['by']
+    psp.bz=comb_df['bz']
+    psp.bt=comb_df['bt']
+    psp.vx=comb_df['vx']
+    psp.vy=comb_df['vy']
+    psp.vz=comb_df['vz']
+    psp.vt=comb_df['vt']
+    psp.np=comb_df['np']
+    psp.tp=comb_df['tp']
+    psp.x=comb_df['x']
+    psp.y=comb_df['y']
+    psp.z=comb_df['z']
+    psp.r=comb_df['r']
+    psp.lat=comb_df['lat']
+    psp.lon=comb_df['lon']
+    
+    #dump to pickle file
+    
+    header='Science level 2 solar wind magnetic field (FIELDS) and plasma data (SWEAP/SPI/MOM) from Parker Solar Probe, ' + \
+    'obtained from https://spdf.gsfc.nasa.gov/pub/data/psp/fields/l2/mag_rtn_1min and https://spdf.gsfc.nasa.gov/pub/data/psp/sweap/spi/l3/spi_sf00_l3_mom/  '+ \
+    'Timerange: '+psp.time[0].strftime("%Y-%b-%d %H:%M")+' to '+psp.time[-1].strftime("%Y-%b-%d %H:%M")+\
+    ', resampled to a time resolution of 1 min. '+\
+    'The data are available in a numpy recarray, fields can be accessed by psp.time, psp.bx, psp.vt etc. '+\
+    'Total number of data points: '+str(psp.size)+'. '+\
+    'Units are btxyz [nT, RTN], vtxy  [km s^-1], np[cm^-3], tp [K], heliospheric position x/y/z/r/lon/lat [AU, degree, HEEQ]. '+\
+    'Made with [...] by E. Davies (twitter @spacedavies). File creation date: '+\
+    datetime.utcnow().strftime("%Y-%b-%d %H:%M")+' UTC'
+
+    pickle.dump([psp,header], open(psp_path+'psp_rtn.p', "wb"))
