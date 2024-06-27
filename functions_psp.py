@@ -222,13 +222,13 @@ def get_pspspc_mom(fp):
     """raw = rtn"""
     try:
         cdf = pycdf.CDF(fp)
-        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'np_moment', 'wp_moment'], ['timestamp', 'density', 'temperature'])}
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'np_moment', 'wp_moment'], ['time', 'np', 'tp'])}
         df = pd.DataFrame.from_dict(data)
         vx, vy, vz = cdf['vp_moment_RTN'][:].T
-        df['v_x'] = vx
-        df['v_y'] = vy
-        df['v_z'] = vz
-        df['v_bulk'] = np.linalg.norm(df[['v_x', 'v_y', 'v_z']], axis=1)
+        df['vx'] = vx
+        df['vy'] = vy
+        df['vz'] = vz
+        df['vt'] = np.linalg.norm(df[['vx', 'vy', 'vz']], axis=1)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
@@ -239,13 +239,13 @@ def get_pspspc_fit(fp):
     """raw = rtn"""
     try:
         cdf = pycdf.CDF(fp)
-        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'np_fit', 'wp_fit'], ['timestamp', 'density', 'temperature'])}
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'np_fit', 'wp_fit'], ['time', 'np', 'tp'])}
         df = pd.DataFrame.from_dict(data)
         vx, vy, vz = cdf['vp_fit_RTN'][:].T
-        df['v_x'] = vx
-        df['v_y'] = vy
-        df['v_z'] = vz
-        df['v_bulk'] = np.linalg.norm(df[['v_x', 'v_y', 'v_z']], axis=1)
+        df['vx'] = vx
+        df['vy'] = vy
+        df['vz'] = vz
+        df['vt'] = np.linalg.norm(df[['vx', 'vy', 'vz']], axis=1)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
@@ -256,13 +256,13 @@ def get_pspspc_fit1(fp):
     """raw = rtn"""
     try:
         cdf = pycdf.CDF(fp)
-        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'np1_fit', 'wp1_fit'], ['timestamp', 'density', 'temperature'])}
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'np1_fit', 'wp1_fit'], ['time', 'np', 'tp'])}
         df = pd.DataFrame.from_dict(data)
         vx, vy, vz = cdf['vp1_fit_RTN'][:].T
-        df['v_x'] = vx
-        df['v_y'] = vy
-        df['v_z'] = vz
-        df['v_bulk'] = np.linalg.norm(df[['v_x', 'v_y', 'v_z']], axis=1)
+        df['vx'] = vx
+        df['vy'] = vy
+        df['vz'] = vz
+        df['vt'] = np.linalg.norm(df[['vx', 'vy', 'vz']], axis=1)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
@@ -273,20 +273,23 @@ def get_pspspi_mom(fp):
     """raw = rtn"""
     try:
         cdf = pycdf.CDF(fp)
-        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'DENS', 'TEMP'], ['timestamp', 'density', 'temperature'])}
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'DENS', 'TEMP'], ['time', 'np', 'tp'])}
         df = pd.DataFrame.from_dict(data)
         vx, vy, vz = cdf['VEL_RTN_SUN'][:].T
-        df['v_x'] = vx
-        df['v_y'] = vy
-        df['v_z'] = vz
-        df['v_bulk'] = np.linalg.norm(df[['v_x', 'v_y', 'v_z']], axis=1)
+        df['vx'] = vx
+        df['vy'] = vy
+        df['vz'] = vz
+        df['vt'] = np.linalg.norm(df[['vx', 'vy', 'vz']], axis=1)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
     return df
 
 
-def get_pspspc_range_mom(start_timestamp, end_timestamp, path="/Volumes/External/Data/PSP/sweap/spc/l3i"):
+# LOAD RANGES of plasma data
+
+
+def get_pspspc_range_mom(start_timestamp, end_timestamp, path=f'{psp_path}'+'sweap/spc/l3i'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df = None
@@ -302,16 +305,16 @@ def get_pspspc_range_mom(start_timestamp, end_timestamp, path="/Volumes/External
             else:
                 df = df.append(_df.copy(deep=True))
         start += timedelta(days=1)
-    filter_bad_data(df, 'temperature', -1E30)
-    filter_bad_data(df, 'density', -1E30)
-    filter_bad_data(df, 'v_bulk', -1E30)
-    filter_bad_data(df, 'v_x', -1E30)
-    filter_bad_data(df, 'v_y', -1E30)
-    filter_bad_data(df, 'v_z', -1E30)
+    filter_bad_data(df, 'tp', -1E30)
+    filter_bad_data(df, 'np', -1E30)
+    filter_bad_data(df, 'vt', -1E30)
+    filter_bad_data(df, 'vx', -1E30)
+    filter_bad_data(df, 'vy', -1E30)
+    filter_bad_data(df, 'vz', -1E30)
     return df
 
 
-def get_pspspc_range_fit(start_timestamp, end_timestamp, path="/Volumes/External/Data/PSP/sweap/spc/l3i"):
+def get_pspspc_range_fit(start_timestamp, end_timestamp, path=f'{psp_path}'+'sweap/spc/l3i'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df = None
@@ -327,16 +330,16 @@ def get_pspspc_range_fit(start_timestamp, end_timestamp, path="/Volumes/External
             else:
                 df = df.append(_df.copy(deep=True))
         start += timedelta(days=1)
-    filter_bad_data(df, 'temperature', -1E30)
-    filter_bad_data(df, 'density', -1E30)
-    filter_bad_data(df, 'v_bulk', -1E30)
-    filter_bad_data(df, 'v_x', -1E30)
-    filter_bad_data(df, 'v_y', -1E30)
-    filter_bad_data(df, 'v_z', -1E30)
+    filter_bad_data(df, 'tp', -1E30)
+    filter_bad_data(df, 'np', -1E30)
+    filter_bad_data(df, 'vt', -1E30)
+    filter_bad_data(df, 'vx', -1E30)
+    filter_bad_data(df, 'vy', -1E30)
+    filter_bad_data(df, 'vz', -1E30)
     return df
 
 
-def get_pspspi_range_mom(start_timestamp, end_timestamp, path="/Volumes/External/Data/PSP/sweap/spi/sf00/mom"):
+def get_pspspi_range_mom(start_timestamp, end_timestamp, path=f'{psp_path}'+'sweap/spi/l3'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df = None
@@ -350,7 +353,7 @@ def get_pspspi_range_mom(start_timestamp, end_timestamp, path="/Volumes/External
             if df is None:
                 df = _df.copy(deep=True)
             else:
-                df = df.append(_df.copy(deep=True))
+                df = pd.concat([df, _df])
         start += timedelta(days=1)
     return df
 
