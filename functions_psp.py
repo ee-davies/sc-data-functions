@@ -170,7 +170,10 @@ PSP PLAS DATA
 """
 
 
-def download_pspplas(start_timestamp, end_timestamp, path=f'{psp_path}'+'sweap/spc/l3i'):
+#DOWNLOAD FUNCTIONS for plas data
+
+
+def download_pspplas_spc(start_timestamp, end_timestamp, path=f'{psp_path}'+'sweap/spc/l3i'):
     start = start_timestamp.date()
     end = end_timestamp.date() + timedelta(days=1)
     while start < end:
@@ -189,6 +192,30 @@ def download_pspplas(start_timestamp, end_timestamp, path=f'{psp_path}'+'sweap/s
             except Exception as e:
                 print('ERROR', e, data_item_id)
                 start += timedelta(days=1)
+
+
+def download_pspplas_spi(start_timestamp, end_timestamp, path=f'{psp_path}'+'sweap/spi/l3'):
+    start = start_timestamp.date()
+    end = end_timestamp.date() + timedelta(days=1)
+    while start < end:
+        year = start.year
+        date_str = f'{year}{start.month:02}{start.day:02}'
+        data_item_id = f'psp_swp_spi_sf00_l3_mom_{date_str}_v04'
+        if os.path.isfile(f"{path}/{data_item_id}.cdf") == True:
+            print(f'{data_item_id}.cdf has already been downloaded.')
+            start += timedelta(days=1)
+        else:
+            try:
+                data_url = f'https://spdf.gsfc.nasa.gov/pub/data/psp/sweap/spi/l3/spi_sf00_l3_mom/{year}/{data_item_id}.cdf'
+                urllib.request.urlretrieve(data_url, f"{path}/{data_item_id}.cdf")
+                print(f'Successfully downloaded {data_item_id}.cdf')
+                start += timedelta(days=1)
+            except Exception as e:
+                print('ERROR', e, data_item_id)
+                start += timedelta(days=1)
+
+
+#LOAD FUNCTIONS for plasma (spc and spi) data
 
 
 def get_pspspc_mom(fp):
