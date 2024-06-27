@@ -10,6 +10,9 @@ import urllib.request
 import os.path
 import pickle
 
+import astrospice
+from sunpy.coordinates import HeliocentricInertial, HeliographicStonyhurst
+
 
 """
 PARKER SOLAR PROBE SERVER DATA PATH
@@ -356,6 +359,44 @@ def get_pspspi_range_mom(start_timestamp, end_timestamp, path=f'{psp_path}'+'swe
                 df = pd.concat([df, _df])
         start += timedelta(days=1)
     return df
+
+
+"""
+PSP SPACECRAFT POSITIONS
+#currently relies on astrospice (will update), calls position for each timestamp
+#Set to HEEQ, but will implement options to change
+"""
+
+
+def cart2sphere(x,y,z):
+    r = np.sqrt(x**2+ y**2 + z**2) /1.495978707E8         
+    theta = np.arctan2(z,np.sqrt(x**2+ y**2)) * 360 / 2 / np.pi
+    phi = np.arctan2(y,x) * 360 / 2 / np.pi                   
+    return (r, theta, phi)
+
+
+def sphere2cart(r, lat, lon):
+    x = r*np.cos(lat*(np.pi/180))*np.cos(lon*(np.pi/180))
+    y = r*np.cos(lat*(np.pi/180))*np.sin(lon*(np.pi/180))
+    z = r*np.sin(lat*(np.pi/180))
+    r_au = r/1.495978707E8
+    return x.value, y.value, z.value, r_au.value
+
+
+def get_psp_positions(time_series):
+    kernels_psp = astrospice.registry.get_kernels('psp', 'predict')
+    frame = HeliographicStonyhurst()
+    coords_psp = astrospice.generate_coords('Solar probe plus', time_series)
+    coords_psp = coords_psp.transform_to(frame)
+    x, y, z, r_au = sphere2cart(coords_psp.radius, coords_psp.lat, coords_psp.lon)
+    lat = coords_psp.lat.value
+    lon = coords_psp.lon.value
+    t = [element.to_pydatetime() for element in list(time_series)]
+    positions = np.array([t, x, y, z, r_au, lat, lon])
+    df_positions = pd.DataFrame(positions.T, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    return df_positions
+
+
 
 
 def create_psp_pkl(start_timestamp):
