@@ -86,17 +86,20 @@ def download_pspmag_full(start_timestamp, end_timestamp, path=f'{psp_path}'+'mag
         start += timedelta(days=1)        
         
 
+#LOAD FUNCTIONS for MAG data 
+
+
 def get_pspmag_1min(fp):
     """raw = rtn"""
     try:
         cdf = pycdf.CDF(fp)
-        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['epoch_mag_RTN_1min'], ['timestamp'])}
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['epoch_mag_RTN_1min'], ['time'])}
         df = pd.DataFrame.from_dict(data)
         bx, by, bz = cdf['psp_fld_l2_mag_RTN_1min'][:].T
-        df['b_x'] = bx
-        df['b_y'] = by
-        df['b_z'] = bz
-        df['b_tot'] = np.linalg.norm(df[['b_x', 'b_y', 'b_z']], axis=1)
+        df['bx'] = bx
+        df['by'] = by
+        df['bz'] = bz
+        df['bt'] = np.linalg.norm(df[['bx', 'by', 'bz']], axis=1)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
@@ -107,20 +110,23 @@ def get_pspmag_full(fp):
     """raw = rtn"""
     try:
         cdf = pycdf.CDF(fp)
-        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['epoch_mag_RTN'], ['timestamp'])}
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['epoch_mag_RTN'], ['time'])}
         df = pd.DataFrame.from_dict(data)
         bx, by, bz = cdf['psp_fld_l2_mag_RTN'][:].T
-        df['b_x'] = bx
-        df['b_y'] = by
-        df['b_z'] = bz
-        df['b_tot'] = np.linalg.norm(df[['b_x', 'b_y', 'b_z']], axis=1)
+        df['bx'] = bx
+        df['by'] = by
+        df['bz'] = bz
+        df['bt'] = np.linalg.norm(df[['bx', 'by', 'bz']], axis=1)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
     return df
 
 
-def get_pspmag_range_1min(start_timestamp, end_timestamp, path="/Volumes/External/Data/PSP/mag/1_min"):
+#Load range of files using specified start and end dates/ timestamps
+
+
+def get_pspmag_range_1min(start_timestamp, end_timestamp, path=f'{psp_path}'+'mag/l2/1min'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df = None
@@ -134,12 +140,12 @@ def get_pspmag_range_1min(start_timestamp, end_timestamp, path="/Volumes/Externa
             if df is None:
                 df = _df.copy(deep=True)
             else:
-                df = df.append(_df.copy(deep=True))
+                df = pd.concat([df, _df])
         start += timedelta(days=1)
     return df
 
 
-def get_pspmag_range_full(start_timestamp, end_timestamp, path="/Volumes/External/Data/PSP/mag/full"):
+def get_pspmag_range_full(start_timestamp, end_timestamp, path=f'{psp_path}'+'mag/l2/full'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df = None
@@ -154,7 +160,7 @@ def get_pspmag_range_full(start_timestamp, end_timestamp, path="/Volumes/Externa
                 if df is None:
                     df = _df.copy(deep=True)
                 else:
-                    df = df.append(_df.copy(deep=True))
+                    df = pd.concat([df, _df])
         start += timedelta(days=1)
     return df
 
