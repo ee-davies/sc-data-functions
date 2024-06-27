@@ -397,17 +397,17 @@ def get_psp_positions(time_series):
     return df_positions
 
 
+"""
+OUTPUT COMBINED PICKLE FILE
+including MAG, PLAS, and POSITION data
+"""
 
 
-def create_psp_pkl(start_timestamp):
-
-    # #download solo mag and plasma data up to now 
-    download_pspmag_1min(start_timestamp)
-    download_pspplas(start_timestamp)
+def create_psp_pkl(start_timestamp, end_timestamp, output_path=psp_path):
 
     #load in mag data to DataFrame and resample, create empty mag and resampled DataFrame if no data
     # if empty, drop time column ready for concat
-    df_mag = get_pspmag_range_1min(start_timestamp)
+    df_mag = get_pspmag_range_1min(start_timestamp, end_timestamp)
     if df_mag is None:
         print(f'PSP FIELDS data is empty for this timerange')
         df_mag = pd.DataFrame({'time':[], 'bt':[], 'bx':[], 'by':[], 'bz':[]})
@@ -418,7 +418,7 @@ def create_psp_pkl(start_timestamp):
 
     #load in plasma data to DataFrame and resample, create empty plasma and resampled DataFrame if no data
     #only drop time column if MAG DataFrame is not empty
-    df_plas = get_pspspi_range_mom(start_timestamp)
+    df_plas = get_pspspi_range_mom(start_timestamp, end_timestamp)
     if df_plas is None:
         print(f'PSP SPI/MOM data is empty for this timerange')
         df_plas = pd.DataFrame({'time':[], 'vt':[], 'vx':[], 'vy':[], 'vz':[], 'np':[], 'tp':[]})
@@ -475,7 +475,7 @@ def create_psp_pkl(start_timestamp):
     header='Science level 2 solar wind magnetic field (FIELDS) and plasma data (SWEAP/SPI/MOM) from Parker Solar Probe, ' + \
     'obtained from https://spdf.gsfc.nasa.gov/pub/data/psp/fields/l2/mag_rtn_1min and https://spdf.gsfc.nasa.gov/pub/data/psp/sweap/spi/l3/spi_sf00_l3_mom/  '+ \
     'Timerange: '+psp.time[0].strftime("%Y-%b-%d %H:%M")+' to '+psp.time[-1].strftime("%Y-%b-%d %H:%M")+\
-    ', resampled to a time resolution of 1 min. '+\
+    ', resampled to a time resolution of 5 min. '+\
     'The data are available in a numpy recarray, fields can be accessed by psp.time, psp.bx, psp.vt etc. '+\
     'Total number of data points: '+str(psp.size)+'. '+\
     'Units are btxyz [nT, RTN], vtxy  [km s^-1], np[cm^-3], tp [K], heliospheric position x/y/z/r/lon/lat [AU, degree, HEEQ]. '+\
