@@ -124,6 +124,7 @@ def get_noaa_pos_realtime_7days():
 
 
 #If realtime doesn't work, 2nd best is download files manually (2 day behind)
+#https://www.ngdc.noaa.gov/dscovr/portal/index.html#/download//pop
 #Load single position file from specific path using netcdf from scipy.io
 #Will show depreciated warning message for netcdf namespace
 def get_dscovrpos(fp):
