@@ -170,7 +170,7 @@ def get_stereoa_merged_range(start_timestamp, end_timestamp=datetime.utcnow(), p
     directory given."""
     df=None
     start = start_timestamp.year
-    end = datetime.utcnow().year + 1
+    end = end_timestamp.year + 1
     while start < end:
         year = start
         date_str = f'{year}0101'
@@ -528,4 +528,4 @@ def create_sta_pkl(start_timestamp, end_timestamp):
     'Made with script by E.E. Davies (github @ee-davies, twitter @spacedavies). File creation date: '+\
     datetime.utcnow().strftime("%Y-%b-%d %H:%M")+' UTC'
 
-    pickle.dump([stereoa,header], open(stereoa_path+'stereoa_rtn.p', "wb"))
+    pickle.dump([stereoa,header], open(stereoa_path+'stereoa_rtn_eva.p', "wb"))
