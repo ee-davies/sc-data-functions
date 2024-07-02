@@ -528,4 +528,4 @@ def create_sta_pkl(start_timestamp, end_timestamp):
     'Made with script by E.E. Davies (github @ee-davies, twitter @spacedavies). File creation date: '+\
     datetime.utcnow().strftime("%Y-%b-%d %H:%M")+' UTC'
 
-    pickle.dump([stereoa,header], open(stereoa_path+'stereoa_rtn_eva.p', "wb"))
+    pickle.dump([stereoa,header], open(stereoa_path+'stereoa_rtn.p', "wb"))
