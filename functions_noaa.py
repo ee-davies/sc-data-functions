@@ -44,6 +44,7 @@ DSCOVR MAG and PLAS DATA
 # Raw data is in GSM coordinates; will implement transform to GSE/RTN
 """
 
+## REALTIME
 
 def get_noaa_mag_realtime_7days():
     #mag data request produces file in GSM coords
@@ -96,6 +97,34 @@ def get_noaa_realtime_alt(path=f'{dscovr_path}'):
 
     return noaa_alt
 
+
+## DSCOVR DATA UP TO CURRENT DAY (INCL COMPONENTS, MORE PARAMETERS)
+
+
+def get_dscovrplas_gse(fp):
+    """raw = gse"""
+    try:
+        ncdf = netcdf.NetCDFFile(fp,'r')
+        data = {df_col: ncdf.variables[cdf_col][:] for cdf_col, df_col in zip(['time', 'proton_speed', 'proton_vx_gse', 'proton_vy_gse', 'proton_vz_gse', 'proton_density', 'proton_temperature'], ['time','vt','vx', 'vy', 'vz', 'np', 'tp'])}
+        df = pd.DataFrame.from_dict(data)
+        df['time'] = pd.to_datetime(df['time'], unit='ms')
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
+    return df
+
+
+def get_dscovrplas_gsm(fp):
+    """raw = gse"""
+    try:
+        ncdf = netcdf.NetCDFFile(fp,'r')
+        data = {df_col: ncdf.variables[cdf_col][:] for cdf_col, df_col in zip(['time', 'proton_speed', 'proton_vx_gsm', 'proton_vy_gsm', 'proton_vz_gsm', 'proton_density', 'proton_temperature'], ['time','vt','vx', 'vy', 'vz', 'np', 'tp'])}
+        df = pd.DataFrame.from_dict(data)
+        df['time'] = pd.to_datetime(df['time'], unit='ms')
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
+    return df
 
 """
 DSCOVR POSITIONS
