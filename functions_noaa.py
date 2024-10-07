@@ -114,6 +114,25 @@ def get_dscovrplas_gse(fp):
     return df
 
 
+def get_dscovrplas_gse_range(start_timestamp, end_timestamp, path=f'{dscovr_path}'+'plas/'):
+    df = None
+    start = start_timestamp.date()
+    end = end_timestamp.date() + timedelta(days=1)
+    while start < end:
+        year = start.year
+        date_str = f'{year}{start.month:02}{start.day:02}'
+        fn = glob.glob(f'{path}/oe_f1m_dscovr_s{date_str}000000_*.nc')
+        _df = get_dscovrplas_gse(fn[0])
+        if _df is not None:
+            if df is None:
+                df = _df.copy(deep=True)
+            else:
+                df = pd.concat([df, _df])
+        start += timedelta(days=1)
+    df = df.reset_index(drop=True)
+    return df
+
+
 def get_dscovrplas_gsm(fp):
     """raw = gse"""
     try:
@@ -125,6 +144,26 @@ def get_dscovrplas_gsm(fp):
         print('ERROR:', e, fp)
         df = None
     return df
+
+
+def get_dscovrplas_gsm_range(start_timestamp, end_timestamp, path=f'{dscovr_path}'+'plas/'):
+    df = None
+    start = start_timestamp.date()
+    end = end_timestamp.date() + timedelta(days=1)
+    while start < end:
+        year = start.year
+        date_str = f'{year}{start.month:02}{start.day:02}'
+        fn = glob.glob(f'{path}/oe_f1m_dscovr_s{date_str}000000_*.nc')
+        _df = get_dscovrplas_gsm(fn[0])
+        if _df is not None:
+            if df is None:
+                df = _df.copy(deep=True)
+            else:
+                df = pd.concat([df, _df])
+        start += timedelta(days=1)
+    df = df.reset_index(drop=True)
+    return df
+
 
 """
 DSCOVR POSITIONS
