@@ -92,3 +92,21 @@ def get_themismag(probe:str, fp):
     return df
 
 
+def get_themisorb(probe:str, coord_sys:str, fp):
+    """options for GSE, GSM, GEO, GM, SM"""
+    R_E = 6378.16 #original cdf file in earth radii, convert to km
+    try:
+        cdf = pycdf.CDF(fp)
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch'], ['time'])}
+        df = pd.DataFrame.from_dict(data)
+        x, y, z = cdf[f'XYZ_{coord_sys}'][:].T
+        df['x'] = x*R_E
+        df['y'] = y*R_E
+        df['z'] = z*R_E
+        df['r'] = cdf['RADIUS'][:]*R_E
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
+    return df
+
+
