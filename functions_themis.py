@@ -1,0 +1,47 @@
+import numpy as np
+import pandas as pd
+from datetime import datetime, timedelta
+import spiceypy
+import os.path
+import glob
+import urllib.request
+from urllib.request import urlopen
+import json
+import astrospice
+from sunpy.coordinates import HeliocentricInertial, HeliographicStonyhurst
+from bs4 import BeautifulSoup
+import cdflib
+import pickle
+from spacepy import pycdf
+
+"""
+THEMIS DATA PATH
+"""
+
+themis_path='/Volumes/External/data/themis/'
+
+
+"""
+THEMIS DOWNLOAD DATA
+#https://cdaweb.gsfc.nasa.gov/pub/data/themis/
+"""
+
+
+def download_themis_mag(probe:str, start_timestamp, end_timestamp, path=f'{themis_path}'):
+    start = start_timestamp.date()
+    end = end_timestamp.date() + timedelta(days=1)
+    while start < end:
+        year = start.year
+        date_str = f'{year}{start.month:02}{start.day:02}'
+        data_item_id = f'{probe}_l2_fgm_{date_str}_v01'
+        if os.path.isfile(f"{path}/{probe}/mag/{data_item_id}.cdf") == True:
+            print(f'{data_item_id}.cdf has already been downloaded.') 
+        else:
+            try:
+                data_url = f'https://cdaweb.gsfc.nasa.gov/pub/data/themis/{probe}/l2/fgm/{year}/'
+                urllib.request.urlretrieve(data_url, f"{path}/{probe}/mag/{data_item_id}.cdf")
+                print(f'Successfully downloaded {data_item_id}.cdf')
+            except Exception as e:
+                print('ERROR', e, data_item_id)
+        start += timedelta(days=1)
+
