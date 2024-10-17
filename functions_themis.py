@@ -38,7 +38,7 @@ def download_themis_mag(probe:str, start_timestamp, end_timestamp, path=f'{themi
             print(f'{data_item_id}.cdf has already been downloaded.') 
         else:
             try:
-                data_url = f'https://cdaweb.gsfc.nasa.gov/pub/data/themis/{probe}/l2/fgm/{year}/'
+                data_url = f'https://cdaweb.gsfc.nasa.gov/pub/data/themis/{probe}/l2/fgm/{year}/{data_item_id}.cdf'
                 urllib.request.urlretrieve(data_url, f"{path}/{probe}/mag/{data_item_id}.cdf")
                 print(f'Successfully downloaded {data_item_id}.cdf')
             except Exception as e:
@@ -71,4 +71,5 @@ def get_themismag(probe:str, fp):
         print('ERROR:', e, fp)
         df = None
     return df
+
 
