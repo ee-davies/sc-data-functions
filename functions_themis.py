@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import spiceypy
 import os.path
 import glob
@@ -44,4 +44,31 @@ def download_themis_mag(probe:str, start_timestamp, end_timestamp, path=f'{themi
             except Exception as e:
                 print('ERROR', e, data_item_id)
         start += timedelta(days=1)
+
+
+"""
+THEMIS MAG DATA
+"""
+
+
+#Load single file from specific path using pycdf from spacepy
+def get_themismag(probe:str, fp):
+    """raw = gse"""
+    try:
+        cdf = pycdf.CDF(fp) #can change to cdflib.CDF(fp)
+        times = cdf[f'{probe}_fgs_time'][:]
+        times_converted = []
+        for i in range(len(times)):
+            time_convert = datetime.fromtimestamp(times[i], timezone.utc)
+            times_converted.append(time_convert)
+        df = pd.DataFrame(times_converted, columns=['time'])
+        bx, by, bz = cdf[f'{probe}_fgs_gse'][:].T
+        df['bx'] = bx
+        df['by'] = by
+        df['bz'] = bz
+        df['bt'] = cdf[f'{probe}_fgs_btotal'][:]
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
+    return df
 
