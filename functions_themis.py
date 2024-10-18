@@ -92,6 +92,13 @@ def get_themismag(probe:str, fp):
     return df
 
 
+"""
+THEMIS POSITION DATA
+#original files contain range of co-ord systems
+#units originally in Earth radii, code converts to km
+"""
+
+
 def get_themisorb(probe:str, coord_sys:str, fp):
     """options for GSE, GSM, GEO, GM, SM"""
     R_E = 6378.16 #original cdf file in earth radii, convert to km
@@ -108,5 +115,6 @@ def get_themisorb(probe:str, coord_sys:str, fp):
         print('ERROR:', e, fp)
         df = None
     return df
+
 
 
