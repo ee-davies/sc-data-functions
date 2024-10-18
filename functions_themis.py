@@ -46,6 +46,25 @@ def download_themis_mag(probe:str, start_timestamp, end_timestamp, path=f'{themi
         start += timedelta(days=1)
 
 
+def download_themis_plas(probe:str, start_timestamp, end_timestamp, path=f'{themis_path}'):
+    start = start_timestamp.date()
+    end = end_timestamp.date() + timedelta(days=1)
+    while start < end:
+        year = start.year
+        date_str = f'{year}{start.month:02}{start.day:02}'
+        data_item_id = f'{probe}_l2_esa_{date_str}_v01'
+        if os.path.isfile(f"{path}/{probe}/plas/{data_item_id}.cdf") == True:
+            print(f'{data_item_id}.cdf has already been downloaded.') 
+        else:
+            try:
+                data_url = f'https://cdaweb.gsfc.nasa.gov/pub/data/themis/{probe}/l2/esa/{year}/{data_item_id}.cdf'
+                urllib.request.urlretrieve(data_url, f"{path}/{probe}/plas/{data_item_id}.cdf")
+                print(f'Successfully downloaded {data_item_id}.cdf')
+            except Exception as e:
+                print('ERROR', e, data_item_id)
+        start += timedelta(days=1)
+
+
 def download_themis_orb(probe:str, start_timestamp, end_timestamp, path=f'{themis_path}'):
     start = start_timestamp.date()
     end = end_timestamp.date() + timedelta(days=1)
@@ -90,6 +109,11 @@ def get_themismag(probe:str, fp):
         print('ERROR:', e, fp)
         df = None
     return df
+
+
+"""
+THEMIS PLAS DATA
+"""
 
 
 """
