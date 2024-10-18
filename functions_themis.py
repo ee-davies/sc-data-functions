@@ -92,6 +92,7 @@ THEMIS MAG DATA
 #Load single file from specific path using pycdf from spacepy
 def get_themismag(probe:str, fp):
     """raw = gse"""
+    #also available in gsm
     try:
         cdf = pycdf.CDF(fp) #can change to cdflib.CDF(fp)
         times = cdf[f'{probe}_fgs_time'][:]
@@ -113,7 +114,33 @@ def get_themismag(probe:str, fp):
 
 """
 THEMIS PLAS DATA
+#note, quality flags are available for both mag and plas files i.e. "thb_peif_data_quality", "thb_fgm_fgs_quality"
+#need to implement data filtering
 """
+
+
+def get_themisplas(probe:str, fp):
+    """raw = gse"""
+    #also available in gsm
+    try:
+        cdf = pycdf.CDF(fp) #can change to cdflib.CDF(fp)
+        times = cdf[f'{probe}_peif_time'][:]
+        times_converted = []
+        for i in range(len(times)):
+            time_convert = datetime.fromtimestamp(times[i], timezone.utc)
+            times_converted.append(time_convert)
+        df = pd.DataFrame(times_converted, columns=['time'])
+        df['np'] = cdf[f'{probe}_peif_density'][:]
+        df['tp'] = cdf[f'{probe}_peif_avgtemp'][:]
+        vx, vy, vz = cdf[f'{probe}_peif_velocity_gse'][:].T #note thermal velocity is also available
+        df['vx'] = vx
+        df['vy'] = vy
+        df['vz'] = vz
+        df['vt'] = np.linalg.norm(df[['vx', 'vy', 'vz']], axis=1)
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
+    return df
 
 
 """
