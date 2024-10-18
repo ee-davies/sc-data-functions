@@ -164,6 +164,27 @@ def get_themisplas(probe:str, fp):
     return df
 
 
+#Load range of files using specified start and end dates/ timestamps
+def get_themisplas_range(probe:str, start_timestamp, end_timestamp, path=f'{themis_path}'):
+    """Pass two datetime objects and grab .cdf files between dates, from
+    directory given."""
+    df = None
+    start = start_timestamp.date()
+    end = end_timestamp.date() + timedelta(days=1)
+    while start < end:
+        date_str = f'{start.year}{start.month:02}{start.day:02}'
+        data_item_id = f'{probe}_l2_esa_{date_str}_v01'
+        fn = f'{path}/{probe}/plas/{data_item_id}.cdf'
+        _df = get_themisplas(f'{probe}',fn)
+        if _df is not None:
+            if df is None:
+                df = _df.copy(deep=True)
+            else:
+                df = pd.concat([df, _df])
+        start += timedelta(days=1)
+    return df
+
+
 """
 THEMIS POSITION DATA
 #original files contain range of co-ord systems
