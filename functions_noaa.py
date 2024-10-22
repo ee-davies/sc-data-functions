@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from spacepy import pycdf
 import spiceypy
 import os
@@ -293,7 +293,97 @@ def get_dscovrpositions_gsm(start_timestamp, end_timestamp):
     return df
 
 
-def create_dscovr_pkl(output_path='/Users/emmadavies/Documents/Projects/SolO_Realtime_Preparation/March2024/'):
+def cart2sphere(x,y,z):
+    r = np.sqrt(x**2+ y**2 + z**2) /1.495978707E8         
+    theta = np.arctan2(z,np.sqrt(x**2+ y**2)) * 360 / 2 / np.pi
+    phi = np.arctan2(y,x) * 360 / 2 / np.pi                   
+    return (r, theta, phi)
+
+
+## COMBINED FILES
+
+def create_dscovr_pkl(start_timestamp, end_timestamp, output_path=dscovr_path):
+    #mag data
+    df_mag = get_dscovrmag_gsm_range(start_timestamp, end_timestamp)
+    if df_mag is None:
+        print(f'DSCOVR MAG data is empty for this timerange')
+        df_mag = pd.DataFrame({'time':[], 'bt':[], 'bx':[], 'by':[], 'bz':[]})
+        mag_rdf = df_mag.drop(columns=['time'])
+    else:
+        mag_rdf = df_mag.set_index('time').resample('1min').mean().reset_index(drop=False)
+        mag_rdf.set_index(pd.to_datetime(mag_rdf['time']), inplace=True)
+    #plas data
+    df_plas = get_dscovrplas_gsm_range(start_timestamp, end_timestamp)
+    if df_plas is None:
+        print(f'DSCOVR PLAS data is empty for this timerange')
+        df_plas = pd.DataFrame({'time':[], 'vt':[], 'vx':[], 'vy':[], 'vz':[], 'np':[], 'tp':[]})
+        plas_rdf = df_plas
+    else:
+        plas_rdf = df_plas.set_index('time').resample('1min').mean().reset_index(drop=False)
+        plas_rdf.set_index(pd.to_datetime(plas_rdf['time']), inplace=True)
+        if mag_rdf.shape[0] != 0:
+            plas_rdf = plas_rdf.drop(columns=['time'])
+    #need to combine mag and plasma dfs to get complete set of timestamps for position calculation
+    magplas_rdf = pd.concat([mag_rdf, plas_rdf], axis=1)
+    #some timestamps may be NaT so after joining, drop time column and reinstate from combined index col
+    magplas_rdf = magplas_rdf.drop(columns=['time'])
+    magplas_rdf['time'] = magplas_rdf.index
+    #position data
+    df_pos = get_dscovrpositions_gsm(start_timestamp, end_timestamp)
+    if df_pos is None:
+        print(f'DSCOVR POS data is empty for this timerange')
+        df_pos = pd.DataFrame({'time':[], 'x':[], 'y':[], 'z':[], 'r':[], 'lat':[], 'lon':[]})
+        pos_rdf = df_pos
+    else:
+        pos_rdf = df_pos.set_index('time').resample('1min').interpolate(method='linear').reset_index(drop=False)
+        r, lat, lon = cart2sphere(pos_rdf['x'],pos_rdf['y'],pos_rdf['z'])
+        pos_rdf['r'] = r
+        pos_rdf['lat'] = lat
+        pos_rdf['lon'] = lon
+        pos_rdf.set_index(pd.to_datetime(pos_rdf['time']), inplace=True)
+        if pos_rdf.shape[0] != 0:
+            pos_rdf = pos_rdf.drop(columns=['time'])
+    #combine
+    comb_df_nans = pd.concat([magplas_rdf, pos_rdf], axis=1)
+    comb_df = comb_df_nans[comb_df_nans['bt'].notna()]
+    #create rec array
+    time_stamps = comb_df['time']
+    dt_lst= [element.to_pydatetime() for element in list(time_stamps)] #extract timestamps in datetime.datetime format
+    dscovr=np.zeros(len(dt_lst),dtype=[('time',object),('bx', float),('by', float),('bz', float),('bt', float),\
+                ('vx', float),('vy', float),('vz', float),('vt', float),('np', float),('tp', float),\
+                ('x', float),('y', float),('z', float), ('r', float),('lat', float),('lon', float)])
+    dscovr = dscovr.view(np.recarray)
+    dscovr.time=dt_lst
+    dscovr.bx=comb_df['bx']
+    dscovr.by=comb_df['by']
+    dscovr.bz=comb_df['bz']
+    dscovr.bt=comb_df['bt']
+    dscovr.vx=comb_df['vx']
+    dscovr.vy=comb_df['vy']
+    dscovr.vz=comb_df['vz']
+    dscovr.vt=comb_df['vt']
+    dscovr.np=comb_df['np']
+    dscovr.tp=comb_df['tp']
+    dscovr.x=comb_df['x']
+    dscovr.y=comb_df['y']
+    dscovr.z=comb_df['z']
+    dscovr.r=comb_df['r']
+    dscovr.lat=comb_df['lat']
+    dscovr.lon=comb_df['lon']
+    #create header
+    header='Science level MAG, PLAS and position data from DSCOVR, sourced from https://www.ngdc.noaa.gov/dscovr/portal/index.html' + \
+    'Timerange: '+dscovr.time[0].strftime("%Y-%b-%d %H:%M")+' to '+dscovr.time[-1].strftime("%Y-%b-%d %H:%M")+\
+    ', 1 min time resolution.'+\
+    'The data are available in a numpy recarray, fields can be accessed by dscovr.time, dscovr.bx, dscovr.r etc. '+\
+    'Total number of data points: '+str(dscovr.size)+'. '+\
+    'Units are btxyz [nT, GSM], vtxyz [km s^-1, GSM], np [cm^-3], tp [K], position x/y/z/r/lon/lat [km, degree, GSM]. '+\
+    'Made with script by E.E. Davies (github @ee-davies, twitter @spacedavies). File creation date: '+\
+    datetime.now(timezone.utc).strftime("%Y-%b-%d %H:%M")+' UTC'
+    #dump to pickle file
+    pickle.dump([dscovr,header], open(output_path+f'dscovr_gsm_{dscovr.time[0].strftime("%Y-%b-%d")}.p', "wb"))
+
+
+def create_dscovr_realtime_pkl(output_path='/Users/emmadavies/Documents/Projects/SolO_Realtime_Preparation/March2024/'):
 
     df_mag = get_noaa_mag_realtime_7days()
     if df_mag is None:
