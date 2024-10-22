@@ -227,7 +227,7 @@ def get_noaa_pos_realtime_7days():
 #https://www.ngdc.noaa.gov/dscovr/portal/index.html#/download//pop
 #Load single position file from specific path using netcdf from scipy.io
 #Will show depreciated warning message for netcdf namespace
-def get_dscovrpos(fp):
+def get_dscovrpos_gse(fp):
     """raw = gse"""
     try:
         ncdf = netcdf.NetCDFFile(fp,'r')
@@ -241,7 +241,21 @@ def get_dscovrpos(fp):
     return df
 
 
-def get_dscovrpositions(start_timestamp, end_timestamp):
+def get_dscovrpos_gsm(fp):
+    """raw = gsm"""
+    try:
+        ncdf = netcdf.NetCDFFile(fp,'r')
+        #print(file2read.variables.keys()) to read variable names
+        data = {df_col: ncdf.variables[cdf_col][:] for cdf_col, df_col in zip(['time', 'sat_x_gsm', 'sat_y_gsm', 'sat_z_gsm'], ['time', 'x', 'y', 'z'])}
+        df = pd.DataFrame.from_dict(data)
+        df['time'] = pd.to_datetime(df['time'], unit='ms')
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
+    return df
+
+
+def get_dscovrpositions_gse(start_timestamp, end_timestamp):
     df = None
     start = start_timestamp.date()
     end = end_timestamp.date() + timedelta(days=1)
@@ -249,7 +263,26 @@ def get_dscovrpositions(start_timestamp, end_timestamp):
         year = start.year
         date_str = f'{year}{start.month:02}{start.day:02}'
         fn = glob.glob(f'{kernels_path}'+'dscovr/'+f'oe_pop_dscovr_s{date_str}000000_*.nc')
-        _df = get_dscovrpos(fn[0])
+        _df = get_dscovrpos_gse(fn[0])
+        if _df is not None:
+            if df is None:
+                df = _df.copy(deep=True)
+            else:
+                df = pd.concat([df, _df])
+        start += timedelta(days=1)
+    df = df.reset_index(drop=True)
+    return df
+
+
+def get_dscovrpositions_gsm(start_timestamp, end_timestamp):
+    df = None
+    start = start_timestamp.date()
+    end = end_timestamp.date() + timedelta(days=1)
+    while start < end:
+        year = start.year
+        date_str = f'{year}{start.month:02}{start.day:02}'
+        fn = glob.glob(f'{kernels_path}'+'dscovr/'+f'oe_pop_dscovr_s{date_str}000000_*.nc')
+        _df = get_dscovrpos_gsm(fn[0])
         if _df is not None:
             if df is None:
                 df = _df.copy(deep=True)
