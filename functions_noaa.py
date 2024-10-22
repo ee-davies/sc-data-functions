@@ -165,6 +165,19 @@ def get_dscovrplas_gsm_range(start_timestamp, end_timestamp, path=f'{dscovr_path
     return df
 
 
+def get_dscovrmag_gsm(fp):
+    """raw = gse"""
+    try:
+        ncdf = netcdf.NetCDFFile(fp,'r')
+        data = {df_col: ncdf.variables[cdf_col][:] for cdf_col, df_col in zip(['time', 'bt', 'bx_gsm', 'by_gsm', 'bz_gsm'], ['time','bt','bx', 'by', 'bz'])}
+        df = pd.DataFrame.from_dict(data)
+        df['time'] = pd.to_datetime(df['time'], unit='ms')
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
+    return df
+
+
 """
 DSCOVR POSITIONS
 # Can call POS from last 7 days directly from https://services.swpc.noaa.gov/products/solar-wind/
