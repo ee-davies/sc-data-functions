@@ -134,7 +134,7 @@ def get_dscovrplas_gse_range(start_timestamp, end_timestamp, path=f'{dscovr_path
 
 
 def get_dscovrplas_gsm(fp):
-    """raw = gse"""
+    """raw = gsm"""
     try:
         ncdf = netcdf.NetCDFFile(fp,'r')
         data = {df_col: ncdf.variables[cdf_col][:] for cdf_col, df_col in zip(['time', 'proton_speed', 'proton_vx_gsm', 'proton_vy_gsm', 'proton_vz_gsm', 'proton_density', 'proton_temperature'], ['time','vt','vx', 'vy', 'vz', 'np', 'tp'])}
@@ -166,7 +166,7 @@ def get_dscovrplas_gsm_range(start_timestamp, end_timestamp, path=f'{dscovr_path
 
 
 def get_dscovrmag_gsm(fp):
-    """raw = gse"""
+    """raw = gsm"""
     try:
         ncdf = netcdf.NetCDFFile(fp,'r')
         data = {df_col: ncdf.variables[cdf_col][:] for cdf_col, df_col in zip(['time', 'bt', 'bx_gsm', 'by_gsm', 'bz_gsm'], ['time','bt','bx', 'by', 'bz'])}
@@ -175,6 +175,25 @@ def get_dscovrmag_gsm(fp):
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
+    return df
+
+
+def get_dscovrmag_gsm_range(start_timestamp, end_timestamp, path=f'{dscovr_path}'+'mag/'):
+    df = None
+    start = start_timestamp.date()
+    end = end_timestamp.date() + timedelta(days=1)
+    while start < end:
+        year = start.year
+        date_str = f'{year}{start.month:02}{start.day:02}'
+        fn = glob.glob(f'{path}/oe_m1m_dscovr_s{date_str}000000_*.nc')
+        _df = get_dscovrmag_gsm(fn[0])
+        if _df is not None:
+            if df is None:
+                df = _df.copy(deep=True)
+            else:
+                df = pd.concat([df, _df])
+        start += timedelta(days=1)
+    df = df.reset_index(drop=True)
     return df
 
 
