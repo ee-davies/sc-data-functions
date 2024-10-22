@@ -262,7 +262,7 @@ def get_dscovrpositions_gse(start_timestamp, end_timestamp):
     while start < end:
         year = start.year
         date_str = f'{year}{start.month:02}{start.day:02}'
-        fn = glob.glob(f'{kernels_path}'+'dscovr/'+f'oe_pop_dscovr_s{date_str}000000_*.nc')
+        fn = glob.glob(f'{dscovr_path}'+'orb/'+f'oe_pop_dscovr_s{date_str}000000_*.nc')
         _df = get_dscovrpos_gse(fn[0])
         if _df is not None:
             if df is None:
@@ -281,7 +281,7 @@ def get_dscovrpositions_gsm(start_timestamp, end_timestamp):
     while start < end:
         year = start.year
         date_str = f'{year}{start.month:02}{start.day:02}'
-        fn = glob.glob(f'{kernels_path}'+'dscovr/'+f'oe_pop_dscovr_s{date_str}000000_*.nc')
+        fn = glob.glob(f'{dscovr_path}'+'orb/'+f'oe_pop_dscovr_s{date_str}000000_*.nc')
         _df = get_dscovrpos_gsm(fn[0])
         if _df is not None:
             if df is None:
