@@ -108,6 +108,12 @@ def get_dscovrplas_gse(fp):
         data = {df_col: ncdf.variables[cdf_col][:] for cdf_col, df_col in zip(['time', 'proton_speed', 'proton_vx_gse', 'proton_vy_gse', 'proton_vz_gse', 'proton_density', 'proton_temperature'], ['time','vt','vx', 'vy', 'vz', 'np', 'tp'])}
         df = pd.DataFrame.from_dict(data)
         df['time'] = pd.to_datetime(df['time'], unit='ms')
+        df = filter_bad_data(df, 'vt', -99998)
+        df = filter_bad_data(df, 'vx', -99998)
+        df = filter_bad_data(df, 'vy', -99998)
+        df = filter_bad_data(df, 'vz', -99998)
+        df = filter_bad_data(df, 'np', -99998)
+        df = filter_bad_data(df, 'tp', -99998)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
@@ -140,6 +146,12 @@ def get_dscovrplas_gsm(fp):
         data = {df_col: ncdf.variables[cdf_col][:] for cdf_col, df_col in zip(['time', 'proton_speed', 'proton_vx_gsm', 'proton_vy_gsm', 'proton_vz_gsm', 'proton_density', 'proton_temperature'], ['time','vt','vx', 'vy', 'vz', 'np', 'tp'])}
         df = pd.DataFrame.from_dict(data)
         df['time'] = pd.to_datetime(df['time'], unit='ms')
+        df = filter_bad_data(df, 'vt', -99998)
+        df = filter_bad_data(df, 'vx', -99998)
+        df = filter_bad_data(df, 'vy', -99998)
+        df = filter_bad_data(df, 'vz', -99998)
+        df = filter_bad_data(df, 'np', -99998)
+        df = filter_bad_data(df, 'tp', -99998)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
@@ -172,6 +184,10 @@ def get_dscovrmag_gsm(fp):
         data = {df_col: ncdf.variables[cdf_col][:] for cdf_col, df_col in zip(['time', 'bt', 'bx_gsm', 'by_gsm', 'bz_gsm'], ['time','bt','bx', 'by', 'bz'])}
         df = pd.DataFrame.from_dict(data)
         df['time'] = pd.to_datetime(df['time'], unit='ms')
+        df = filter_bad_data(df, 'bt', -99998)
+        df = filter_bad_data(df, 'bx', -99998)
+        df = filter_bad_data(df, 'by', -99998)
+        df = filter_bad_data(df, 'bz', -99998)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
