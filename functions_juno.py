@@ -238,3 +238,45 @@ def create_juno_pkl(start_timestamp, end_timestamp):
     datetime.utcnow().strftime("%Y-%b-%d %H:%M")+' UTC'
 
     pickle.dump([juno,header], open(juno_path+'juno_rtn.p', "wb"))
+
+
+def create_juno_mag_pkl(start_timestamp, end_timestamp):
+
+    #create mag df, resampled to nearest 1 min
+    df_mag = get_junomag_range(start_timestamp, end_timestamp)
+    if df_mag is None:
+        print(f'Juno MAG data is empty for this timerange')
+        df_mag = pd.DataFrame({'time':[], 'bt':[], 'bx':[], 'by':[], 'bz':[]})
+        mag_rdf = df_mag.drop(columns=['time'])
+    else:
+        mag_rdf = df_mag.set_index('time').resample('1min').mean().reset_index(drop=False)
+        mag_rdf.set_index(pd.to_datetime(mag_rdf['time']), inplace=True)
+        mag_rdf = mag_rdf.dropna() #need to drop NaN values for plotly...
+
+    #produce recarray with correct datatypes
+    time_stamps = mag_rdf['time']
+    dt_lst= [element.to_pydatetime() for element in list(time_stamps)] #extract timestamps in datetime.datetime format
+
+    juno=np.zeros(len(dt_lst),dtype=[('time',object),('bx', float),('by', float),('bz', float),('bt', float),\
+                ('vx', float),('vy', float),('vz', float),('vt', float),('np', float),('tp', float),\
+                ('x', float),('y', float),('z', float), ('r', float),('lat', float),('lon', float)])
+    juno = juno.view(np.recarray) 
+
+    juno.time=dt_lst
+    juno.bx=mag_rdf['bx']
+    juno.by=mag_rdf['by']
+    juno.bz=mag_rdf['bz']
+    juno.bt=mag_rdf['bt']
+
+    #dump to pickle file
+    header='Science level 2 solar wind magnetic field (FGM) from Juno Mission Cruise Phase, ' + \
+    'obtained from https://pds-ppi.igpp.ucla.edu/search/view/?f=yes&id=pds://PPI/JNO-SS-3-FGM-CAL-V1.0/DATA/CRUISE/SE/1MIN '+ \
+    'Timerange: '+juno.time[0].strftime("%Y-%b-%d %H:%M")+' to '+juno.time[-1].strftime("%Y-%b-%d %H:%M")+\
+    ', resampled to a time resolution of 1 min. '+\
+    'The data are available in a numpy recarray, fields can be accessed by juno.time, juno.bx, etc. '+\
+    'Total number of data points: '+str(juno.size)+'. '+\
+    'Units are btxyz [nT, RTN].'+\
+    'Made with script by E.E. Davies (github @ee-davies, twitter @spacedavies). File creation date: '+\
+    datetime.utcnow().strftime("%Y-%b-%d %H:%M")+' UTC'
+
+    pickle.dump([juno,header], open(juno_path+'juno_20160520_rtn.p', "wb"))
