@@ -161,6 +161,27 @@ def get_aceswe_gse(fp):
     return df
 
 
+def get_aceswe_gsm(fp):
+    try:
+        cdf = pycdf.CDF(fp)
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'Vp', 'Np', 'Tpr'], ['time', 'vt', 'np', 'tp'])}
+        df = pd.DataFrame.from_dict(data)
+        vx, vy, vz = cdf['V_GSM'][:].T
+        df['vx'] = vx
+        df['vy'] = vy
+        df['vz'] = vz
+        df['tp'].mask((df['tp'] < -9.99e+30), inplace=True)
+        df['np'].mask((df['np'] < -9.99e+30), inplace=True)
+        df['vt'].mask((df['vt'] < -9.99e+30), inplace=True)
+        df['vx'].mask((df['vx'] < -9.99e+30), inplace=True)
+        df['vy'].mask((df['vy'] < -9.99e+30), inplace=True)
+        df['vz'].mask((df['vz'] < -9.99e+30), inplace=True)
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
+    return df
+
+
 def get_acemag_rtn_range(start_timestamp, end_timestamp, path=r'/Volumes/External/Data/ACE/mfi'):
     """Pass two datetime objects and grab .STS files between dates, from
     directory given."""
