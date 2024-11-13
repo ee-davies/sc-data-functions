@@ -253,6 +253,28 @@ def get_acemag_gse_range(start_timestamp, end_timestamp, path=r'/Volumes/Externa
     return df
 
 
+def get_acemag_gsm_range(start_timestamp, end_timestamp, path=r'/Volumes/External/Data/ACE/mfi'):
+    """Pass two datetime objects and grab .STS files between dates, from
+    directory given."""
+    df = None
+    start = start_timestamp.date()
+    end = end_timestamp.date()
+    while start <= end:
+        fn = f'ac_h0_mfi_{start.year}{start.month:02}{start.day:02}'
+        try:
+            path_fn = glob.glob(f'{path}/{fn}*.cdf')[0]
+        except Exception as e:
+            path_fn = None
+        _df = get_acemag_gsm(f'{path_fn}')
+        if _df is not None:
+            if df is None:
+                df = _df.copy(deep=True)
+            else:
+                df = pd.concat([df, _df])
+        start += timedelta(days=1)
+    return df
+
+
 def get_aceswe_rtn_range(start_timestamp, end_timestamp, path=r'/Volumes/External/Data/ACE/swe'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
