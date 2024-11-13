@@ -8,6 +8,9 @@ from scipy import constants
 import glob
 import urllib.request
 import os.path
+import pickle
+
+ace_path = "/Volumes/External/Data/ACE/"
 
 
 def filter_bad_data(df, col, bad_val):
@@ -364,17 +367,70 @@ def get_acepos_gsm_range(start_timestamp, end_timestamp, path=r'/Volumes/Externa
 
 
 def resample_df(df, resample_min):
-    rdf = df.set_index('timestamp').resample(f'{resample_min}min').mean().reset_index(drop=False)
+    rdf = df.set_index('time').resample(f'{resample_min}min').mean().reset_index(drop=False)
     return rdf
 
 
 def merge_rdfs(df1, df2):
-    df1.set_index(pd.to_datetime(df1['timestamp']), inplace=True)
-    df2.set_index(pd.to_datetime(df2['timestamp']), inplace=True)
+    df1.set_index(pd.to_datetime(df1['time']), inplace=True)
+    df2.set_index(pd.to_datetime(df2['time']), inplace=True)
     mdf = pd.concat([df1, df2], axis=1)
-    mdf = mdf.drop(['timestamp'], axis=1)
+    mdf = mdf.drop(['time'], axis=1)
     mdf = mdf.reset_index(drop=False)
     return mdf
+
+
+def create_ace_gsm_pkl(start_timestamp, end_timestamp): #just initial quick version, may fail easily
+    #create dataframes for mag, plas, and position
+    df_mag = get_acemag_gsm_range(start_timestamp, end_timestamp)
+    df_swe = get_aceswe_gsm_range(start_timestamp, end_timestamp)
+    df_pos = get_acepos_gsm_range(start_timestamp, end_timestamp)
+    #resample all dfs
+    rdf_mag = resample_df(df_mag, 1)
+    rdf_swe = resample_df(df_swe, 1)
+    rdf_pos = resample_df(df_pos, 1)
+    #merge resampled dataframes
+    mdf_mag_swe = merge_rdfs(rdf_mag, rdf_swe)
+    mdf_mag_swe_pos = merge_rdfs(mdf_mag_swe, rdf_pos)
+    #produce recarray with correct datatypes
+    time_stamps = mdf_mag_swe_pos['time']
+    dt_lst= [element.to_pydatetime() for element in list(time_stamps)] #extract timestamps in datetime.datetime format
+
+    ace=np.zeros(len(dt_lst),dtype=[('time',object),('bx', float),('by', float),('bz', float),('bt', float),\
+                ('vx', float),('vy', float),('vz', float),('vt', float),('np', float),('tp', float),\
+                ('x', float),('y', float),('z', float), ('r', float),('lat', float),('lon', float)])
+    ace = ace.view(np.recarray) 
+
+    ace.time=dt_lst
+    ace.bx=mdf_mag_swe_pos['bx']
+    ace.by=mdf_mag_swe_pos['by']
+    ace.bz=mdf_mag_swe_pos['bz']
+    ace.bt=mdf_mag_swe_pos['bt']
+    ace.vx=mdf_mag_swe_pos['vx']
+    ace.vy=mdf_mag_swe_pos['vy']
+    ace.vz=mdf_mag_swe_pos['vz']
+    ace.vt=mdf_mag_swe_pos['vt']
+    ace.np=mdf_mag_swe_pos['np']
+    ace.tp=mdf_mag_swe_pos['tp']
+    ace.x=mdf_mag_swe_pos['x']
+    ace.y=mdf_mag_swe_pos['y']
+    ace.z=mdf_mag_swe_pos['z']
+    ace.r=mdf_mag_swe_pos['r']
+    ace.lat=mdf_mag_swe_pos['lat']
+    ace.lon=mdf_mag_swe_pos['lon']
+
+    #dump to pickle file
+    header='Science level 2 solar wind magnetic field (MFI), plasma (SWE), and positions from ACE, ' + \
+    'obtained from https://spdf.gsfc.nasa.gov/pub/data/ace/mag/level_2_cdaweb '+ \
+    'Timerange: '+ace.time[0].strftime("%Y-%b-%d %H:%M")+' to '+ace.time[-1].strftime("%Y-%b-%d %H:%M")+\
+    ', resampled to a time resolution of 1 min. '+\
+    'The data are available in a numpy recarray, fields can be accessed by ace.time, ace.bx, etc. '+\
+    'Total number of data points: '+str(ace.size)+'. '+\
+    'Units are btxyz [nT, GSM], vtxyz [km/s, GSM], heliospheric position x/y/z/r/lon/lat [km, degree, GSM]. '+\
+    'Made with script by E.E. Davies (github @ee-davies, twitter @spacedavies). File creation date: '+\
+    datetime.utcnow().strftime("%Y-%b-%d %H:%M")+' UTC'
+
+    pickle.dump([ace,header], open(ace_path+'ace_gsm.p', "wb"))
 
 
 def calc_pressure_params(plasmag_df):
