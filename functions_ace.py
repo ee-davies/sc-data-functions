@@ -47,7 +47,7 @@ def download_ace_mag(start_timestamp, end_timestamp, path="/Volumes/External/Dat
     while start < end:
         year = start.year
         date_str = f'{year}{start.month:02}{start.day:02}'
-        data_item_id = f'ac_h0_mfi_{date_str}_v06'
+        data_item_id = f'ac_h0_mfi_{date_str}_v07'
         if os.path.isfile(f"{path}/{data_item_id}.cdf") == True:
             print(f'{data_item_id}.cdf has already been downloaded.')
             start += timedelta(days=1)
@@ -94,6 +94,25 @@ def get_acemag_gse(fp):
         df['b_x'].mask((df['b_x'] < -9.99e+30), inplace=True)
         df['b_y'].mask((df['b_y'] < -9.99e+30), inplace=True)
         df['b_z'].mask((df['b_z'] < -9.99e+30), inplace=True)
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
+    return df
+
+
+def get_acemag_gsm(fp):
+    try:
+        cdf = pycdf.CDF(fp)
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'Magnitude'], ['time', 'bt'])}
+        df = pd.DataFrame.from_dict(data)
+        bx, by, bz = cdf['BGSM'][:].T
+        df['bx'] = bx
+        df['by'] = by
+        df['bz'] = bz
+        df['bt'].mask((df['bt'] < -9.99e+30), inplace=True)
+        df['bx'].mask((df['bx'] < -9.99e+30), inplace=True)
+        df['by'].mask((df['by'] < -9.99e+30), inplace=True)
+        df['bz'].mask((df['bz'] < -9.99e+30), inplace=True)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
