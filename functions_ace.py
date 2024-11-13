@@ -182,6 +182,33 @@ def get_aceswe_gsm(fp):
     return df
 
 
+def cart2sphere(x,y,z):
+    r = np.sqrt(x**2+ y**2 + z**2) /1.495978707E8         
+    theta = np.arctan2(z,np.sqrt(x**2+ y**2)) * 360 / 2 / np.pi
+    phi = np.arctan2(y,x) * 360 / 2 / np.pi                   
+    return (r, theta, phi)
+
+
+#positions in units of km
+def get_acepos_gsm(fp):
+    try:
+        cdf = pycdf.CDF(fp)
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch'], ['time'])}
+        df = pd.DataFrame.from_dict(data)
+        x, y, z = cdf['SC_pos_GSM'][:].T
+        df['x'] = x
+        df['y'] = y
+        df['z'] = z
+        r, lat, lon = cart2sphere(x,y,z)
+        df['r'] = r
+        df['lat'] = lat
+        df['lon'] = lon
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
+    return df
+
+
 def get_acemag_rtn_range(start_timestamp, end_timestamp, path=r'/Volumes/External/Data/ACE/mfi'):
     """Pass two datetime objects and grab .STS files between dates, from
     directory given."""
