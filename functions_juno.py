@@ -105,6 +105,13 @@ def get_junoplas(fp=f"{juno_path}"+"jade/JADE_Wilson.mat"):
     return df
 
 
+def get_junoplas_range(start_timestamp, end_timestamp):
+    df = get_junoplas()
+    mask = (df['time'] >= start_timestamp) & (df['time'] <= end_timestamp)
+    df_new = df[mask].reset_index(drop=True)
+    return df_new
+
+
 """
 JUNO POSITION FUNCTIONS: coord maths, furnish kernels, and call position for each timestamp
 Currently set to HEEQ, but will implement options to change
