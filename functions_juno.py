@@ -6,6 +6,7 @@ import spiceypy
 import os.path
 import glob
 import pickle
+import scipy
 
 
 def format_path(fp):
@@ -78,6 +79,29 @@ def get_junomag_range(start_timestamp, end_timestamp, path=juno_path+'fgm/1min')
             else:
                 df = pd.concat([df, _df])
         start += timedelta(days=1)
+    return df
+
+
+"""
+JUNO PLASMA DATA
+Juno plasma data provided by Robert Wilson privately in .mat file
+"""
+
+def matlab2datetime(matlab_datenum):
+    day = datetime.fromordinal(int(matlab_datenum))
+    dayfrac = timedelta(days=matlab_datenum%1) - timedelta(days = 366)
+    return day + dayfrac
+
+
+def get_junoplas(fp=f"{juno_path}"+"jade/JADE_Wilson.mat"):
+    mat_jade = scipy.io.loadmat(fp)
+    time = mat_jade['time'].reshape(-1)
+    vt = mat_jade['vsw'].reshape(-1)
+    np = mat_jade['np'].reshape(-1)
+    tp = mat_jade['Tp'].reshape(-1)
+    converted_time = [matlab2datetime(tval) for tval in time]
+    data = {'time':converted_time, 'vt':vt, 'np':np, 'tp':tp}
+    df = pd.DataFrame.from_dict(data)
     return df
 
 
