@@ -84,7 +84,7 @@ def get_junomag_range(start_timestamp, end_timestamp, path=juno_path+'fgm/1min')
 
 """
 JUNO PLASMA DATA
-Juno plasma data provided by Robert Wilson privately in .mat file
+Juno plasma data provided by R. Wilson privately in .mat file
 """
 
 def matlab2datetime(matlab_datenum):
@@ -198,7 +198,10 @@ including MAG, empty PLAS, and POSITION data
 """
 
 
-def create_juno_pkl(start_timestamp, end_timestamp):
+def create_juno_pkl(start_timestamp, end_timestamp, data_coord_sys = "RTN", pos_coord_sys = "HAE"):
+
+    if data_coord_sys != "RTN":
+        print("Juno data only available in RTN at the moment. Continuing to produce RTN data file...")
 
     #create mag df, resampled to nearest 1 min
     df_mag = get_junomag_range(start_timestamp, end_timestamp)
@@ -211,10 +214,19 @@ def create_juno_pkl(start_timestamp, end_timestamp):
         mag_rdf.set_index(pd.to_datetime(mag_rdf['time']), inplace=True)
         mag_rdf = mag_rdf.dropna() #need to drop NaN values for plotly...
 
-    #create empty plasma df    
-    print(f'Note: Juno plasma data is unavailable during cruise phase')
-    df_plas = pd.DataFrame({'time':[], 'vt':[], 'vx':[], 'vy':[], 'vz':[], 'np':[], 'tp':[]})
-    plas_rdf = df_plas
+    #create plas df, resampled to nearest 1 min
+    df_plas = get_junoplas_range(start_timestamp, end_timestamp)
+    if df_plas is None:
+        print(f'Note: Juno plasma data is unavailable during cruise phase, except 2016-05-15 to 2016-06-24')
+        df_plas = pd.DataFrame({'time':[], 'vt':[], 'vx':[], 'vy':[], 'vz':[], 'np':[], 'tp':[]})
+        plas_rdf = df_plas.drop(columns=['time'])
+    else:
+        plas_rdf = df_plas.set_index('time').resample('1min').mean().reset_index(drop=False)
+        plas_rdf.set_index(pd.to_datetime(plas_rdf['time']), inplace=True)
+        plas_rdf = plas_rdf.dropna() #need to drop NaN values for plotly...
+        plas_rdf['vx'] = pd.NA
+        plas_rdf['vy'] = pd.NA
+        plas_rdf['vz'] = pd.NA
 
     #need to combine mag and plasma dfs to get complete set of timestamps for position calculation
     magplas_rdf = pd.concat([mag_rdf, plas_rdf], axis=1)
@@ -223,7 +235,8 @@ def create_juno_pkl(start_timestamp, end_timestamp):
     magplas_rdf['time'] = magplas_rdf.index
 
     #get juno positions for corresponding timestamps
-    juno_pos = get_juno_positions(magplas_rdf['time'])
+    juno_furnish()
+    juno_pos = get_juno_positions(magplas_rdf['time'], frame=pos_coord_sys)
     juno_pos.set_index(pd.to_datetime(juno_pos['time']), inplace=True)
     juno_pos = juno_pos.drop(columns=['time'])
 
@@ -258,17 +271,18 @@ def create_juno_pkl(start_timestamp, end_timestamp):
     juno.lon=comb_df['lon']
 
     #dump to pickle file
-    header='Science level 2 solar wind magnetic field (FGM) from Juno Mission Cruise Phase, ' + \
+    header='Science level 2 solar wind magnetic field (FGM) from Juno Mission Cruise Phase,' + \
     'obtained from https://pds-ppi.igpp.ucla.edu/search/view/?f=yes&id=pds://PPI/JNO-SS-3-FGM-CAL-V1.0/DATA/CRUISE/SE/1MIN '+ \
     'Timerange: '+juno.time[0].strftime("%Y-%b-%d %H:%M")+' to '+juno.time[-1].strftime("%Y-%b-%d %H:%M")+\
     ', resampled to a time resolution of 1 min. '+\
-    'The data are available in a numpy recarray, fields can be accessed by juno.time, juno.bx, etc. '+\
+    'The data are available in a numpy recarray, fields can be accessed by juno.time, juno.bx, juno.vt, etc. '+\
     'Total number of data points: '+str(juno.size)+'. '+\
-    'Units are btxyz [nT, RTN], heliospheric position x/y/z/r/lon/lat [AU, degree, HEEQ]. '+\
+    'Units are btxyz [nT, RTN], vtxy  [km s^-1], np[cm^-3], tp [K], heliospheric position x/y/z/r/lon/lat [AU, degree]. '+\
     'Made with script by E.E. Davies (github @ee-davies, twitter @spacedavies). File creation date: '+\
     datetime.utcnow().strftime("%Y-%b-%d %H:%M")+' UTC'
 
-    pickle.dump([juno,header], open(juno_path+'juno_rtn.p', "wb"))
+    fileid = start_timestamp.strftime("%Y-%m-%d")
+    pickle.dump([juno,header], open(juno_path+f'juno_rtn_{fileid}.p', "wb"))
 
 
 def create_juno_mag_pkl(start_timestamp, end_timestamp):
