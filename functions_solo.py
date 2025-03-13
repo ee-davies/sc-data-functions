@@ -329,6 +329,7 @@ def get_soloplas_ll(fp):
     df = filter_bad_col(df, 'vy', -1E30)
     df = filter_bad_col(df, 'vz', -1E30)
     df['vt'] = np.linalg.norm(df[['vx', 'vy', 'vz']], axis=1)
+    df['tp'] = np.nan
     return df
 
 
