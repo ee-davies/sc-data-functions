@@ -478,7 +478,7 @@ def create_solo_pkl(start_timestamp, end_timestamp=datetime.utcnow(), level='l2'
         
     #load in plasma data to DataFrame and resample, create empty plasma and resampled DataFrame if no data
     #only drop time column if MAG DataFrame is not empty
-    df_plas = get_soloplas_range(start_timestamp, end_timestamp)
+    df_plas = get_soloplas_range(start_timestamp, end_timestamp, level)
     if df_plas is None:
         print(f'SolO SWA data is empty for this timerange')
         df_plas = pd.DataFrame({'time':[], 'vt':[], 'vx':[], 'vy':[], 'vz':[], 'np':[], 'tp':[]})
