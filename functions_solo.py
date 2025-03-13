@@ -291,7 +291,7 @@ def download_soloplas(start_timestamp, end_timestamp, path=f'{solo_path}'+'swa/p
 
 
 #Load single file from specific path using pycdf from spacepy
-def get_soloplas(fp):
+def get_soloplas_l2(fp):
     """raw = rtn"""
     try:
         cdf = pycdf.CDF(fp)
@@ -356,7 +356,7 @@ def get_soloplas_ll(fp):
 
 
 #Load range of files using specified start and end dates/ timestamps
-def get_soloplas_range(start_timestamp, end_timestamp, path=f'{solo_path}'+'swa/plas/l2'):
+def get_soloplas_range_l2(start_timestamp, end_timestamp, path=f'{solo_path}'+'swa/plas/l2'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df = None
@@ -365,7 +365,7 @@ def get_soloplas_range(start_timestamp, end_timestamp, path=f'{solo_path}'+'swa/
     while start < end:
         date_str = f'{start.year}{start.month:02}{start.day:02}'
         fn = f'{path}/solo_L2_swa-pas-grnd-mom_{date_str}.cdf'
-        _df = get_soloplas(fn)
+        _df = get_soloplas_l2(fn)
         if _df is not None:
             if df is None:
                 df = _df.copy(deep=True)
