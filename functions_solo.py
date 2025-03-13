@@ -397,6 +397,15 @@ def get_soloplas_range_ll(start_timestamp, end_timestamp, path=f'{solo_path}'+'s
     return df
 
 
+#combined soloplas range function to specify level and resolution of data 
+def get_soloplas_range(start_timestamp, end_timestamp, level="l2", res="full"): #res col is filler for consistency with mag for now
+    if level == "l2":
+        df = get_soloplas_range_l2(start_timestamp, end_timestamp)
+    elif level == "ll":
+        df = get_soloplas_range_ll(start_timestamp, end_timestamp)
+    return df 
+
+
 """
 SOLO POSITION FUNCTIONS: coord maths, furnish kernels, and call position for each timestamp
 Currently set to HEEQ, but will implement options to change
