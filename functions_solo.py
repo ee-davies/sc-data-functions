@@ -309,6 +309,29 @@ def get_soloplas(fp):
     return df
 
 
+#Load single low latency file from specific path 
+def get_soloplas_ll(fp):
+    """raw = rtn"""
+    try:
+        cdf = pycdf.CDF(fp)
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['EPOCH', 'SWA_PAS_DENSITY'], ['time', 'np'])}
+        df = pd.DataFrame.from_dict(data)
+        df['time'] = pd.to_datetime(df['time'])
+        vx, vy, vz = cdf['SWA_PAS_VELOCITY_RTN'][:].T
+        df['vx'] = vx
+        df['vy'] = vy
+        df['vz'] = vz
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
+    df = filter_bad_col(df, 'np', -1E30)
+    df = filter_bad_col(df, 'vx', -1E30)
+    df = filter_bad_col(df, 'vy', -1E30)
+    df = filter_bad_col(df, 'vz', -1E30)
+    df['vt'] = np.linalg.norm(df[['vx', 'vy', 'vz']], axis=1)
+    return df
+
+
 # #Load single file from specific path using cdflib
 # def get_soloplas(fp):
 #     """raw = rtn"""
