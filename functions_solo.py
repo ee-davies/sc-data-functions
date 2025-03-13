@@ -309,7 +309,7 @@ def get_soloplas(fp):
     return df
 
 
-#Load single low latency file from specific path 
+#Load single low latency file from specific path (no temp data)
 def get_soloplas_ll(fp):
     """raw = rtn"""
     try:
@@ -366,6 +366,27 @@ def get_soloplas_range(start_timestamp, end_timestamp, path=f'{solo_path}'+'swa/
         date_str = f'{start.year}{start.month:02}{start.day:02}'
         fn = f'{path}/solo_L2_swa-pas-grnd-mom_{date_str}.cdf'
         _df = get_soloplas(fn)
+        if _df is not None:
+            if df is None:
+                df = _df.copy(deep=True)
+            else:
+                df = pd.concat([df, _df])
+        start += timedelta(days=1)
+    return df
+
+
+#Loads range between specified dates, returns combined df. 
+#BE CAREFUL: path where data is saved must be carefully maintained: only keep one file per date (the longest time range)
+def get_soloplas_range_ll(start_timestamp, end_timestamp, path=f'{solo_path}'+'swa/plas/ll'):
+    """Pass two datetime objects and grab .cdf files between dates, from
+    directory given."""
+    df = None
+    start = start_timestamp.date()
+    end = end_timestamp.date() + timedelta(days=1)
+    while start < end:
+        date_str = f'{start.year}{start.month:02}{start.day:02}'
+        fn = glob.glob(f'{path}/solo_LL02_swa-pas-mom_{date_str}*.cdf')
+        _df = get_soloplas_ll(fn[0])
         if _df is not None:
             if df is None:
                 df = _df.copy(deep=True)
