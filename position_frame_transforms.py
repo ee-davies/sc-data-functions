@@ -81,17 +81,17 @@ def get_heliocentric_transformation_matrices(time):
         if (x_theta>=0 and y_theta>=0): theta = theta - np.pi
         elif (x_theta<=0 and y_theta<=0): theta = theta
         elif (x_theta>=0 and y_theta<=0): theta = theta - np.pi/2
-        elif (x_theta<=0 and y_theta>=0): theta = np.pi+(theta-np.pi/2)
+        elif (x_theta<=0 and y_theta>=0): theta = theta + np.pi/2
         
     elif (x<=0 and y<=0):
         if (x_theta>=0 and y_theta>=0): theta = theta
         elif (x_theta<=0 and y_theta<=0): theta = theta + np.pi
         elif (x_theta>=0 and y_theta<=0): theta = theta + np.pi/2
-        elif (x_theta<=0 and y_theta>=0): theta = theta-np.pi/2
+        elif (x_theta<=0 and y_theta>=0): theta = theta - np.pi/2
         
     elif (x>=0 and y<=0):
         if (x_theta>=0 and y_theta>=0): theta = theta + np.pi/2
-        elif (x_theta<=0 and y_theta<=0): theta = np.pi+(theta-np.pi/2) 
+        elif (x_theta<=0 and y_theta<=0): theta = theta - np.pi/2 
         elif (x_theta>=0 and y_theta<=0): theta = theta + np.pi
         elif (x_theta<=0 and y_theta>=0): theta = theta
 
@@ -99,7 +99,7 @@ def get_heliocentric_transformation_matrices(time):
         if (x_theta>=0 and y_theta>=0): theta = theta - np.pi/2
         elif (x_theta<=0 and y_theta<=0): theta = theta + np.pi/2
         elif (x_theta>=0 and y_theta<=0): theta = theta
-        elif (x_theta<=0 and y_theta>=0): theta = theta -np.pi   
+        elif (x_theta<=0 and y_theta>=0): theta = theta - np.pi   
 
     s2_theta = np.matrix([[np.cos(theta), np.sin(theta),  0], [-np.sin(theta) , np.cos(theta) , 0], [0,  0,  1]])
     s2_iota = np.matrix([[1,  0,  0], [0, np.cos(iota), np.sin(iota)], [0, -np.sin(iota) , np.cos(iota)]])
