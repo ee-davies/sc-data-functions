@@ -404,6 +404,15 @@ def get_psp_pos(t):
     return position
 
 
+def get_psp_positions(time_series):
+    positions = []
+    for t in time_series:
+        position = get_psp_pos(t)
+        positions.append(position)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    return df_positions
+
+
 # def get_psp_positions(time_series):
 #     kernels_psp = astrospice.registry.get_kernels('psp', 'predict')
 #     frame = HeliographicStonyhurst()
