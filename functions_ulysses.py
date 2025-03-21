@@ -89,3 +89,25 @@ def get_ulyssesmag(fp):
         print('ERROR:', e, fp)
         df = None
     return df
+
+
+#Load range of files using specified start and end dates/ timestamps
+def get_ulyssesmag_range(start_timestamp, end_timestamp, path=f'{ulysses_path}'+'mag/l2/1min'):
+    """Pass two datetime objects and grab .cdf files between dates, from
+    directory given."""
+    df = None
+    start = start_timestamp.date()
+    end = end_timestamp.date() + timedelta(days=1)
+    while start < end:
+        year = start.year
+        date_str = f'{year}{start.month:02}{start.day:02}'
+        data_item_id = f'uy_1min_vhm_{date_str}_v01'
+        fn = f'{path}/{data_item_id}.cdf'
+        _df = get_ulyssesmag(fn)
+        if _df is not None:
+            if df is None:
+                df = _df.copy(deep=True)
+            else:
+                df = pd.concat([df, _df])
+        start += timedelta(days=1)
+    return df
