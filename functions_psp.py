@@ -363,7 +363,7 @@ def get_pspspi_range_mom(start_timestamp, end_timestamp, path=f'{psp_path}'+'swe
 
 """
 PSP SPACECRAFT POSITIONS
-#currently relies on astrospice (will update), calls position for each timestamp
+#Calls directly from spiceypy kernels
 #Set to HEEQ, but will implement options to change
 """
 
@@ -383,6 +383,7 @@ def sphere2cart(r, lat, lon):
     return x.value, y.value, z.value, r_au.value
 
 
+#kernels obtained from https://cdaweb.gsfc.nasa.gov/pub/data/psp/ephemeris/spice/
 def psp_furnish():
     """Main"""
     psp_path = kernels_path+'psp/'
