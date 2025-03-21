@@ -71,3 +71,21 @@ def download_ulyssesmag_1min(start_timestamp, end_timestamp, path=f'{ulysses_pat
             except Exception as e:
                 print('ERROR', e, data_item_id)
                 start += timedelta(days=1)
+
+
+#Load single file from specific path using pycdf from spacepy
+def get_ulyssesmag(fp):
+    """raw = rtn"""
+    try:
+        cdf = pycdf.CDF(fp)
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'B_MAG'], ['time', 'bt'])}
+        df = pd.DataFrame.from_dict(data)
+        bx, by, bz = cdf['B_RTN'][:].T
+        df['bx'] = bx
+        df['by'] = by
+        df['bz'] = bz
+        #df['bt'] = np.linalg.norm(df[['bx', 'by', 'bz']], axis=1)
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
+    return df
