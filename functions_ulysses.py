@@ -111,3 +111,45 @@ def get_ulyssesmag_range(start_timestamp, end_timestamp, path=f'{ulysses_path}'+
                 df = pd.concat([df, _df])
         start += timedelta(days=1)
     return df
+
+
+"""
+ULYSSES PLASMA DATA
+# L2 plasma moments from SWOOPS instrument
+"""
+
+
+#DOWNLOAD FUNCTIONS
+
+#all plasma files are yearly i.e. 19920101, except 19901118
+def download_ulyssesplas(start_timestamp, end_timestamp, path=f'{ulysses_path}'+'plas/l2'): 
+    start = start_timestamp.date()
+    end = end_timestamp.date() + timedelta(days=1)
+    while start < end:
+        year = start.year
+        if year == 1990:
+            date_str = f'{year}{start.month:02}{start.day:02}'
+        else:
+            date_str = f'{year}0101'
+        data_item_id = f'uy_proton-moments_swoops_{date_str}_v01'
+        if os.path.isfile(f"{path}/{data_item_id}.cdf") == True:
+            print(f'{data_item_id}.cdf has already been downloaded.')
+            if year == 1990:
+                start += timedelta(days=1)
+            else:
+                start += timedelta(days=365.25)
+        else:
+            try:
+                data_url = f'https://cdaweb.gsfc.nasa.gov/pub/data/ulysses/plasma/swoops_cdaweb/proton-moments_swoops/{year}/{data_item_id}.cdf'
+                urllib.request.urlretrieve(data_url, f"{path}/{data_item_id}.cdf")
+                print(f'Successfully downloaded {data_item_id}.cdf')
+                if year == 1990:
+                    start += timedelta(days=1)
+                else:
+                    start += timedelta(days=365.25)
+            except Exception as e:
+                print('ERROR', e, data_item_id)
+                if year == 1990:
+                    start += timedelta(days=1)
+                else:
+                    start += timedelta(days=365.25)
