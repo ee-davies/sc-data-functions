@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 from spacepy import pycdf
 import cdflib
-# import spiceypy
+import spiceypy
 # import os
 import glob
 import urllib.request
@@ -383,18 +383,30 @@ def sphere2cart(r, lat, lon):
     return x.value, y.value, z.value, r_au.value
 
 
-def get_psp_positions(time_series):
-    kernels_psp = astrospice.registry.get_kernels('psp', 'predict')
-    frame = HeliographicStonyhurst()
-    coords_psp = astrospice.generate_coords('Solar probe plus', time_series)
-    coords_psp = coords_psp.transform_to(frame)
-    x, y, z, r_au = sphere2cart(coords_psp.radius, coords_psp.lat, coords_psp.lon)
-    lat = coords_psp.lat.value
-    lon = coords_psp.lon.value
-    t = [element.to_pydatetime() for element in list(time_series)]
-    positions = np.array([t, x, y, z, r_au, lat, lon])
-    df_positions = pd.DataFrame(positions.T, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
-    return df_positions
+def psp_furnish():
+    """Main"""
+    psp_path = kernels_path+'psp/'
+    generic_path = kernels_path+'generic/'
+    solo_kernels = os.listdir(psp_path)
+    generic_kernels = os.listdir(generic_path)
+    for kernel in solo_kernels:
+        spiceypy.furnsh(os.path.join(psp_path, kernel))
+    for kernel in generic_kernels:
+        spiceypy.furnsh(os.path.join(generic_path, kernel))
+
+
+# def get_psp_positions(time_series):
+#     kernels_psp = astrospice.registry.get_kernels('psp', 'predict')
+#     frame = HeliographicStonyhurst()
+#     coords_psp = astrospice.generate_coords('Solar probe plus', time_series)
+#     coords_psp = coords_psp.transform_to(frame)
+#     x, y, z, r_au = sphere2cart(coords_psp.radius, coords_psp.lat, coords_psp.lon)
+#     lat = coords_psp.lat.value
+#     lon = coords_psp.lon.value
+#     t = [element.to_pydatetime() for element in list(time_series)]
+#     positions = np.array([t, x, y, z, r_au, lat, lon])
+#     df_positions = pd.DataFrame(positions.T, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+#     return df_positions
 
 
 """
