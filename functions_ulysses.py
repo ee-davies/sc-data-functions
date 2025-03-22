@@ -195,3 +195,21 @@ def get_ulyssesplas_range(start_timestamp, end_timestamp, path=f'{ulysses_path}'
     time_mask = (df['time'] > start_timestamp) & (df['time'] < end_timestamp)
     df_timerange = df[time_mask]
     return df_timerange
+
+
+"""
+ULYSSES POSITION DATA
+# https://naif.jpl.nasa.gov/pub/naif/ULYSSES/kernels/spk/ #apparently may have discontinuities
+"""
+
+
+def ulysses_furnish():
+    """Main"""
+    ulysses_path = kernels_path+'ulysses/'
+    generic_path = kernels_path+'generic/'
+    ulysses_kernels = os.listdir(ulysses_path)
+    generic_kernels = os.listdir(generic_path)
+    for kernel in ulysses_kernels:
+        spiceypy.furnsh(os.path.join(ulysses_path, kernel))
+    for kernel in generic_kernels:
+        spiceypy.furnsh(os.path.join(generic_path, kernel))
