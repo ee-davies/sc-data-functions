@@ -213,3 +213,12 @@ def ulysses_furnish():
         spiceypy.furnsh(os.path.join(ulysses_path, kernel))
     for kernel in generic_kernels:
         spiceypy.furnsh(os.path.join(generic_path, kernel))
+
+
+def get_ulysses_pos(t):
+    if spiceypy.ktotal('ALL') < 1:
+        ulysses_furnish()
+    pos = spiceypy.spkpos("ULYSSES", spiceypy.datetime2et(t), "HEEQ", "NONE", "SUN")[0] #calls positions in HEEQ; can be changed
+    r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
+    position = t, pos[0], pos[1], pos[2], r, lat, lon
+    return position
