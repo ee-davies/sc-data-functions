@@ -222,7 +222,7 @@ def ulysses_furnish():
         spiceypy.furnsh(os.path.join(generic_path, kernel))
 
 
-def get_ulysses_pos(t):
+def get_ulysses_pos(t): #doesn't automatically furnish, fix
     if spiceypy.ktotal('ALL') < 1:
         ulysses_furnish()
     pos = spiceypy.spkpos("ULYSSES", spiceypy.datetime2et(t), "HEEQ", "NONE", "SUN")[0] #calls positions in HEEQ; can be changed
