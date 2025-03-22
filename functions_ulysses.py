@@ -173,3 +173,25 @@ def get_ulyssesplas(fp):
         print('ERROR:', e, fp)
         df = None
     return df
+
+
+#Load range of files using specified start and end dates/ timestamps
+def get_ulyssesplas_range(start_timestamp, end_timestamp, path=f'{ulysses_path}'+'plas/l2'):
+    """Pass two datetime objects and grab .cdf files between dates, from
+    directory given."""
+    df = None
+    start = start_timestamp.date()
+    end = end_timestamp.date() + timedelta(days=1)
+    while start < end:
+        year = start.year
+        fn = glob.glob(f'{path}/uy_proton-moments_swoops_{year}*.cdf')
+        _df = get_ulyssesplas(fn[0])
+        if _df is not None:
+            if df is None:
+                df = _df.copy(deep=True)
+            else:
+                df = pd.concat([df, _df])
+        start += timedelta(days=365.25)
+    time_mask = (df['time'] > start_timestamp) & (df['time'] < end_timestamp)
+    df_timerange = df[time_mask]
+    return df_timerange
