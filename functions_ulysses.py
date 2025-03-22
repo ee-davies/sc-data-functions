@@ -229,3 +229,12 @@ def get_ulysses_pos(t):
     r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
     position = t, pos[0], pos[1], pos[2], r, lat, lon
     return position
+
+
+def get_ulysses_positions(time_series):
+    positions = []
+    for t in time_series:
+        position = get_ulysses_pos(t)
+        positions.append(position)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    return df_positions
