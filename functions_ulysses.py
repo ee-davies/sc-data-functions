@@ -157,7 +157,7 @@ def download_ulyssesplas(start_timestamp, end_timestamp, path=f'{ulysses_path}'+
 
 #Load single file from specific path using pycdf from spacepy
 #plasma files also include mag data and heliocentricDistance and lat if needed
-#need to assess temperature
+#need to assess proton temperature is correct
 def get_ulyssesplas(fp):
     """raw = rtn"""
     try:
@@ -165,10 +165,10 @@ def get_ulyssesplas(fp):
         data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'V_MAG', 'VR', 'VT', 'VN', 'dens'], ['time', 'vt', 'vx', 'vy', 'vz', 'np'])}
         df = pd.DataFrame.from_dict(data)
         df['time'] = pd.to_datetime(df['time'])
-        # t_par = cdf['Tpar'][:]
-        # t_per = cdf['Tper'][:]
-        # tp = np.sqrt(t_par**2 + t_per**2)
-        # df['tp'] = tp
+        t_par = cdf['Tpar'][:]
+        t_per = cdf['Tper'][:]
+        tp = np.sqrt(t_par**2 + t_per**2)
+        df['tp'] = tp
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
