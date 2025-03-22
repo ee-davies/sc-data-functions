@@ -203,6 +203,13 @@ ULYSSES POSITION DATA
 """
 
 
+def cart2sphere(x,y,z):
+    r = np.sqrt(x**2+ y**2 + z**2) /1.495978707E8         
+    theta = np.arctan2(z,np.sqrt(x**2+ y**2)) * 360 / 2 / np.pi
+    phi = np.arctan2(y,x) * 360 / 2 / np.pi                   
+    return (r, theta, phi)
+
+
 def ulysses_furnish():
     """Main"""
     ulysses_path = kernels_path+'ulysses/'
