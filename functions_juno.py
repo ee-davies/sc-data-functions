@@ -180,7 +180,7 @@ def get_juno_positions_daily(start, end):
     return df_positions
 
 
-def get_juno_positions_hourly(start, end, planet):
+def get_juno_positions_hourly(start, end):
     t = start
     positions = []
     while t < end:
@@ -191,7 +191,7 @@ def get_juno_positions_hourly(start, end, planet):
     return df_positions
 
 
-def get_juno_positions_minute(start, end, planet):
+def get_juno_positions_minute(start, end):
     t = start
     positions = []
     while t < end:
