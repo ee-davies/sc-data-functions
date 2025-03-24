@@ -414,6 +414,39 @@ def get_psp_positions(time_series):
     return df_positions
 
 
+def get_psp_positions_daily(start, end, planet):
+    t = start
+    positions = []
+    while t < end:
+        position = get_psp_pos(t)
+        positions.append(position)
+        t += timedelta(days=1)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    return df_positions
+
+
+def get_psp_positions_hourly(start, end, planet):
+    t = start
+    positions = []
+    while t < end:
+        position = get_psp_pos(t)
+        positions.append(position)
+        t += timedelta(hours=1)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    return df_positions
+
+
+def get_psp_positions_minute(start, end, planet):
+    t = start
+    positions = []
+    while t < end:
+        position = get_psp_pos(t)
+        positions.append(position)
+        t += timedelta(minutes=1)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    return df_positions
+
+
 # def get_psp_positions(time_series):
 #     kernels_psp = astrospice.registry.get_kernels('psp', 'predict')
 #     frame = HeliographicStonyhurst()
