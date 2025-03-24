@@ -62,3 +62,25 @@ def get_planet_positions(time_series, planet):
         positions.append(position)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
     return df_positions
+
+
+def get_planet_positions_daily(start, end):
+    t = start
+    positions = []
+    while t < end:
+        position = get_planet_pos(t)
+        positions.append(position)
+        t += timedelta(days=1)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    return df_positions
+
+
+def get_planet_positions_minute(start, end):
+    t = start
+    positions = []
+    while t < end:
+        position = get_planet_pos(t)
+        positions.append(position)
+        t += timedelta(minutes=1)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    return df_positions
