@@ -2,7 +2,22 @@ import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
 from spacepy import pycdf
+import cdflib
+import spiceypy
+# import os
 import glob
+import urllib.request
+import os.path
+import pickle
+
+
+"""
+WIND  SERVER DATA PATH
+"""
+
+wind_path='/Volumes/External/data/wind/'
+
+
 
 
 def format_path(fp):
