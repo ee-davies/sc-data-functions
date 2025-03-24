@@ -414,7 +414,7 @@ def get_psp_positions(time_series):
     return df_positions
 
 
-def get_psp_positions_daily(start, end, planet):
+def get_psp_positions_daily(start, end):
     t = start
     positions = []
     while t < end:
@@ -425,7 +425,7 @@ def get_psp_positions_daily(start, end, planet):
     return df_positions
 
 
-def get_psp_positions_hourly(start, end, planet):
+def get_psp_positions_hourly(start, end):
     t = start
     positions = []
     while t < end:
@@ -436,7 +436,7 @@ def get_psp_positions_hourly(start, end, planet):
     return df_positions
 
 
-def get_psp_positions_minute(start, end, planet):
+def get_psp_positions_minute(start, end):
     t = start
     positions = []
     while t < end:
