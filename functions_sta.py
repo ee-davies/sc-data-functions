@@ -368,6 +368,39 @@ def get_sta_pos_range(start, end, cadence=1):
     return df_positions
 
 
+def get_sta_positions_daily(start, end):
+    t = start
+    positions = []
+    while t < end:
+        position = get_sta_pos(t)
+        positions.append(position)
+        t += timedelta(days=1)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    return df_positions
+
+
+def get_sta_positions_hourly(start, end):
+    t = start
+    positions = []
+    while t < end:
+        position = get_sta_pos(t)
+        positions.append(position)
+        t += timedelta(hours=1)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    return df_positions
+
+
+def get_sta_positions_minute(start, end):
+    t = start
+    positions = []
+    while t < end:
+        position = get_sta_pos(t)
+        positions.append(position)
+        t += timedelta(minutes=1)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    return df_positions
+
+
 def main():
     tfmt = r'%Y%m%dT%H%M%S'
     start = datetime.strptime(input('->'), tfmt)
