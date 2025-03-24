@@ -47,6 +47,9 @@ def filter_bad_col(df, col, bad_val): #filter by individual columns
     return df
 
 
+"""
+WIND MAG DATA
+"""
 
 
 def get_windmag(fp):
@@ -126,6 +129,11 @@ def get_windmag_rtn_range(start_timestamp, end_timestamp, path=wind_path+'mfi/rt
     return df
 
 
+"""
+WIND PLASMA DATA (3DP hidden for now, and SWE)
+"""
+
+
 # def get_wind3dp_pm(fp):
 #     cdf = pycdf.CDF(fp)
 #     data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'P_DENS', 'P_TEMP'], ['timestamp', 'density', 'v_therm'])}
@@ -152,6 +160,42 @@ def get_windmag_rtn_range(start_timestamp, end_timestamp, path=wind_path+'mfi/rt
 #         month = start.month
 #         day = start.day
 #         fn = f'wi_pm_3dp_{year}{month:02}{day:02}_v05.cdf'
+#         #print(f'{path}/{fn}')
+#         _df = get_wind3dp_pm(f'{path}/{fn}')
+#         if _df is not None:
+#             if df is None:
+#                 df = _df.copy(deep=True)
+#             else:
+#                 df = df.append(_df.copy(deep=True))
+#         start += timedelta(days=1)
+#     return df
+
+
+# def get_wind3dp_pm_range(start_timestamp, end_timestamp, path=r'/Volumes/External/Data/WIND/3dp/pm'):
+#     """Pass two datetime objects and grab .cdf files between dates, from
+#     directory given."""
+#     df = None
+#     start = start_timestamp.date()
+#     end = end_timestamp.date()
+#     while start <= end:
+#         year = start.year
+#         month = start.month
+#         day = start.day
+#         if start >= (datetime(2011, 12, 30).date()):
+#             fn = f'wi_pm_3dp_{year}{month:02}{day:02}_v05.cdf'
+#         elif (start <= datetime(2011, 12, 29).date()) & (start > datetime(2011, 1, 13).date()):
+#             fn = f'wi_pm_3dp_{year}{month:02}{day:02}_v04.cdf'
+#         elif (start <= datetime(2011, 1, 13).date()) & (start > datetime(2010, 5, 11).date()):
+#             fn = f'wi_pm_3dp_{year}{month:02}{day:02}_v03.cdf'
+#         elif (start <= datetime(2010, 5, 11).date()) & (start > datetime(2009, 5, 19).date()):
+#             fn = f'wi_pm_3dp_{year}{month:02}{day:02}_v04.cdf'
+#         elif (start <= datetime(2009, 5, 19).date()) & (start > datetime(2008, 1, 1).date()):
+#             fn = f'wi_pm_3dp_{year}{month:02}{day:02}_v03.cdf'
+#         elif start == datetime(2008, 1, 1).date():
+#             fn = f'wi_pm_3dp_{year}{month:02}{day:02}_v05.cdf'
+#         elif year <= 2007:
+#             fn = f'wi_pm_3dp_{year}{month:02}{day:02}_v03.cdf'
+#         #fn = f'wi_pm_3dp_{year}{month:02}{day:02}_v05.cdf'
 #         #print(f'{path}/{fn}')
 #         _df = get_wind3dp_pm(f'{path}/{fn}')
 #         if _df is not None:
