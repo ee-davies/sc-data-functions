@@ -48,6 +48,13 @@ def filter_bad_col(df, col, bad_val): #filter by individual columns
     return df
 
 
+"""
+STEREO-B MAG AND PLAS DATA 
+# Option to load in merged mag and plas data files
+# Can also load separate MAG and PLAS beacon data files for real-time use
+"""
+
+
 def get_stereomag(fp):
     cdf = pycdf.CDF(fp)
     data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'BTOTAL'], ['Timestamp', 'B_TOT'])}
@@ -83,8 +90,7 @@ def get_stereoplas(fp):
     return filter_bad_data(df, 'v_bulk', -9.99e+04)
 
 
-
-def get_stereobmag_range(start_timestamp, end_timestamp, path=r'D:/STEREO_B'):
+def get_stereobmag_range(start_timestamp, end_timestamp, path=stereob_path):
     """Pass two datetime objects and grab .STS files between dates, from
     directory given."""
     df = None
@@ -123,7 +129,7 @@ def get_stereobmag_range(start_timestamp, end_timestamp, path=r'D:/STEREO_B'):
 #     return df
 
 
-def get_stereobplas_range(start_timestamp, end_timestamp, path=r'D:/STEREO_B/PLA'):
+def get_stereobplas_range(start_timestamp, end_timestamp, path=stereob_path):
     """Pass two datetime objects and grab .STS files between dates, from
     directory given."""
     df = None
