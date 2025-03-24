@@ -453,6 +453,40 @@ def get_solo_positions(time_series):
     return df_positions
 
 
+
+def get_solo_positions_daily(start, end):
+    t = start
+    positions = []
+    while t < end:
+        position = get_solo_pos(t)
+        positions.append(position)
+        t += timedelta(days=1)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    return df_positions
+
+
+def get_solo_positions_hourly(start, end):
+    t = start
+    positions = []
+    while t < end:
+        position = get_solo_pos(t)
+        positions.append(position)
+        t += timedelta(hours=1)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    return df_positions
+
+
+def get_solo_positions_minute(start, end):
+    t = start
+    positions = []
+    while t < end:
+        position = get_solo_pos(t)
+        positions.append(position)
+        t += timedelta(minutes=1)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    return df_positions
+
+
 """
 OUTPUT COMBINED PICKLE FILE
 including MAG, PLAS, and POSITION data
