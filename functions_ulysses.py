@@ -240,7 +240,7 @@ def get_ulysses_positions(time_series):
     return df_positions
 
 
-def get_ulysses_positions_daily(start, end, planet):
+def get_ulysses_positions_daily(start, end):
     t = start
     positions = []
     while t < end:
@@ -251,7 +251,7 @@ def get_ulysses_positions_daily(start, end, planet):
     return df_positions
 
 
-def get_ulysses_positions_hourly(start, end, planet):
+def get_ulysses_positions_hourly(start, end):
     t = start
     positions = []
     while t < end:
@@ -262,7 +262,7 @@ def get_ulysses_positions_hourly(start, end, planet):
     return df_positions
 
 
-def get_ulysses_positions_minute(start, end, planet):
+def get_ulysses_positions_minute(start, end):
     t = start
     positions = []
     while t < end:
