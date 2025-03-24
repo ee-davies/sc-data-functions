@@ -180,6 +180,28 @@ def get_juno_positions_daily(start, end):
     return df_positions
 
 
+def get_juno_positions_hourly(start, end, planet):
+    t = start
+    positions = []
+    while t < end:
+        position = get_juno_pos(t)
+        positions.append(position)
+        t += timedelta(hours=1)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    return df_positions
+
+
+def get_juno_positions_minute(start, end, planet):
+    t = start
+    positions = []
+    while t < end:
+        position = get_juno_pos(t)
+        positions.append(position)
+        t += timedelta(minutes=1)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    return df_positions
+
+
 def get_juno_transform(epoch: datetime, base_frame: str, to_frame: str):
     """Return transformation matrix at a given epoch."""
     if spiceypy.ktotal('ALL') < 1:
