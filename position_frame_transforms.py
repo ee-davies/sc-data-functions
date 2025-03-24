@@ -256,6 +256,26 @@ def get_rsun_position_vector(time):
     return R_sun
 
 
+def get_rsun_position(time):
+    #format dates correctly, calculate MJD, T0, UT 
+    ts = pd.Timestamp(time)
+    jd=ts.to_julian_date()
+    mjd=float(int(jd-2400000.5)) #use modified julian date    
+    T0=(mjd-51544.5)/36525.0
+    UT=ts.hour + ts.minute / 60. + ts.second / 3600. #time in UT in hours
+    LAMBDA=280.460+36000.772*T0+0.04107*UT
+    M=357.528+35999.050*T0+0.04107*UT
+    lt2=(LAMBDA+(1.915-0.0048*T0)*np.sin(M*np.pi/180)+0.020*np.sin(2*M*np.pi/180))*np.pi/180 #lamda sun
+    #section 6.1
+    r_0 = 1.495985E8 #units km
+    e = 0.016709 - 0.0000418*T0
+    omega_bar = 282.94 + 1.72*T0
+    v = lt2 - omega_bar
+    #final r_sun equation
+    r_sun = (r_0*(1 - e**2)) / (1 + e*np.cos(v))
+    return r_sun
+
+
 def GSE_to_HEE(df):
     B_HEE = []
     z_rot_180 = np.matrix([[-1, 0, 0],[0, -1, 0],[0, 0, 1]])
@@ -269,5 +289,5 @@ def GSE_to_HEE(df):
         position = flat_B_HEE_i[0], flat_B_HEE_i[1], flat_B_HEE_i[2], r, lat, lon
         B_HEE.append(position)
     df_transformed = pd.DataFrame(B_HEE, columns=['x', 'y', 'z', 'r', 'lat', 'lon'])
-    df_transformed['time'] = df['time']
+    #df time replication no longer works
     return df_transformed
