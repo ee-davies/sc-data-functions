@@ -247,7 +247,10 @@ def get_windswe_range(start_timestamp, end_timestamp, path=wind_path+'swe'):
     return df
 
 
-#### WIND POSITIONS
+"""
+WIND POSITION FUNCTIONS:
+Wind has no spice kernels, but does have predicted orbit files including J2000 GCI, GSE, GSM, HEC
+"""
 
 
 def cart2sphere(x,y,z):
@@ -257,23 +260,26 @@ def cart2sphere(x,y,z):
     return (r, theta, phi)
 
 
-def get_windorbit_hec(fp):
-    """raw = rtn"""
+def get_wind_pos(fp, coord_sys='GSE'):
     try:
         cdf = pycdf.CDF(fp)
         data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch'], ['time'])}
         df = pd.DataFrame.from_dict(data)
-        x, y, z = cdf['HEC_POS'][:].T
+        x, y, z = cdf[f'{coord_sys}_POS'][:].T
+        r, lat, lon = cart2sphere(x,y,z)
         df['x'] = x
         df['y'] = y
         df['z'] = z
+        df['r'] = r
+        df['lat'] = lat
+        df['lon'] = lon
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
     return df
 
 
-def get_windorbit_hec_range(start_timestamp, end_timestamp, path=wind_path+'orbit/'):
+def get_wind_positions(start_timestamp, end_timestamp, coord_sys='GSE', path=wind_path+'orbit/'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df=None
@@ -284,7 +290,7 @@ def get_windorbit_hec_range(start_timestamp, end_timestamp, path=wind_path+'orbi
         date_str = f'{year}{start.month:02}{start.day:02}'
         try:
             fn = glob.glob(path+f'wi_or_pre_{date_str}_*')[0]
-            _df = get_windorbit_hec(fn)
+            _df = get_wind_pos(fn, coord_sys)
             if _df is not None:
                 if df is None:
                     df = _df.copy(deep=True)
@@ -293,11 +299,9 @@ def get_windorbit_hec_range(start_timestamp, end_timestamp, path=wind_path+'orbi
         except Exception as e:
             print('ERROR:', e, f'{date_str} does not exist')
         start += timedelta(days=1)
-    r, theta, phi = cart2sphere(df['x'],df['y'],df['z'])
-    df['r'] = r
-    df['lat'] = theta
-    df['lon'] = phi
     return df
+
+
 
 
 # def transform_data(df, instrument, coord_system):
