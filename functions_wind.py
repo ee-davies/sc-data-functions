@@ -12,12 +12,15 @@ import pickle
 
 
 """
-WIND  SERVER DATA PATH
+WIND SERVER DATA PATH
 """
 
 wind_path='/Volumes/External/data/wind/'
 
 
+"""
+WIND BAD DATA FILTER and PATH FORMATTING
+"""
 
 
 def format_path(fp):
@@ -25,7 +28,7 @@ def format_path(fp):
     return fp.replace('/', '\\')
 
 
-def filter_bad_data(df, col, bad_val):
+def filter_bad_data(df, col, bad_val): #filter across whole df
     if bad_val < 0:
         mask = df[col] < bad_val  # boolean mask for all bad values
     else:
@@ -35,11 +38,15 @@ def filter_bad_data(df, col, bad_val):
     return df
 
 
-"""
-WIND DATA PATH
-"""
+def filter_bad_col(df, col, bad_val): #filter by individual columns
+    if bad_val < 0:
+        mask = df[col] < bad_val  # boolean mask for all bad values
+    else:
+        mask = df[col] > bad_val  # boolean mask for all bad values
+    df[col][mask] = np.nan
+    return df
 
-wind_path='/Volumes/External/data/wind/'
+
 
 
 def get_windmag(fp):
