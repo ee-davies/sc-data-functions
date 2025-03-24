@@ -276,7 +276,7 @@ def get_rsun_position(time):
     return r_sun
 
 
-def GSE_to_HEE(df):
+def GSE_to_HEE_old(df):
     B_HEE = []
     z_rot_180 = np.matrix([[-1, 0, 0],[0, -1, 0],[0, 0, 1]])
     for i in range(df.shape[0]):
@@ -290,4 +290,21 @@ def GSE_to_HEE(df):
         B_HEE.append(position)
     df_transformed = pd.DataFrame(B_HEE, columns=['x', 'y', 'z', 'r', 'lat', 'lon'])
     #df time replication no longer works
+    return df_transformed
+
+
+def GSE_to_HEE(df):
+    timeseries = df.time
+    r_suns = []
+    for t in timeseries:
+        r_sun = get_rsun_position(t)
+        r_suns.append(r_sun)
+    x = -df.x + r_suns
+    y = -df.y
+    z = df.z
+    r, lat, lon = cart2sphere(x,y,z)
+    df_transformed = pd.concat([timeseries, x, y, z], axis=1)
+    df_transformed['r'] = r
+    df_transformed['lat'] = lat
+    df_transformed['lon'] = lon
     return df_transformed
