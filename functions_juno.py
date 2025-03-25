@@ -169,36 +169,60 @@ def get_juno_positions(time_series, frame="HEEQ"):
     return df_positions
 
 
-def get_juno_positions_daily(start, end):
+def get_juno_positions_daily(start, end, cadence, dist_unit='au', ang_unit='deg'):
     t = start
     positions = []
     while t < end:
         position = get_juno_pos(t)
         positions.append(position)
-        t += timedelta(days=1)
+        t += timedelta(days=cadence)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    if dist_unit == 'au':
+        df_positions.x = df_positions.x/1.495978707E8 
+        df_positions.y = df_positions.y/1.495978707E8
+        df_positions.z = df_positions.z/1.495978707E8
+    if ang_unit == 'rad':
+        df_positions.lat = df_positions.lat * np.pi / 180
+        df_positions.lon = df_positions.lon * np.pi / 180
+    spiceypy.kclear()
     return df_positions
 
 
-def get_juno_positions_hourly(start, end):
+def get_juno_positions_hourly(start, end, cadence, dist_unit='au', ang_unit='deg'):
     t = start
     positions = []
     while t < end:
         position = get_juno_pos(t)
         positions.append(position)
-        t += timedelta(hours=1)
+        t += timedelta(hours=cadence)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    if dist_unit == 'au':
+        df_positions.x = df_positions.x/1.495978707E8 
+        df_positions.y = df_positions.y/1.495978707E8
+        df_positions.z = df_positions.z/1.495978707E8
+    if ang_unit == 'rad':
+        df_positions.lat = df_positions.lat * np.pi / 180
+        df_positions.lon = df_positions.lon * np.pi / 180
+    spiceypy.kclear()
     return df_positions
 
 
-def get_juno_positions_minute(start, end):
+def get_juno_positions_minute(start, end, cadence, dist_unit='au', ang_unit='deg'):
     t = start
     positions = []
     while t < end:
         position = get_juno_pos(t)
         positions.append(position)
-        t += timedelta(minutes=1)
+        t += timedelta(minutes=cadence)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    if dist_unit == 'au':
+        df_positions.x = df_positions.x/1.495978707E8 
+        df_positions.y = df_positions.y/1.495978707E8
+        df_positions.z = df_positions.z/1.495978707E8
+    if ang_unit == 'rad':
+        df_positions.lat = df_positions.lat * np.pi / 180
+        df_positions.lon = df_positions.lon * np.pi / 180
+    spiceypy.kclear()
     return df_positions
 
 
