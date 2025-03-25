@@ -6,6 +6,15 @@ import pandas as pd
 from spacepy import pycdf
 
 
+"""
+BEPICOLOMBO DATA PATH
+"""
+
+
+bepi_path='/Volumes/External/data/bepi/'
+kernels_path='/Volumes/External/data/kernels/'
+
+
 def format_path(fp):
     """Formatting required for CDF package."""
     return fp.replace('/', '\\')
@@ -53,52 +62,136 @@ def get_bepimag_range(start_timestamp, end_timestamp, path):
     return df
 
 
-def furnish():
+"""
+BEPI POSITION FUNCTIONS: coord maths, furnish kernels, and call position for each timestamp
+Currently set to HEEQ, but will implement options to change
+"""
+
+
+def cart2sphere(x,y,z):
+    r = np.sqrt(x**2+ y**2 + z**2) /1.495978707E8         
+    theta = np.arctan2(z,np.sqrt(x**2+ y**2)) * 360 / 2 / np.pi
+    phi = np.arctan2(y,x) * 360 / 2 / np.pi                   
+    return (r, theta, phi)
+
+
+def bepi_furnish():
     """Main"""
-    base = "kernels/bepi"
-    kernels = ["naif0012.tls", "pck00010.tpc", "de434s.bsp", "heliospheric_v004u.tf", 
-               "bc_mpo_fcp_00094_20181020_20251101_v01.bsp", "bc_sci_v06.tf"]
-    for kernel in kernels:
-        spiceypy.furnsh(os.path.join(base, kernel))  
+    bepi_path = kernels_path+'bepi/'
+    generic_path = kernels_path+'generic/'
+    bepi_kernels = os.listdir(bepi_path)
+    generic_kernels = os.listdir(generic_path)
+    for kernel in bepi_kernels:
+        spiceypy.furnsh(os.path.join(bepi_path, kernel))
+    for kernel in generic_kernels:
+        spiceypy.furnsh(os.path.join(generic_path, kernel))
 
 
-def get_bepi_position(timestamp, prefurnished=False):
+# def bepi_furnish():
+#     """Main"""
+#     base = "kernels/bepi"
+#     kernels = ["naif0012.tls", "pck00010.tpc", "de434s.bsp", "heliospheric_v004u.tf", 
+#                "bc_mpo_fcp_00094_20181020_20251101_v01.bsp", "bc_sci_v06.tf"]
+#     for kernel in kernels:
+#         spiceypy.furnsh(os.path.join(base, kernel))  
+
+
+def get_bepi_pos(t, prefurnished=False):
     """Return timestamp, position array (in km), r_au, lat, lon."""
     if not prefurnished: 
         if spiceypy.ktotal('ALL') < 1:
-            furnish()
+            bepi_furnish()
     try:
-        bepi_pos = spiceypy.spkpos("BEPICOLOMBO MPO", spiceypy.datetime2et(timestamp), "HEEQ", "NONE", "SUN")[0]
-        r = np.linalg.norm(bepi_pos)
-        r_au = r/1.495978707E8
-        lat = np.arcsin(bepi_pos[2]/ r) * 360 / 2 / np.pi
-        lon = np.arctan2(bepi_pos[1], bepi_pos[0]) * 360 / 2 / np.pi
-        return [timestamp, bepi_pos, r_au, lat, lon]
+        pos = spiceypy.spkpos("BEPICOLOMBO MPO", spiceypy.datetime2et(t), "HEEQ", "NONE", "SUN")[0]
+        r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
+        position = t, pos[0], pos[1], pos[2], r, lat, lon
+        return position
     except Exception as e:
         print(e)
         return [None, None, None, None]
 
 
-def get_bepi_positions(start, end):
-    if spiceypy.ktotal('ALL') < 1:
-        furnish()
+def get_bepi_positions_daily(start, end, cadence, dist_unit='au', ang_unit='deg'):
     t = start
     positions = []
     while t < end:
-        bepi_pos = spiceypy.spkpos("BEPICOLOMBO MPO", spiceypy.datetime2et(t), "HEEQ", "NONE", "SUN")[0]
-        r = np.linalg.norm(bepi_pos)
-        r_au = r/1.495978707E8
-        lat = np.arcsin(bepi_pos[2]/ r) * 360 / 2 / np.pi
-        lon = np.arctan2(bepi_pos[1], bepi_pos[0]) * 360 / 2 / np.pi
-        positions.append([t, bepi_pos, r_au, lat, lon])
-        t += timedelta(hours=1)
-    return positions
+        position = get_bepi_pos(t)
+        positions.append(position)
+        t += timedelta(days=cadence)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    if dist_unit == 'au':
+        df_positions.x = df_positions.x/1.495978707E8 
+        df_positions.y = df_positions.y/1.495978707E8
+        df_positions.z = df_positions.z/1.495978707E8
+    if ang_unit == 'rad':
+        df_positions.lat = df_positions.lat * np.pi / 180
+        df_positions.lon = df_positions.lon * np.pi / 180
+    spiceypy.kclear()
+    return df_positions
+
+
+def get_bepi_positions_hourly(start, end, cadence, dist_unit='au', ang_unit='deg'):
+    t = start
+    positions = []
+    while t < end:
+        position = get_bepi_pos(t)
+        positions.append(position)
+        t += timedelta(hours=cadence)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    if dist_unit == 'au':
+        df_positions.x = df_positions.x/1.495978707E8 
+        df_positions.y = df_positions.y/1.495978707E8
+        df_positions.z = df_positions.z/1.495978707E8
+    if ang_unit == 'rad':
+        df_positions.lat = df_positions.lat * np.pi / 180
+        df_positions.lon = df_positions.lon * np.pi / 180
+    spiceypy.kclear()
+    return df_positions
+
+
+def get_bepi_positions_minute(start, end, cadence, dist_unit='au', ang_unit='deg'):
+    t = start
+    positions = []
+    while t < end:
+        position = get_bepi_pos(t)
+        positions.append(position)
+        t += timedelta(minutes=cadence)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    if dist_unit == 'au':
+        df_positions.x = df_positions.x/1.495978707E8 
+        df_positions.y = df_positions.y/1.495978707E8
+        df_positions.z = df_positions.z/1.495978707E8
+    if ang_unit == 'rad':
+        df_positions.lat = df_positions.lat * np.pi / 180
+        df_positions.lon = df_positions.lon * np.pi / 180
+    spiceypy.kclear()
+    return df_positions
+
+
+# def get_bepi_positions(start, end):
+#     if spiceypy.ktotal('ALL') < 1:
+#         furnish()
+#     t = start
+#     positions = []
+#     while t < end:
+#         bepi_pos = spiceypy.spkpos("BEPICOLOMBO MPO", spiceypy.datetime2et(t), "HEEQ", "NONE", "SUN")[0]
+#         r = np.linalg.norm(bepi_pos)
+#         r_au = r/1.495978707E8
+#         lat = np.arcsin(bepi_pos[2]/ r) * 360 / 2 / np.pi
+#         lon = np.arctan2(bepi_pos[1], bepi_pos[0]) * 360 / 2 / np.pi
+#         positions.append([t, bepi_pos, r_au, lat, lon])
+#         t += timedelta(hours=1)
+#     return positions
+
+
+
+
 
 
 def get_bepi_transform(epoch: datetime, base_frame: str, to_frame: str):
     """Return transformation matrix at a given epoch."""
     if spiceypy.ktotal('ALL') < 1:
-        furnish()
+        bepi_furnish()
     transform = spiceypy.pxform(base_frame, to_frame, spiceypy.datetime2et(epoch))
     return transform
 
