@@ -152,6 +152,8 @@ def get_stereobplas_range(start_timestamp, end_timestamp, path=stereob_path):
 """
 STEREO B POSITION FUNCTIONS: coord maths, furnish kernels, and call position for each timestamp
 Currently set to HEEQ, but will implement options to change
+kernels from https://soho.nascom.nasa.gov/solarsoft/stereo/gen/data/spice/depm/behind/ 
+and https://soho.nascom.nasa.gov/solarsoft/stereo/gen/data/spice/epm/behind/ for predicted orbit kernel
 """
 
 
