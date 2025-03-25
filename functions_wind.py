@@ -7,8 +7,10 @@ import spiceypy
 # import os
 import glob
 import urllib.request
+from urllib.request import urlopen
 import os.path
 import pickle
+from bs4 import BeautifulSoup
 
 
 """
@@ -45,6 +47,34 @@ def filter_bad_col(df, col, bad_val): #filter by individual columns
         mask = df[col] > bad_val  # boolean mask for all bad values
     df[col][mask] = np.nan
     return df
+
+
+"""
+WIND DOWNLOAD DATA
+"""
+
+
+def download_wind_orb(start_timestamp, end_timestamp, path=wind_path+'orbit/'):
+    start = start_timestamp.date()
+    end = end_timestamp.date() + timedelta(days=1)
+    while start < end:
+        year = start.year
+        date_str = f'{year}{start.month:02}{start.day:02}'
+        try: 
+            data_url = f'https://cdaweb.gsfc.nasa.gov/pub/data/wind/orbit/pre_or/{year}/'
+            soup = BeautifulSoup(urlopen(data_url), 'html.parser')
+            for link in soup.find_all('a'):
+                href = link.get('href')
+                if href is not None and href.startswith('wi_or_pre_'+date_str):
+                    filename = href
+                    if os.path.isfile(f"{path}{filename}") == True:
+                        print(f'{filename} has already been downloaded.')
+                    else:
+                        urllib.request.urlretrieve(data_url+filename, f"{path}{filename}")
+                        print(f'Successfully downloaded {filename}')
+        except Exception as e:
+            print('ERROR', e, f'.File for {year} does not exist.')
+        start += timedelta(days=1)
 
 
 """
