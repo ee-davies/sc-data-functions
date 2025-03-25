@@ -1,3 +1,117 @@
+import numpy as np
+import pandas as pd
+from datetime import datetime, timedelta
+from spacepy import pycdf
+import spiceypy
+import os.path
+import glob
+import pickle
+import scipy
+
+
+"""
+VENUS EXPRESS DATA PATH
+"""
+
+vex_path='/Volumes/External/data/vex/'
+kernels_path='/Volumes/External/data/kernels/'
+
+
+"""
+VEX POSITION FUNCTIONS: coord maths, furnish kernels, and call position for each timestamp
+Currently set to HEEQ, but will implement options to change
+"""
+
+
+def cart2sphere(x,y,z):
+    r = np.sqrt(x**2+ y**2 + z**2) /1.495978707E8         
+    theta = np.arctan2(z,np.sqrt(x**2+ y**2)) * 360 / 2 / np.pi
+    phi = np.arctan2(y,x) * 360 / 2 / np.pi                   
+    return (r, theta, phi)
+
+
+def vex_furnish():
+    """Main"""
+    vex_path = kernels_path+'vex/'
+    generic_path = kernels_path+'generic/'
+    vex_kernels = os.listdir(vex_path)
+    generic_kernels = os.listdir(generic_path)
+    for kernel in vex_kernels:
+        spiceypy.furnsh(os.path.join(vex_path, kernel))
+    for kernel in generic_kernels:
+        spiceypy.furnsh(os.path.join(generic_path, kernel))
+
+
+def get_vex_pos(t):
+    if spiceypy.ktotal('ALL') < 1:
+        vex_furnish()
+    pos = spiceypy.spkpos("VENUS EXPRESS", spiceypy.datetime2et(t), "HEEQ", "NONE", "SUN")[0]
+    r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
+    position = t, pos[0], pos[1], pos[2], r, lat, lon
+    return position
+
+
+def get_vex_positions_daily(start, end, cadence, dist_unit='au', ang_unit='deg'):
+    t = start
+    positions = []
+    while t < end:
+        position = get_vex_pos(t)
+        positions.append(position)
+        t += timedelta(days=cadence)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    if dist_unit == 'au':
+        df_positions.x = df_positions.x/1.495978707E8 
+        df_positions.y = df_positions.y/1.495978707E8
+        df_positions.z = df_positions.z/1.495978707E8
+    if ang_unit == 'rad':
+        df_positions.lat = df_positions.lat * np.pi / 180
+        df_positions.lon = df_positions.lon * np.pi / 180
+    spiceypy.kclear()
+    return df_positions
+
+
+def get_vex_positions_hourly(start, end, cadence, dist_unit='au', ang_unit='deg'):
+    t = start
+    positions = []
+    while t < end:
+        position = get_vex_pos(t)
+        positions.append(position)
+        t += timedelta(hours=cadence)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    if dist_unit == 'au':
+        df_positions.x = df_positions.x/1.495978707E8 
+        df_positions.y = df_positions.y/1.495978707E8
+        df_positions.z = df_positions.z/1.495978707E8
+    if ang_unit == 'rad':
+        df_positions.lat = df_positions.lat * np.pi / 180
+        df_positions.lon = df_positions.lon * np.pi / 180
+    spiceypy.kclear()
+    return df_positions
+
+
+def get_vex_positions_minute(start, end, cadence, dist_unit='au', ang_unit='deg'):
+    t = start
+    positions = []
+    while t < end:
+        position = get_vex_pos(t)
+        positions.append(position)
+        t += timedelta(minutes=cadence)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    if dist_unit == 'au':
+        df_positions.x = df_positions.x/1.495978707E8 
+        df_positions.y = df_positions.y/1.495978707E8
+        df_positions.z = df_positions.z/1.495978707E8
+    if ang_unit == 'rad':
+        df_positions.lat = df_positions.lat * np.pi / 180
+        df_positions.lon = df_positions.lon * np.pi / 180
+    spiceypy.kclear()
+    return df_positions
+
+
+"""
+OLD FUNCTIONS (NEED TO MODIFY)
+"""
+
 def get_vexmag(fp):
     """Reformats a .TAB file to .csv equivalent."""
     if not fp.endswith('.TAB'):
