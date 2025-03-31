@@ -392,8 +392,8 @@ def HEEQ_to_RTN(df):
     for i in range(df.shape[0]):
         #make unit vectors of RTN in basis of HEEQ
         rtn_r = [df['x'].iloc[i],df['y'].iloc[i],df['z'].iloc[i]]/np.linalg.norm([df['x'].iloc[i],df['y'].iloc[i],df['z'].iloc[i]])
-        rtn_t=np.cross(heeq_z,rtn_r)
-        rtn_n=np.cross(rtn_r,rtn_t)
+        rtn_t=np.cross(heeq_z,rtn_r)/np.linalg.norm(np.cross(heeq_z,rtn_r))
+        rtn_n=np.cross(rtn_r,rtn_t)/np.linalg.norm(np.cross(rtn_r, rtn_t))
 
         br_i=df['bx'].iloc[i]*np.dot(heeq_x,rtn_r)+df['by'].iloc[i]*np.dot(heeq_y,rtn_r)+df['bz'].iloc[i]*np.dot(heeq_z,rtn_r)
         bt_i=df['bx'].iloc[i]*np.dot(heeq_x,rtn_t)+df['by'].iloc[i]*np.dot(heeq_y,rtn_t)+df['bz'].iloc[i]*np.dot(heeq_z,rtn_t)
