@@ -63,7 +63,7 @@ def get_lagrange_pos(t, lagrange_point): #doesn't automatically furnish, furnish
         return position
     except Exception as e:
         print(e)
-        return [None, None, None, None]
+        return [t, None, None, None, None, None, None]
 
 
 def get_lagrange_positions_daily(start, end, lagrange_point, cadence, dist_unit='au', ang_unit='deg'):

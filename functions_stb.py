@@ -179,11 +179,15 @@ def stereob_furnish():
 def get_stb_pos(t):
     if spiceypy.ktotal('ALL') < 1:
         stereob_furnish()
-    pos = spiceypy.spkpos("STEREO BEHIND", spiceypy.datetime2et(t), "HEEQ", "NONE", "SUN")[0]
-    r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
-    position = t, pos[0], pos[1], pos[2], r, lat, lon
-    return position
-
+    try:
+        pos = spiceypy.spkpos("STEREO BEHIND", spiceypy.datetime2et(t), "HEEQ", "NONE", "SUN")[0]
+        r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
+        position = t, pos[0], pos[1], pos[2], r, lat, lon
+        return position
+    except Exception as e:
+        print(e)
+        return [t, None, None, None, None, None, None]
+    
 
 def get_stb_positions(time_series):
     positions = []

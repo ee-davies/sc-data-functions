@@ -93,7 +93,7 @@ def get_mes_pos(t, prefurnished=False):
         return position
     except Exception as e:
         print(e)
-        return [None, None, None, None]
+        return [t, None, None, None, None, None, None]
 
 
 def get_mes_positions_daily(start, end, cadence, dist_unit='au', ang_unit='deg'):

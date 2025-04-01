@@ -148,7 +148,7 @@ def get_juno_pos(t, frame="HEEQ"):
             return position
         except Exception as e:
             print(e)
-            return [None, None, None, None]
+            return [t, None, None, None, None, None, None]
     elif frame == "HAE":
         try:
             pos = spiceypy.spkpos("JUNO", spiceypy.datetime2et(t), "ECLIPJ2000", "NONE", "SUN")[0] #calls positions in HAE or ECLIPJ2000
@@ -157,7 +157,7 @@ def get_juno_pos(t, frame="HEEQ"):
             return position
         except Exception as e:
             print(e)
-            return [None, None, None, None]
+            return [t, None, None, None, None, None, None]
 
 
 def get_juno_positions(time_series, frame="HEEQ"):

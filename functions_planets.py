@@ -49,10 +49,14 @@ options include:
 def get_planet_pos(t, planet): #doesn't automatically furnish, fix
     if spiceypy.ktotal('ALL') < 1:
         generic_furnish()
-    pos = spiceypy.spkpos(planet, spiceypy.datetime2et(t), "HEEQ", "NONE", "SUN")[0] #calls positions in HEEQ; can be changed
-    r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
-    position = t, pos[0], pos[1], pos[2], r, lat, lon
-    return position
+    try:
+        pos = spiceypy.spkpos(planet, spiceypy.datetime2et(t), "HEEQ", "NONE", "SUN")[0] #calls positions in HEEQ; can be changed
+        r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
+        position = t, pos[0], pos[1], pos[2], r, lat, lon
+        return position
+    except Exception as e:
+        print(e)
+        return [t, None, None, None, None, None, None]
 
 
 def get_planet_positions(time_series, planet):
