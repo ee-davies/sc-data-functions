@@ -37,6 +37,15 @@ def filter_bad_data(df, col, bad_val):
     return df
 
 
+def filter_bad_col(df, col, bad_val): #filter by individual columns
+    if bad_val < 0:
+        mask = df[col] < bad_val  # boolean mask for all bad values
+    else:
+        mask = df[col] > bad_val  # boolean mask for all bad values
+    df[col][mask] = np.nan
+    return df
+
+
 """
 PSP MAG DATA
 # 1 min and full resolution files from https://spdf.gsfc.nasa.gov/pub/data/psp/fields/l2
@@ -225,12 +234,15 @@ def get_pspspc_mom(fp):
     """raw = rtn"""
     try:
         cdf = pycdf.CDF(fp)
-        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'np_moment', 'wp_moment'], ['time', 'np', 'tp'])}
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'np_moment', 'wp_moment', 'general_flag'], ['time', 'np', 'tp', 'flag'])}
         df = pd.DataFrame.from_dict(data)
         vx, vy, vz = cdf['vp_moment_RTN'][:].T
         df['vx'] = vx
         df['vy'] = vy
         df['vz'] = vz
+        df = filter_bad_col(df, 'vx', -1E30)
+        df = filter_bad_col(df, 'vy', -1E30)
+        df = filter_bad_col(df, 'vz', -1E30)
         df['vt'] = np.linalg.norm(df[['vx', 'vy', 'vz']], axis=1)
     except Exception as e:
         print('ERROR:', e, fp)
@@ -248,6 +260,9 @@ def get_pspspc_fit(fp):
         df['vx'] = vx
         df['vy'] = vy
         df['vz'] = vz
+        df = filter_bad_col(df, 'vx', -1E30)
+        df = filter_bad_col(df, 'vy', -1E30)
+        df = filter_bad_col(df, 'vz', -1E30)
         df['vt'] = np.linalg.norm(df[['vx', 'vy', 'vz']], axis=1)
     except Exception as e:
         print('ERROR:', e, fp)
@@ -265,6 +280,9 @@ def get_pspspc_fit1(fp):
         df['vx'] = vx
         df['vy'] = vy
         df['vz'] = vz
+        df = filter_bad_col(df, 'vx', -1E30)
+        df = filter_bad_col(df, 'vy', -1E30)
+        df = filter_bad_col(df, 'vz', -1E30)
         df['vt'] = np.linalg.norm(df[['vx', 'vy', 'vz']], axis=1)
     except Exception as e:
         print('ERROR:', e, fp)
@@ -282,6 +300,9 @@ def get_pspspi_mom(fp):
         df['vx'] = vx
         df['vy'] = vy
         df['vz'] = vz
+        df = filter_bad_col(df, 'vx', -1E30)
+        df = filter_bad_col(df, 'vy', -1E30)
+        df = filter_bad_col(df, 'vz', -1E30)
         df['vt'] = np.linalg.norm(df[['vx', 'vy', 'vz']], axis=1)
     except Exception as e:
         print('ERROR:', e, fp)
@@ -306,14 +327,10 @@ def get_pspspc_range_mom(start_timestamp, end_timestamp, path=f'{psp_path}'+'swe
             if df is None:
                 df = _df.copy(deep=True)
             else:
-                df = df.append(_df.copy(deep=True))
+                df = pd.concat([df, _df])
         start += timedelta(days=1)
-    filter_bad_data(df, 'tp', -1E30)
-    filter_bad_data(df, 'np', -1E30)
-    filter_bad_data(df, 'vt', -1E30)
-    filter_bad_data(df, 'vx', -1E30)
-    filter_bad_data(df, 'vy', -1E30)
-    filter_bad_data(df, 'vz', -1E30)
+    df = filter_bad_col(df, 'tp', -1E30)
+    df = filter_bad_col(df, 'np', -1E30)
     return df
 
 
@@ -331,7 +348,7 @@ def get_pspspc_range_fit(start_timestamp, end_timestamp, path=f'{psp_path}'+'swe
             if df is None:
                 df = _df.copy(deep=True)
             else:
-                df = df.append(_df.copy(deep=True))
+                df = pd.concat([df, _df])
         start += timedelta(days=1)
     filter_bad_data(df, 'tp', -1E30)
     filter_bad_data(df, 'np', -1E30)
