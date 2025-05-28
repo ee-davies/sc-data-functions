@@ -82,22 +82,58 @@ WIND MAG DATA
 """
 
 
-def get_windmag(fp):
+def get_windmag_gse(fp):
     """raw = gse"""
     try:
         cdf = pycdf.CDF(fp)
-        data = {df_col: cdf[cdf_col][:,0] for cdf_col, df_col in zip(['Epoch', 'BF1'], ['timestamp', 'b_tot'])}
+        data = {df_col: cdf[cdf_col][:,0] for cdf_col, df_col in zip(['Epoch', 'BF1'], ['time', 'bt'])}
         df = pd.DataFrame.from_dict(data)
         bx, by, bz = cdf['BGSE'][:].T
-        df['b_x'] = bx
-        df['b_y'] = by
-        df['b_z'] = bz
-        df = filter_bad_data(df, 'b_tot', -9.99e+30)
+        df['bx'] = bx
+        df['by'] = by
+        df['bz'] = bz
+        df = filter_bad_data(df, 'bt', -9.99e+30)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
     return df
 
+
+def get_windmag_gsm(fp):
+    """raw = gse"""
+    try:
+        cdf = pycdf.CDF(fp)
+        data = {df_col: cdf[cdf_col][:,0] for cdf_col, df_col in zip(['Epoch', 'BF1'], ['time', 'bt'])}
+        df = pd.DataFrame.from_dict(data)
+        bx, by, bz = cdf['BGSM'][:].T
+        df['bx'] = bx
+        df['by'] = by
+        df['bz'] = bz
+        df = filter_bad_data(df, 'bt', -9.99e+30)
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
+    return df
+
+
+def get_windmag_gsm_range(start_timestamp, end_timestamp, path=wind_path+'mfi/h0'):
+    """Pass two datetime objects and grab .cdf files between dates, from
+    directory given."""
+    df = None
+    start = start_timestamp.date()
+    end = end_timestamp.date() + timedelta(days=1)
+    while start < end:
+        year = start.year
+        date_str = f'{year}{start.month:02}{start.day:02}'
+        fn = f'wi_h0_mfi_{date_str}_v05.cdf'
+        _df = get_windmag_gsm(f'{path}/{fn}')
+        if _df is not None:
+            if df is None:
+                df = _df.copy(deep=True)
+            else:
+                df = pd.concat([df, _df])
+        start += timedelta(days=1)
+    return df
 
 # def get_windmag_range(start_timestamp, end_timestamp, wind_path):
 #     """Pass two datetime objects and grab .STS files between dates, from
