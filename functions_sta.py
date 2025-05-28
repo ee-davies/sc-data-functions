@@ -251,6 +251,18 @@ def get_sta_beacon_plas(fp):
     return df
 
 
+def get_sta_beacon_plas(fp):
+    """raw = rtn"""
+    try:
+        cdf = pycdf.CDF(fp)
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['epoch', 'proton_bulk_speed', 'proton_Vr_RTN', 'proton_Vt_RTN', 'proton_Vn_RTN', 'proton_number_density', 'proton_temperature'], ['time', 'vt', 'vx', 'vy', 'vz', 'np', 'tp'])}
+        df = pd.DataFrame.from_dict(data)
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
+    return df
+
+
 def get_sta_beacon_mag(fp):
     """raw = rtn"""
     try:
