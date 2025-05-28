@@ -80,6 +80,55 @@ def download_stereoa_merged(start_timestamp, end_timestamp=datetime.utcnow(), pa
         start+=1
 
 
+#download level 1 magnetometer daily files from https://stereo-ssc.nascom.nasa.gov/data/ins_data/impact/level1/ahead/mag/RTN/
+def download_stereoa_level1_mag(start_timestamp, end_timestamp, path=f'{stereoa_path}'+'impact/level1/'):
+    start = start_timestamp.date()
+    end = end_timestamp.date() + timedelta(days=1)
+    while start < end:
+        year = start.year
+        month = f'{start.month:02}'
+        date_str = f'{year}{start.month:02}{start.day:02}'
+        try: 
+            data_url = f'https://stereo-ssc.nascom.nasa.gov/data/ins_data/impact/level1/ahead/mag/RTN/{year}/{month}/'
+            soup = BeautifulSoup(urlopen(data_url), 'html.parser')
+            for link in soup.find_all('a'):
+                href = link.get('href')
+                if href is not None and href.startswith('STA_L1_MAGB_RTN_'+date_str):
+                    filename = href
+                    if os.path.isfile(f"{path}{filename}") == True:
+                        print(f'{filename} has already been downloaded.')
+                    else:
+                        urllib.request.urlretrieve(data_url+filename, f"{path}/{filename}")
+                        print(f'Successfully downloaded {filename}')
+        except Exception as e:
+            print('ERROR', e, f'.File for {date_str} does not exist.')
+        start += timedelta(days=1)
+
+
+#download level 2 plasma daily files from https://stereo-ssc.nascom.nasa.gov/data/ins_data/plastic/level2/Protons/Derived_from_1D_Maxwellian/ahead/1min/
+def download_stereoa_level2_plas(start_timestamp, end_timestamp, path=f'{stereoa_path}'+'plastic/level2/'):
+    start = start_timestamp.date()
+    end = end_timestamp.date() + timedelta(days=1)
+    while start < end:
+        year = start.year
+        date_str = f'{year}{start.month:02}{start.day:02}'
+        try: 
+            data_url = f'https://stereo-ssc.nascom.nasa.gov/data/ins_data/plastic/level2/Protons/Derived_from_1D_Maxwellian/ahead/1min/{year}/'
+            soup = BeautifulSoup(urlopen(data_url), 'html.parser')
+            for link in soup.find_all('a'):
+                href = link.get('href')
+                if href is not None and href.startswith('STA_L2_PLA_1DMax_1min_'+date_str):
+                    filename = href
+                    if os.path.isfile(f"{path}{filename}") == True:
+                        print(f'{filename} has already been downloaded.')
+                    else:
+                        urllib.request.urlretrieve(data_url+filename, f"{path}/{filename}")
+                        print(f'Successfully downloaded {filename}')
+        except Exception as e:
+            print('ERROR', e, f'.File for {date_str} does not exist.')
+        start += timedelta(days=1)
+
+
 #download data from https://spdf.gsfc.nasa.gov/pub/data/stereo/ahead/beacon/
 #download functions work but seem to download corrupt files: may need to manually download cdfs instead
 def download_sta_beacon_mag(path=stereoa_path+'beacon/mag'):
