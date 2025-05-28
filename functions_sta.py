@@ -251,7 +251,7 @@ def get_sta_beacon_plas(fp):
     return df
 
 
-def get_sta_beacon_plas(fp):
+def get_sta_level2_plas(fp):
     """raw = rtn"""
     try:
         cdf = pycdf.CDF(fp)
@@ -260,6 +260,31 @@ def get_sta_beacon_plas(fp):
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
+    return df
+
+
+def get_sta_level2_plas_range(start_timestamp, end_timestamp, path=f'{stereoa_path}'+'plastic/level2'):
+    """Pass two datetime objects and grab .cdf files between dates, from
+    directory given."""
+    df = None
+    start = start_timestamp.date()
+    end = end_timestamp.date() + timedelta(days=1)
+    while start < end:
+        date_str = f'{start.year}{start.month:02}{start.day:02}'
+        fn = glob.glob(f'{path}/STA_L2_PLA_1DMax_1min_{date_str}*.cdf')
+        _df = get_sta_level2_plas(fn[0])
+        if _df is not None:
+            if df is None:
+                df = _df.copy(deep=True)
+            else:
+                df = pd.concat([df, _df])
+        start += timedelta(days=1)
+    df = filter_bad_col(df, 'tp', -1E30) #will give slice warnings
+    df = filter_bad_col(df, 'np', -1E30)
+    df = filter_bad_col(df, 'vt', -1E30)
+    df = filter_bad_col(df, 'vx', -1E30)
+    df = filter_bad_col(df, 'vy', -1E30)
+    df = filter_bad_col(df, 'vz', -1E30)
     return df
 
 
@@ -334,6 +359,10 @@ def get_sta_beacon_mag_range(start_timestamp, end_timestamp, path=f'{stereoa_pat
             else:
                 df = pd.concat([df, _df])
         start += timedelta(days=1)
+    df = filter_bad_col(df, 'bt', -1E30) #will give slice warnings
+    df = filter_bad_col(df, 'bx', -1E30)
+    df = filter_bad_col(df, 'by', -1E30)
+    df = filter_bad_col(df, 'bz', -1E30)
     return df
 
 
