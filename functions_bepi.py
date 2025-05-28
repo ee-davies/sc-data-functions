@@ -20,6 +20,11 @@ def format_path(fp):
     return fp.replace('/', '\\')
 
 
+"""
+BAD DATA FILTER
+"""
+
+
 def filter_bad_data(df, col, bad_val):
     if bad_val < 0:
         mask = df[col] < bad_val  # boolean mask for all bad values
@@ -85,15 +90,6 @@ def bepi_furnish():
         spiceypy.furnsh(os.path.join(bepi_path, kernel))
     for kernel in generic_kernels:
         spiceypy.furnsh(os.path.join(generic_path, kernel))
-
-
-# def bepi_furnish():
-#     """Main"""
-#     base = "kernels/bepi"
-#     kernels = ["naif0012.tls", "pck00010.tpc", "de434s.bsp", "heliospheric_v004u.tf", 
-#                "bc_mpo_fcp_00094_20181020_20251101_v01.bsp", "bc_sci_v06.tf"]
-#     for kernel in kernels:
-#         spiceypy.furnsh(os.path.join(base, kernel))  
 
 
 def get_bepi_pos(t, prefurnished=False):
