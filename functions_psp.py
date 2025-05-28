@@ -234,7 +234,7 @@ def get_pspspc_mom(fp):
     """raw = rtn"""
     try:
         cdf = pycdf.CDF(fp)
-        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'np_moment', 'wp_moment', 'general_flag'], ['time', 'np', 'tp', 'flag'])}
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'np_moment', 'wp_moment', 'general_flag', 'np_moment_deltahigh', 'np_moment_deltalow'], ['time', 'np', 'tp', 'flag', 'np_upperlim', 'np_lowerlim'])}
         df = pd.DataFrame.from_dict(data)
         vx, vy, vz = cdf['vp_moment_RTN'][:].T
         df['vx'] = vx
@@ -294,7 +294,7 @@ def get_pspspi_mom(fp):
     """raw = rtn"""
     try:
         cdf = pycdf.CDF(fp)
-        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'DENS', 'TEMP'], ['time', 'np', 'tp'])}
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'DENS', 'TEMP', 'QUALITY_FLAG'], ['time', 'np', 'tp', 'flag'])}
         df = pd.DataFrame.from_dict(data)
         vx, vy, vz = cdf['VEL_RTN_SUN'][:].T
         df['vx'] = vx
@@ -331,6 +331,8 @@ def get_pspspc_range_mom(start_timestamp, end_timestamp, path=f'{psp_path}'+'swe
         start += timedelta(days=1)
     df = filter_bad_col(df, 'tp', -1E30)
     df = filter_bad_col(df, 'np', -1E30)
+    df = filter_bad_col(df, 'np_upperlim', -1E30)
+    df = filter_bad_col(df, 'np_lowerlim', -1E30)
     return df
 
 
