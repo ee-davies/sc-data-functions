@@ -337,6 +337,25 @@ def get_sta_beacon_mag_range(start_timestamp, end_timestamp, path=f'{stereoa_pat
     return df
 
 
+def get_sta_level1_mag_range(start_timestamp, end_timestamp, path=f'{stereoa_path}'+'impact/level1'):
+    """Pass two datetime objects and grab .cdf files between dates, from
+    directory given."""
+    df = None
+    start = start_timestamp.date()
+    end = end_timestamp.date() + timedelta(days=1)
+    while start < end:
+        date_str = f'{start.year}{start.month:02}{start.day:02}'
+        fn = glob.glob(f'{path}/STA_L1_MAGB_RTN_{date_str}*.cdf') 
+        _df = get_sta_level1_mag(fn[0])
+        if _df is not None:
+            if df is None:
+                df = _df.copy(deep=True)
+            else:
+                df = pd.concat([df, _df])
+        start += timedelta(days=1)
+    return df
+
+
 def get_sta_beacon_plas_7days(path=f'{stereoa_path}'+'beacon/plas/'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
