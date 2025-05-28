@@ -268,6 +268,23 @@ def get_sta_beacon_mag(fp):
     return df
 
 
+def get_sta_level1_mag(fp):
+    """raw = rtn"""
+    try:
+        cdf = pycdf.CDF(fp)
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch'], ['time'])}
+        df = pd.DataFrame.from_dict(data)
+        bx, by, bz, bt = cdf['BFIELD'][:].T
+        df['bt'] = bt
+        df['bx'] = bx
+        df['by'] = by
+        df['bz'] = bz
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
+    return df
+
+
 def get_sta_beacon_mag_7days(path=f'{stereoa_path}'+'beacon/mag/'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
