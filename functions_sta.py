@@ -321,6 +321,24 @@ def get_sta_level1_mag(fp):
         df = None
     return df
 
+def get_sta_level1_mag_1min(fp):
+    """raw = rtn"""
+    try:
+        cdf = pycdf.CDF(fp)
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch'], ['time'])}
+        df = pd.DataFrame.from_dict(data)
+        bx, by, bz, bt = cdf['BFIELD'][:].T
+        df['bt'] = bt
+        df['bx'] = bx
+        df['by'] = by
+        df['bz'] = bz
+        df = df.set_index('time').resample('1min').mean().reset_index(drop=False) #for some reason makes 0 bt
+        df['bt'] = np.linalg.norm(df[['bx', 'by', 'bz']], axis=1) #recalculate bt
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
+    return df
+
 
 def get_sta_beacon_mag_7days(path=f'{stereoa_path}'+'beacon/mag/'):
     """Pass two datetime objects and grab .cdf files between dates, from
@@ -375,7 +393,7 @@ def get_sta_level1_mag_range(start_timestamp, end_timestamp, path=f'{stereoa_pat
     while start < end:
         date_str = f'{start.year}{start.month:02}{start.day:02}'
         fn = glob.glob(f'{path}/STA_L1_MAGB_RTN_{date_str}*.cdf') 
-        _df = get_sta_level1_mag(fn[0])
+        _df = get_sta_level1_mag_1min(fn[0])
         if _df is not None:
             if df is None:
                 df = _df.copy(deep=True)
@@ -468,7 +486,7 @@ def get_sta_pos(t):
     if spiceypy.ktotal('ALL') < 1:
         stereoa_furnish()
     try:
-        pos = spiceypy.spkpos("STEREO AHEAD", spiceypy.datetime2et(t), "HEEQ", "NONE", "SUN")[0]
+        pos = spiceypy.spkpos("STEREO AHEAD", spiceypy.datetime2et(t), "GSE", "NONE", "EARTH")[0]
         r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
         position = t, pos[0], pos[1], pos[2], r, lat, lon
         return position
