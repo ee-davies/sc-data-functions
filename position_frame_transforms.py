@@ -186,7 +186,7 @@ def HEE_to_HAE(df):
     return df_transformed
 
 
-def HAE_to_HEE(df):
+def HAE_to_HEE_old(df):
     B_HEE = []
     for i in range(df.shape[0]):
         S1, S2 = get_heliocentric_transformation_matrices(df['time'].iloc[i])
@@ -199,6 +199,22 @@ def HAE_to_HEE(df):
         B_HEE.append(position)
     df_transformed = pd.DataFrame(B_HEE, columns=['x', 'y', 'z', 'r', 'lat', 'lon'])
     df_transformed['time'] = df['time']
+    return df_transformed
+
+
+def HAE_to_HEE(df):
+    timeseries = df.time
+    HAE = np.vstack((df.x, df.y, df.z)).T
+    transformation_matrices = np.array([get_heliocentric_transformation_matrices(t)[0] for t in timeseries])
+    HEE = np.einsum('ijk,ik->ij', transformation_matrices, HAE)
+    r, lat, lon = cart2sphere(HEE[:,0],HEE[:,1],HEE[:,2])
+    df_transformed = pd.concat([timeseries], axis=1)
+    df_transformed['x'] = HEE[:,0]
+    df_transformed['y'] = HEE[:,1]
+    df_transformed['z'] = HEE[:,2]
+    df_transformed['r'] = r
+    df_transformed['lat'] = lat
+    df_transformed['lon'] = lon
     return df_transformed
 
 
