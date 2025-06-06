@@ -375,6 +375,23 @@ def GSE_to_HEE(df):
     return df_transformed
 
 
+def HEE_to_GSE(df): #same as GSE_to_HEE, included for simplicity
+    timeseries = df.time
+    r_suns = []
+    for t in timeseries:
+        r_sun = get_rsun_position(t)
+        r_suns.append(r_sun)
+    x = -df.x + r_suns
+    y = -df.y
+    z = df.z
+    r, lat, lon = cart2sphere(x,y,z)
+    df_transformed = pd.concat([timeseries, x, y, z], axis=1)
+    df_transformed['r'] = r
+    df_transformed['lat'] = lat
+    df_transformed['lon'] = lon
+    return df_transformed
+
+
 def get_transform(epoch: datetime, base_frame: str, to_frame: str):
     """Return transformation matrix at a given epoch."""
     transform = spiceypy.pxform(base_frame, to_frame, spiceypy.datetime2et(epoch))
