@@ -145,6 +145,30 @@ def get_windmag_gse(fp):
     return df
 
 
+def get_windmag_gse_range(start_timestamp, end_timestamp, path=wind_path+'mfi/h0'):
+    """Pass two datetime objects and grab .cdf files between dates, from
+    directory given."""
+    df = None
+    start = start_timestamp.date()
+    end = end_timestamp.date() + timedelta(days=1)
+    while start < end:
+        year = start.year
+        date_str = f'{year}{start.month:02}{start.day:02}'
+        fn = glob.glob(f'wi_h0_mfi_{date_str}*.cdf')
+        _df = get_windmag_gse(f'{path}/{fn}')         
+        try:
+            _df = get_windmag_gse(f'{path}/{fn[0]}')
+            if _df is not None:
+                if df is None:
+                    df = _df.copy(deep=True)
+                else:
+                    df = pd.concat([df, _df])
+        except Exception as e:
+                print('ERROR', e, date_str)
+        start += timedelta(days=1)
+    return df
+
+
 def get_windmag_gsm(fp):
     """raw = gse"""
     try:
