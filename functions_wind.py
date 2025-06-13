@@ -195,37 +195,18 @@ def get_windmag_gsm_range(start_timestamp, end_timestamp, path=wind_path+'mfi/h0
     while start < end:
         year = start.year
         date_str = f'{year}{start.month:02}{start.day:02}'
-        fn = f'wi_h0_mfi_{date_str}_v05.cdf'
-        _df = get_windmag_gsm(f'{path}/{fn}')
-        if _df is not None:
-            if df is None:
-                df = _df.copy(deep=True)
-            else:
-                df = pd.concat([df, _df])
+        fn = glob.glob(f'wi_h0_mfi_{date_str}*.cdf')
+        try:
+            _df = get_windmag_gsm(f'{path}/{fn[0]}')
+            if _df is not None:
+                if df is None:
+                    df = _df.copy(deep=True)
+                else:
+                    df = pd.concat([df, _df])
+        except Exception as e:
+                print('ERROR', e, date_str)
         start += timedelta(days=1)
     return df
-
-# def get_windmag_range(start_timestamp, end_timestamp, wind_path):
-#     """Pass two datetime objects and grab .STS files between dates, from
-#     directory given."""
-#     df = None
-#     start = start_timestamp.date()
-#     end = end_timestamp.date() + timedelta(days=1)
-#     while start < end:
-#         year = start.year
-#         date_str = f'{year}{start.month:02}{start.day:02}'
-#         if year < 2020:
-#             fn = f'wi_h0_mfi_{date_str}_v05.cdf'
-#         else:
-#             fn = f'wi_h0_mfi_{date_str}_v04.cdf'
-#         _df = get_windmag(f'{path}/{year}/{fn}')
-#         if _df is not None:
-#             if df is None:
-#                 df = _df.copy(deep=True)
-#             else:
-#                 df = df.append(_df.copy(deep=True))
-#         start += timedelta(days=1)
-#     return df
 
 
 def get_windmag_rtn(fp):
