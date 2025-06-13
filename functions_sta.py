@@ -486,7 +486,7 @@ def get_sta_pos(t):
     if spiceypy.ktotal('ALL') < 1:
         stereoa_furnish()
     try:
-        pos = spiceypy.spkpos("STEREO AHEAD", spiceypy.datetime2et(t), "GSE", "NONE", "EARTH")[0]
+        pos = spiceypy.spkpos("STEREO AHEAD", spiceypy.datetime2et(t), "GSE", "NONE", "EARTH")[0] #HEEQ, HEE, ECLIPJ2000 wrt SUN, GSE wrt EARTH
         r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
         position = t, pos[0], pos[1], pos[2], r, lat, lon
         return position
