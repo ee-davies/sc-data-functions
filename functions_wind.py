@@ -384,16 +384,17 @@ def get_windswe_range(start_timestamp, end_timestamp, path=wind_path+'swe'):
     start = start_timestamp.date()
     end = end_timestamp.date()
     while start <= end:
-        year = start.year
-        month = start.month
-        day = start.day
-        fn = f'wi_h1_swe_{year}{month:02}{day:02}_v01.cdf'
-        _df = get_windswe(f'{path}/{fn}')
-        if _df is not None:
-            if df is None:
-                df = _df.copy(deep=True)
-            else:
-                df = pd.concat([df, _df])
+        date_str = f'{start.year}{start.month:02}{start.day:02}'
+        try:
+            fn = glob.glob(f'{path}/wi_h1_swe_{date_str}*')[0]
+            _df = get_windswe(fn)
+            if _df is not None:
+                if df is None:
+                    df = _df.copy(deep=True)
+                else:
+                    df = pd.concat([df, _df])
+        except Exception as e:
+            print('ERROR:', e, f'{date_str} does not exist')
         start += timedelta(days=1)
     return df
 
