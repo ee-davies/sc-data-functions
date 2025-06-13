@@ -184,13 +184,16 @@ def get_windmag_rtn_range(start_timestamp, end_timestamp, path=wind_path+'mfi/rt
     while start < end:
         year = start.year
         date_str = f'{year}{start.month:02}{start.day:02}'
-        fn = f'wi_h3-rtn_mfi_{date_str}_v05.cdf'
-        _df = get_windmag_rtn(f'{path}/{fn}')
-        if _df is not None:
-            if df is None:
-                df = _df.copy(deep=True)
-            else:
-                df = pd.concat([df, _df])
+        fn = glob.glob(f'wi_h3-rtn_mfi_{date_str}*.cdf')
+        try:
+            _df = get_windmag_rtn(f'{path}/{fn[0]}')
+            if _df is not None:
+                if df is None:
+                    df = _df.copy(deep=True)
+                else:
+                    df = pd.concat([df, _df])
+        except Exception as e:
+                print('ERROR', e, date_str)
         start += timedelta(days=1)
     return df
 
