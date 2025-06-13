@@ -98,6 +98,29 @@ def download_wind_mag_rtn(start_timestamp, end_timestamp, path=wind_path+'mfi/rt
         except Exception as e:
             print('ERROR', e, f'.File for {year} does not exist.')
         start += timedelta(days=1)
+        
+
+def download_wind_mag_h0(start_timestamp, end_timestamp, path=wind_path+'mfi/h0/'):
+    start = start_timestamp.date()
+    end = end_timestamp.date() + timedelta(days=1)
+    while start < end:
+        year = start.year
+        date_str = f'{year}{start.month:02}{start.day:02}'
+        try: 
+            data_url = f'https://cdaweb.gsfc.nasa.gov/pub/data/wind/mfi/mfi_h0/{year}/'
+            soup = BeautifulSoup(urlopen(data_url), 'html.parser')
+            for link in soup.find_all('a'):
+                href = link.get('href')
+                if href is not None and href.startswith('wi_h0_mfi_'+date_str):
+                    filename = href
+                    if os.path.isfile(f"{path}{filename}") == True:
+                        print(f'{filename} has already been downloaded.')
+                    else:
+                        urllib.request.urlretrieve(data_url+filename, f"{path}{filename}")
+                        print(f'Successfully downloaded {filename}')
+        except Exception as e:
+            print('ERROR', e, f'.File for {year} does not exist.')
+        start += timedelta(days=1)
 
 
 """
