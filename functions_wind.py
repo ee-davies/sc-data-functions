@@ -153,18 +153,17 @@ def get_windmag_gse_range(start_timestamp, end_timestamp, path=wind_path+'mfi/h0
     end = end_timestamp.date() + timedelta(days=1)
     while start < end:
         year = start.year
-        date_str = f'{year}{start.month:02}{start.day:02}'
-        fn = glob.glob(f'wi_h0_mfi_{date_str}*.cdf')
-        _df = get_windmag_gse(f'{path}/{fn}')         
+        date_str = f'{year}{start.month:02}{start.day:02}'       
         try:
-            _df = get_windmag_gse(f'{path}/{fn[0]}')
+            fn = glob.glob(f'{path}/wi_h0_mfi_{date_str}*.cdf')[0]
+            _df = get_windmag_gse(fn)
             if _df is not None:
                 if df is None:
                     df = _df.copy(deep=True)
                 else:
                     df = pd.concat([df, _df])
         except Exception as e:
-                print('ERROR', e, date_str)
+                print('ERROR', e, f'{date_str} does not exist')
         start += timedelta(days=1)
     return df
 
@@ -195,16 +194,16 @@ def get_windmag_gsm_range(start_timestamp, end_timestamp, path=wind_path+'mfi/h0
     while start < end:
         year = start.year
         date_str = f'{year}{start.month:02}{start.day:02}'
-        fn = glob.glob(f'wi_h0_mfi_{date_str}*.cdf')
         try:
-            _df = get_windmag_gsm(f'{path}/{fn[0]}')
+            fn = glob.glob(f'{path}/wi_h0_mfi_{date_str}*.cdf')[0]
+            _df = get_windmag_gsm(fn)
             if _df is not None:
                 if df is None:
                     df = _df.copy(deep=True)
                 else:
                     df = pd.concat([df, _df])
         except Exception as e:
-                print('ERROR', e, date_str)
+                print('ERROR', e, f'{date_str} does not exist')
         start += timedelta(days=1)
     return df
 
@@ -233,19 +232,28 @@ def get_windmag_rtn_range(start_timestamp, end_timestamp, path=wind_path+'mfi/rt
     start = start_timestamp.date()
     end = end_timestamp.date() + timedelta(days=1)
     while start < end:
-        year = start.year
-        date_str = f'{year}{start.month:02}{start.day:02}'
-        fn = glob.glob(f'wi_h3-rtn_mfi_{date_str}*.cdf')
+        date_str = f'{start.year}{start.month:02}{start.day:02}'
         try:
-            _df = get_windmag_rtn(f'{path}/{fn[0]}')
+            fn = glob.glob(f'{path}/wi_h3-rtn_mfi_{date_str}*')[0]
+            _df = get_windmag_rtn(fn)
             if _df is not None:
                 if df is None:
                     df = _df.copy(deep=True)
                 else:
                     df = pd.concat([df, _df])
         except Exception as e:
-                print('ERROR', e, date_str)
+            print('ERROR:', e, f'{date_str} does not exist')
         start += timedelta(days=1)
+    return df
+
+
+def get_windmag_range(start_timestamp, end_timestamp, coord_sys:str):
+    if coord_sys == 'GSE':
+        df = get_windmag_gse_range(start_timestamp, end_timestamp)
+    elif coord_sys == 'GSM':
+        df = get_windmag_gsm_range(start_timestamp, end_timestamp)
+    elif coord_sys == 'RTN':
+        df = get_windmag_rtn_range(start_timestamp, end_timestamp)
     return df
 
 
