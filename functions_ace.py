@@ -196,7 +196,7 @@ def get_acemag_gse_range(start_timestamp, end_timestamp, path=ace_path+'mfi'):
     return df
 
 
-def get_acemag_gsm_range(start_timestamp, end_timestamp, path=r'/Volumes/External/Data/ACE/mfi'):
+def get_acemag_gsm_range(start_timestamp, end_timestamp, path=ace_path+'mfi'):
     """Pass two datetime objects and grab .STS files between dates, from
     directory given."""
     df = None
@@ -226,18 +226,18 @@ LOAD ACE SWE DATA
 def get_aceswe_rtn(fp):
     try:
         cdf = pycdf.CDF(fp)
-        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'Vp', 'Np', 'Tpr'], ['timestamp', 'v_bulk', 'density', 'temperature'])}
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'Vp', 'Np', 'Tpr'], ['time', 'vt', 'np', 'tp'])}
         df = pd.DataFrame.from_dict(data)
         vr, vt, vn = cdf['V_RTN'][:].T
-        df['v_x'] = vr
-        df['v_y'] = vt
-        df['v_z'] = vn
-        df['temperature'].mask((df['temperature'] < -9.99e+30), inplace=True)
-        df['density'].mask((df['density'] < -9.99e+30), inplace=True)
-        df['v_bulk'].mask((df['v_bulk'] < -9.99e+30), inplace=True)
-        df['v_x'].mask((df['v_x'] < -9.99e+30), inplace=True)
-        df['v_y'].mask((df['v_y'] < -9.99e+30), inplace=True)
-        df['v_z'].mask((df['v_z'] < -9.99e+30), inplace=True)
+        df['vx'] = vr
+        df['vy'] = vt
+        df['vz'] = vn
+        df['tp'].mask((df['tp'] < -9.99e+30), inplace=True)
+        df['np'].mask((df['np'] < -9.99e+30), inplace=True)
+        df['vt'].mask((df['vt'] < -9.99e+30), inplace=True)
+        df['vx'].mask((df['vx'] < -9.99e+30), inplace=True)
+        df['vy'].mask((df['vy'] < -9.99e+30), inplace=True)
+        df['vz'].mask((df['vz'] < -9.99e+30), inplace=True)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
@@ -247,18 +247,18 @@ def get_aceswe_rtn(fp):
 def get_aceswe_gse(fp):
     try:
         cdf = pycdf.CDF(fp)
-        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'Vp', 'Np', 'Tpr'], ['timestamp', 'v_bulk', 'density', 'temperature'])}
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'Vp', 'Np', 'Tpr'], ['time', 'vt', 'np', 'tp'])}
         df = pd.DataFrame.from_dict(data)
         vx, vy, vz = cdf['V_GSE'][:].T
-        df['v_x'] = vx
-        df['v_y'] = vy
-        df['v_z'] = vz
-        df['temperature'].mask((df['temperature'] < -9.99e+30), inplace=True)
-        df['density'].mask((df['density'] < -9.99e+30), inplace=True)
-        df['v_bulk'].mask((df['v_bulk'] < -9.99e+30), inplace=True)
-        df['v_x'].mask((df['v_x'] < -9.99e+30), inplace=True)
-        df['v_y'].mask((df['v_y'] < -9.99e+30), inplace=True)
-        df['v_z'].mask((df['v_z'] < -9.99e+30), inplace=True)
+        df['vx'] = vx
+        df['vy'] = vy
+        df['vz'] = vz
+        df['tp'].mask((df['tp'] < -9.99e+30), inplace=True)
+        df['np'].mask((df['np'] < -9.99e+30), inplace=True)
+        df['vt'].mask((df['vt'] < -9.99e+30), inplace=True)
+        df['vx'].mask((df['vx'] < -9.99e+30), inplace=True)
+        df['vy'].mask((df['vy'] < -9.99e+30), inplace=True)
+        df['vz'].mask((df['vz'] < -9.99e+30), inplace=True)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
