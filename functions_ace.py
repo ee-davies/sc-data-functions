@@ -26,13 +26,22 @@ ACE BAD DATA FILTER
 """
 
 
-def filter_bad_data(df, col, bad_val):
+def filter_bad_data(df, col, bad_val): #filter across whole df
     if bad_val < 0:
         mask = df[col] < bad_val  # boolean mask for all bad values
     else:
         mask = df[col] > bad_val  # boolean mask for all bad values
     cols = [x for x in df.columns if x != 'timestamp']
     df.loc[mask, cols] = np.nan
+    return df
+
+
+def filter_bad_col(df, col, bad_val): #filter by individual columns
+    if bad_val < 0:
+        mask = df[col] < bad_val  # boolean mask for all bad values
+    else:
+        mask = df[col] > bad_val  # boolean mask for all bad values
+    df[col][mask] = np.nan
     return df
 
 
@@ -103,10 +112,10 @@ def get_acemag_rtn_approx(fp):
         df['bx'] = -1 * bx
         df['by'] = -1 * by
         df['bz'] = bz
-        df['bt'].mask((df['bt'] < -9.99e+30), inplace=True)
-        df['bx'].mask((df['bx'] < -9.99e+30), inplace=True)
-        df['by'].mask((df['by'] < -9.99e+30), inplace=True)
-        df['bz'].mask((df['bz'] < -9.99e+30), inplace=True)
+        df = filter_bad_col(df, 'bt', -9.99E30)
+        df = filter_bad_col(df, 'bx', -9.99E30)
+        df = filter_bad_col(df, 'by', -9.99E30)
+        df = filter_bad_col(df, 'bz', -9.99E30)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
@@ -122,10 +131,10 @@ def get_acemag_gse(fp):
         df['bx'] = bx
         df['by'] = by
         df['bz'] = bz
-        df['bt'].mask((df['bt'] < -9.99e+30), inplace=True)
-        df['bx'].mask((df['bx'] < -9.99e+30), inplace=True)
-        df['by'].mask((df['by'] < -9.99e+30), inplace=True)
-        df['bz'].mask((df['bz'] < -9.99e+30), inplace=True)
+        df = filter_bad_col(df, 'bt', -9.99E30)
+        df = filter_bad_col(df, 'bx', -9.99E30)
+        df = filter_bad_col(df, 'by', -9.99E30)
+        df = filter_bad_col(df, 'bz', -9.99E30)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
@@ -141,10 +150,10 @@ def get_acemag_gsm(fp):
         df['bx'] = bx
         df['by'] = by
         df['bz'] = bz
-        df['bt'].mask((df['bt'] < -9.99e+30), inplace=True)
-        df['bx'].mask((df['bx'] < -9.99e+30), inplace=True)
-        df['by'].mask((df['by'] < -9.99e+30), inplace=True)
-        df['bz'].mask((df['bz'] < -9.99e+30), inplace=True)
+        df = filter_bad_col(df, 'bt', -9.99E30)
+        df = filter_bad_col(df, 'bx', -9.99E30)
+        df = filter_bad_col(df, 'by', -9.99E30)
+        df = filter_bad_col(df, 'bz', -9.99E30)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
@@ -232,12 +241,12 @@ def get_aceswe_rtn(fp):
         df['vx'] = vr
         df['vy'] = vt
         df['vz'] = vn
-        df['tp'].mask((df['tp'] < -9.99e+30), inplace=True)
-        df['np'].mask((df['np'] < -9.99e+30), inplace=True)
-        df['vt'].mask((df['vt'] < -9.99e+30), inplace=True)
-        df['vx'].mask((df['vx'] < -9.99e+30), inplace=True)
-        df['vy'].mask((df['vy'] < -9.99e+30), inplace=True)
-        df['vz'].mask((df['vz'] < -9.99e+30), inplace=True)
+        df = filter_bad_col(df, 'np', -9.99E30)
+        df = filter_bad_col(df, 'tp', -9.99E30)
+        df = filter_bad_col(df, 'vt', -9.99E30)
+        df = filter_bad_col(df, 'vx', -9.99E30)
+        df = filter_bad_col(df, 'vy', -9.99E30)
+        df = filter_bad_col(df, 'vz', -9.99E30)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
@@ -253,12 +262,12 @@ def get_aceswe_gse(fp):
         df['vx'] = vx
         df['vy'] = vy
         df['vz'] = vz
-        df['tp'].mask((df['tp'] < -9.99e+30), inplace=True)
-        df['np'].mask((df['np'] < -9.99e+30), inplace=True)
-        df['vt'].mask((df['vt'] < -9.99e+30), inplace=True)
-        df['vx'].mask((df['vx'] < -9.99e+30), inplace=True)
-        df['vy'].mask((df['vy'] < -9.99e+30), inplace=True)
-        df['vz'].mask((df['vz'] < -9.99e+30), inplace=True)
+        df = filter_bad_col(df, 'np', -9.99E30)
+        df = filter_bad_col(df, 'tp', -9.99E30)
+        df = filter_bad_col(df, 'vt', -9.99E30)
+        df = filter_bad_col(df, 'vx', -9.99E30)
+        df = filter_bad_col(df, 'vy', -9.99E30)
+        df = filter_bad_col(df, 'vz', -9.99E30)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
@@ -274,12 +283,12 @@ def get_aceswe_gsm(fp):
         df['vx'] = vx
         df['vy'] = vy
         df['vz'] = vz
-        df['tp'].mask((df['tp'] < -9.99e+30), inplace=True)
-        df['np'].mask((df['np'] < -9.99e+30), inplace=True)
-        df['vt'].mask((df['vt'] < -9.99e+30), inplace=True)
-        df['vx'].mask((df['vx'] < -9.99e+30), inplace=True)
-        df['vy'].mask((df['vy'] < -9.99e+30), inplace=True)
-        df['vz'].mask((df['vz'] < -9.99e+30), inplace=True)
+        df = filter_bad_col(df, 'np', -9.99E30)
+        df = filter_bad_col(df, 'tp', -9.99E30)
+        df = filter_bad_col(df, 'vt', -9.99E30)
+        df = filter_bad_col(df, 'vx', -9.99E30)
+        df = filter_bad_col(df, 'vy', -9.99E30)
+        df = filter_bad_col(df, 'vz', -9.99E30)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
