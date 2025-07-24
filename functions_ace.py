@@ -38,10 +38,10 @@ def filter_bad_data(df, col, bad_val): #filter across whole df
 
 def filter_bad_col(df, col, bad_val): #filter by individual columns
     if bad_val < 0:
-        mask = df[col] < bad_val  # boolean mask for all bad values
+        mask_vals = df[col] < bad_val  # boolean mask for all bad values
     else:
-        mask = df[col] > bad_val  # boolean mask for all bad values
-    df[col][mask] = np.nan
+        mask_vals = df[col] > bad_val  # boolean mask for all bad values
+    df[col].mask(mask_vals, inplace=True)
     return df
 
 
@@ -283,12 +283,12 @@ def get_aceswe_gsm(fp):
         df['vx'] = vx
         df['vy'] = vy
         df['vz'] = vz
-        df = filter_bad_col(df, 'np', -9.99E30)
-        df = filter_bad_col(df, 'tp', -9.99E30)
-        df = filter_bad_col(df, 'vt', -9.99E30)
-        df = filter_bad_col(df, 'vx', -9.99E30)
-        df = filter_bad_col(df, 'vy', -9.99E30)
-        df = filter_bad_col(df, 'vz', -9.99E30)
+        df['tp'].mask((df['tp'] < -9.99e+30), inplace=True)
+        df['np'].mask((df['np'] < -9.99e+30), inplace=True)
+        df['vt'].mask((df['vt'] < -9.99e+30), inplace=True)
+        df['vx'].mask((df['vx'] < -9.99e+30), inplace=True)
+        df['vy'].mask((df['vy'] < -9.99e+30), inplace=True)
+        df['vz'].mask((df['vz'] < -9.99e+30), inplace=True)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
