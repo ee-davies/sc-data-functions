@@ -42,10 +42,10 @@ def filter_bad_data(df, col, bad_val): #filter across whole df
 
 def filter_bad_col(df, col, bad_val): #filter by individual columns
     if bad_val < 0:
-        mask = df[col] < bad_val  # boolean mask for all bad values
+        mask_vals = df[col] < bad_val  # boolean mask for all bad values
     else:
-        mask = df[col] > bad_val  # boolean mask for all bad values
-    df[col][mask] = np.nan
+        mask_vals = df[col] > bad_val  # boolean mask for all bad values
+    df[col].mask(mask_vals, inplace=True)
     return df
 
 
@@ -184,7 +184,10 @@ def get_windmag_gse(fp):
         df['bx'] = bx
         df['by'] = by
         df['bz'] = bz
-        df = filter_bad_data(df, 'bt', -9.99e+30)
+        df = filter_bad_col(df, 'bt', -9.99E30)
+        df = filter_bad_col(df, 'bx', -9.99E30)
+        df = filter_bad_col(df, 'by', -9.99E30)
+        df = filter_bad_col(df, 'bz', -9.99E30)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
@@ -224,7 +227,10 @@ def get_windmag_gsm(fp):
         df['bx'] = bx
         df['by'] = by
         df['bz'] = bz
-        df = filter_bad_data(df, 'bt', -9.99e+30)
+        df = filter_bad_col(df, 'bt', -9.99E30)
+        df = filter_bad_col(df, 'bx', -9.99E30)
+        df = filter_bad_col(df, 'by', -9.99E30)
+        df = filter_bad_col(df, 'bz', -9.99E30)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
@@ -264,7 +270,10 @@ def get_windmag_rtn(fp):
         df['bx'] = bx
         df['by'] = by
         df['bz'] = bz
-        df = filter_bad_data(df, 'bt', -9.99e+30)
+        df = filter_bad_col(df, 'bt', -9.99E30)
+        df = filter_bad_col(df, 'bx', -9.99E30)
+        df = filter_bad_col(df, 'by', -9.99E30)
+        df = filter_bad_col(df, 'bz', -9.99E30)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
