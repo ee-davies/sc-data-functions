@@ -7,8 +7,10 @@ from scipy import constants
 # import os
 import glob
 import urllib.request
+from urllib.request import urlopen
 import os.path
 import pickle
+from bs4 import BeautifulSoup
 
 
 """
@@ -61,25 +63,27 @@ def download_ace_swe(start_timestamp, end_timestamp, path="/Volumes/External/Dat
 
 
 #MAG
-def download_ace_mag(start_timestamp, end_timestamp, path="/Volumes/External/Data/ACE/mfi"):
+def download_ace_mag(start_timestamp, end_timestamp, path=ace_path+'mfi/'):
     start = start_timestamp.date()
     end = end_timestamp.date() + timedelta(days=1)
     while start < end:
         year = start.year
         date_str = f'{year}{start.month:02}{start.day:02}'
-        data_item_id = f'ac_h0_mfi_{date_str}_v07'
-        if os.path.isfile(f"{path}/{data_item_id}.cdf") == True:
-            print(f'{data_item_id}.cdf has already been downloaded.')
-            start += timedelta(days=1)
-        else:
-            try:
-                data_url = f'https://spdf.gsfc.nasa.gov/pub/data/ace/mag/level_2_cdaweb/mfi_h0/{year}/{data_item_id}.cdf'
-                urllib.request.urlretrieve(data_url, f"{path}/{data_item_id}.cdf")
-                print(f'Successfully downloaded {data_item_id}.cdf')
-                start += timedelta(days=1)
-            except Exception as e:
-                print('ERROR', e, data_item_id)
-                start += timedelta(days=1)
+        try: 
+            data_url = f'https://spdf.gsfc.nasa.gov/pub/data/ace/mag/level_2_cdaweb/mfi_h0/{year}/'
+            soup = BeautifulSoup(urlopen(data_url), 'html.parser')
+            for link in soup.find_all('a'):
+                href = link.get('href')
+                if href is not None and href.startswith('ac_h0_mfi_'+date_str):
+                    filename = href
+                    if os.path.isfile(f"{path}{filename}") == True:
+                        print(f'{filename} has already been downloaded.')
+                    else:
+                        urllib.request.urlretrieve(data_url+filename, f"{path}{filename}")
+                        print(f'Successfully downloaded {filename}')
+        except Exception as e:
+            print('ERROR', e, f'.File for {year} does not exist.')
+        start += timedelta(days=1)
 
 
 """
