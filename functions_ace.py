@@ -113,8 +113,8 @@ def get_acemag_rtn_approx(fp):
         df['by'] = -1 * by
         df['bz'] = bz
         df = filter_bad_col(df, 'bt', -9.99E30)
-        df = filter_bad_col(df, 'bx', -9.99E30)
-        df = filter_bad_col(df, 'by', -9.99E30)
+        df = filter_bad_col(df, 'bx', 9.99E30)
+        df = filter_bad_col(df, 'by', 9.99E30)
         df = filter_bad_col(df, 'bz', -9.99E30)
     except Exception as e:
         print('ERROR:', e, fp)
