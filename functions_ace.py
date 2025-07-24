@@ -287,7 +287,7 @@ def get_aceswe_gsm(fp):
 
 
 #RANGES
-def get_aceswe_rtn_range(start_timestamp, end_timestamp, path=r'/Volumes/External/Data/ACE/swe'):
+def get_aceswe_rtn_range(start_timestamp, end_timestamp, path=ace_path+'swe'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df = None
@@ -304,12 +304,12 @@ def get_aceswe_rtn_range(start_timestamp, end_timestamp, path=r'/Volumes/Externa
             if df is None:
                 df = _df.copy(deep=True)
             else:
-                df = df.append(_df.copy(deep=True))
+                df = pd.concat([df, _df])
         start += timedelta(days=1)
     return df
 
 
-def get_aceswe_gse_range(start_timestamp, end_timestamp, path=r'/Volumes/External/Data/ACE/swe'):
+def get_aceswe_gse_range(start_timestamp, end_timestamp, path=ace_path+'swe'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df = None
@@ -326,12 +326,12 @@ def get_aceswe_gse_range(start_timestamp, end_timestamp, path=r'/Volumes/Externa
             if df is None:
                 df = _df.copy(deep=True)
             else:
-                df = df.append(_df.copy(deep=True))
+                df = pd.concat([df, _df])
         start += timedelta(days=1)
     return df
 
 
-def get_aceswe_gsm_range(start_timestamp, end_timestamp, path=r'/Volumes/External/Data/ACE/swe'):
+def get_aceswe_gsm_range(start_timestamp, end_timestamp, path=ace_path+'swe'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df = None
