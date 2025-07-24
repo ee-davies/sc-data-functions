@@ -41,25 +41,27 @@ ACE DOWNLOAD DATA FUNCTIONS
 """
 
 #SWE
-def download_ace_swe(start_timestamp, end_timestamp, path="/Volumes/External/Data/ACE/swe"):
+def download_ace_swe(start_timestamp, end_timestamp, path=ace_path+'swe/'):
     start = start_timestamp.date()
     end = end_timestamp.date() + timedelta(days=1)
     while start < end:
         year = start.year
         date_str = f'{year}{start.month:02}{start.day:02}'
-        data_item_id = f'ac_h0_swe_{date_str}_v11'
-        if os.path.isfile(f"{path}/{data_item_id}.cdf") == True:
-            print(f'{data_item_id}.cdf has already been downloaded.')
-            start += timedelta(days=1)
-        else:
-            try:
-                data_url = f'https://spdf.gsfc.nasa.gov/pub/data/ace/swepam/level_2_cdaweb/swe_h0/{year}/{data_item_id}.cdf'
-                urllib.request.urlretrieve(data_url, f"{path}/{data_item_id}.cdf")
-                print(f'Successfully downloaded {data_item_id}.cdf')
-                start += timedelta(days=1)
-            except Exception as e:
-                print('ERROR', e, data_item_id)
-                start += timedelta(days=1)
+        try: 
+            data_url = f'https://spdf.gsfc.nasa.gov/pub/data/ace/swepam/level_2_cdaweb/swe_h0/{year}/'
+            soup = BeautifulSoup(urlopen(data_url), 'html.parser')
+            for link in soup.find_all('a'):
+                href = link.get('href')
+                if href is not None and href.startswith('ac_h0_swe_'+date_str):
+                    filename = href
+                    if os.path.isfile(f"{path}{filename}") == True:
+                        print(f'{filename} has already been downloaded.')
+                    else:
+                        urllib.request.urlretrieve(data_url+filename, f"{path}{filename}")
+                        print(f'Successfully downloaded {filename}')
+        except Exception as e:
+            print('ERROR', e, f'.File for {year} does not exist.')
+        start += timedelta(days=1)
 
 
 #MAG
@@ -172,7 +174,7 @@ def get_acemag_rtn_range(start_timestamp, end_timestamp, path=r'/Volumes/Externa
     return df
 
 
-def get_acemag_gse_range(start_timestamp, end_timestamp, path=r'/Volumes/External/Data/ACE/mfi'):
+def get_acemag_gse_range(start_timestamp, end_timestamp, path=ace_path+'mfi'):
     """Pass two datetime objects and grab .STS files between dates, from
     directory given."""
     df = None
