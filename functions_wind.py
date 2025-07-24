@@ -401,8 +401,12 @@ def get_windswe(fp):
         df['time'] = pd.to_datetime(df['time'])
         for col in cols_new[1:]:
             df[col] = df[col].astype('float32')
-        df = filter_bad_data(df, 'vt', 9.99e+04)
-        df = filter_bad_data(df, 'tp', 9.99e+04) #called tp but actually is v_therm
+        df = filter_bad_col(df, 'np', 9.99E04)
+        df = filter_bad_col(df, 'tp', 9.99E04) #called tp but actually is v_therm
+        df = filter_bad_col(df, 'vt', 9.99E04)
+        df = filter_bad_col(df, 'vx', 9.99E04)
+        df = filter_bad_col(df, 'vy', 9.99E04)
+        df = filter_bad_col(df, 'vz', 9.99E04)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
