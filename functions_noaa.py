@@ -11,6 +11,9 @@ from scipy.io import netcdf
 import glob
 import pickle
 import position_frame_transforms as pos_transform
+import requests
+import gzip
+import shutil
 
 
 """
@@ -44,6 +47,73 @@ def filter_bad_col(df, col, bad_val): #filter by individual columns
         mask_vals = df[col] > bad_val  # boolean mask for all bad values
     df[col].mask(mask_vals, inplace=True)
     return df
+
+
+"""
+DSCOVR DOWNLOAD: SCIENCE DATA
+#modified base functions from H.Ruedisser
+#allow for MAG(m1m), SWE(f1m), and position(pop) datafiles to be called using wget system
+"""
+
+def to_epoch_millis_utc(dt):
+    dt_utc = dt.replace(tzinfo=timezone.utc)
+    return int(dt_utc.timestamp() * 1000)
+
+
+def extract_wget_links(start_datetime, end_datetime, datatype="f1m"): #"f1m", "m1m", "pop"
+
+    start_ms = to_epoch_millis_utc(start_datetime)
+    end_ms = to_epoch_millis_utc(end_datetime + timedelta(days=1, milliseconds=-1))
+
+    api_url = f"https://www.ngdc.noaa.gov/dscovr-data-access/files?start_date={start_ms}&end_date={end_ms}"
+
+    print(f"Requesting file list from: {api_url}")
+
+    response = requests.get(api_url)
+
+    if response.status_code != 200:
+        print(f"Error: Unable to fetch data from {api_url}")
+        return []
+
+    file_list = response.json()
+
+    # Collect datatype to download URLs
+    file_urls = []
+    for date_key, file_types in file_list.items():
+        if isinstance(file_types, dict) and datatype in file_types:
+            file_urls.append(file_types[datatype])
+
+    return file_urls
+
+
+def download_dscovr(start_datetime, end_datetime, datatype:str, path=dscovr_path):  #"f1m", "m1m", "pop"
+    if datatype == "f1m":
+        output_path = path+'plas/'
+    elif datatype == "m1m":
+        output_path = path+'mag/'
+    elif datatype == "pop":
+        output_path = path+'orb/'
+    file_urls = extract_wget_links(start_datetime, end_datetime, datatype)
+    for file_url in file_urls:
+        filename = os.path.basename(file_url)
+        file_path = os.path.join(output_path, filename)
+        print(f"Downloading {file_url} to {file_path}")
+        response = requests.get(file_url, stream=True)
+        if response.status_code == 200:
+            with open(file_path, "wb") as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    f.write(chunk)
+                    print(f"Downloaded {filename}")
+        else:
+            print(f"Failed to download {filename}. Status code: {response.status_code}")
+            continue
+        #extract zips
+        if filename.endswith(".gz"):
+            with open(file_path[:-3], "wb") as f_out:
+                with gzip.open(file_path, "rb") as f_in:
+                    shutil.copyfileobj(f_in, f_out)
+            os.remove(file_path)
+            print(f"Extracted {filename[:-3]} from {filename}")
 
 
 """
