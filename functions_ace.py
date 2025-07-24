@@ -97,16 +97,16 @@ LOAD ACE MAG DATA
 def get_acemag_rtn_approx(fp):
     try:
         cdf = pycdf.CDF(fp)
-        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'Magnitude'], ['Timestamp', 'B_TOT'])}
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'Magnitude'], ['time', 'bt'])}
         df = pd.DataFrame.from_dict(data)
         bx, by, bz = cdf['BGSEc'][:].T
-        df['B_R'] = -1 * bx
-        df['B_T'] = -1 * by
-        df['B_N'] = bz
-        df['B_TOT'].mask((df['B_TOT'] < -9.99e+30), inplace=True)
-        df['B_R'].mask((df['B_R'] < -9.99e+30), inplace=True)
-        df['B_T'].mask((df['B_T'] < -9.99e+30), inplace=True)
-        df['B_N'].mask((df['B_N'] < -9.99e+30), inplace=True)
+        df['bx'] = -1 * bx
+        df['by'] = -1 * by
+        df['bz'] = bz
+        df['bt'].mask((df['bt'] < -9.99e+30), inplace=True)
+        df['bx'].mask((df['bx'] < -9.99e+30), inplace=True)
+        df['by'].mask((df['by'] < -9.99e+30), inplace=True)
+        df['bz'].mask((df['bz'] < -9.99e+30), inplace=True)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
@@ -116,16 +116,16 @@ def get_acemag_rtn_approx(fp):
 def get_acemag_gse(fp):
     try:
         cdf = pycdf.CDF(fp)
-        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'Magnitude'], ['timestamp', 'b_tot'])}
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'Magnitude'], ['time', 'bt'])}
         df = pd.DataFrame.from_dict(data)
         bx, by, bz = cdf['BGSEc'][:].T
-        df['b_x'] = bx
-        df['b_y'] = by
-        df['b_z'] = bz
-        df['b_tot'].mask((df['b_tot'] < -9.99e+30), inplace=True)
-        df['b_x'].mask((df['b_x'] < -9.99e+30), inplace=True)
-        df['b_y'].mask((df['b_y'] < -9.99e+30), inplace=True)
-        df['b_z'].mask((df['b_z'] < -9.99e+30), inplace=True)
+        df['bx'] = bx
+        df['by'] = by
+        df['bz'] = bz
+        df['bt'].mask((df['bt'] < -9.99e+30), inplace=True)
+        df['bx'].mask((df['bx'] < -9.99e+30), inplace=True)
+        df['by'].mask((df['by'] < -9.99e+30), inplace=True)
+        df['bz'].mask((df['bz'] < -9.99e+30), inplace=True)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
