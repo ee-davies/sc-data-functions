@@ -390,7 +390,7 @@ WIND PLASMA DATA (3DP hidden for now, and SWE)
 #     return df
 
 
-def get_windswe(fp):
+def get_windswe(fp): #choice between nonlin or moments
     try:
         cdf = pycdf.CDF(fp)
         cols_raw = ['Epoch', 'Proton_V_nonlin', 'Proton_VX_nonlin', 'Proton_VY_nonlin',
@@ -413,7 +413,7 @@ def get_windswe(fp):
     return df
 
 
-def get_windswe_range(start_timestamp, end_timestamp, path=wind_path+'swe'):
+def get_windswe_range(start_timestamp, end_timestamp, path=wind_path+'swe/h1'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df = None
@@ -424,6 +424,48 @@ def get_windswe_range(start_timestamp, end_timestamp, path=wind_path+'swe'):
         try:
             fn = glob.glob(f'{path}/wi_h1_swe_{date_str}*')[0]
             _df = get_windswe(fn)
+            if _df is not None:
+                if df is None:
+                    df = _df.copy(deep=True)
+                else:
+                    df = pd.concat([df, _df])
+        except Exception as e:
+            print('ERROR:', e, f'{date_str} does not exist')
+        start += timedelta(days=1)
+    return df
+
+
+def get_windswe_rtn(fp): #choice between nonlin or moments
+    try:
+        cdf = pycdf.CDF(fp)
+        cols_raw = ['Epoch', 'Proton_V_nonlin', 'Proton_VR_nonlin', 'Proton_VT_nonlin',
+                    'Proton_VN_nonlin', 'Proton_W_nonlin', 'Proton_Np_nonlin']
+        cols_new = ['time', 'vt', 'vx', 'vy', 'vz', 'tp', 'np']
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(cols_raw, cols_new)}
+        df = pd.DataFrame.from_dict(data)
+        df = filter_bad_col(df, 'np', 9.99E04)
+        df = filter_bad_col(df, 'tp', 9.99E04) #called tp but actually is v_therm, km/s
+        df = filter_bad_col(df, 'vt', 9.99E04)
+        df = filter_bad_col(df, 'vx', 9.99E04)
+        df = filter_bad_col(df, 'vy', 9.99E04)
+        df = filter_bad_col(df, 'vz', 9.99E04)
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
+    return df
+
+
+def get_windswe_rtn_range(start_timestamp, end_timestamp, path=wind_path+'swe/rtn'):
+    """Pass two datetime objects and grab .cdf files between dates, from
+    directory given."""
+    df = None
+    start = start_timestamp.date()
+    end = end_timestamp.date()
+    while start <= end:
+        date_str = f'{start.year}{start.month:02}{start.day:02}'
+        try:
+            fn = glob.glob(f'{path}/wi_h1_swe_rtn_{date_str}*')[0]
+            _df = get_windswe_rtn(fn)
             if _df is not None:
                 if df is None:
                     df = _df.copy(deep=True)
