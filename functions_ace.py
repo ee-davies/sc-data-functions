@@ -152,7 +152,7 @@ def get_acemag_gsm(fp):
 
 
 #RANGES
-def get_acemag_rtn_range(start_timestamp, end_timestamp, path=r'/Volumes/External/Data/ACE/mfi'):
+def get_acemag_rtn_range(start_timestamp, end_timestamp, path=ace_path+'mfi'):
     """Pass two datetime objects and grab .STS files between dates, from
     directory given."""
     df = None
@@ -169,7 +169,7 @@ def get_acemag_rtn_range(start_timestamp, end_timestamp, path=r'/Volumes/Externa
             if df is None:
                 df = _df.copy(deep=True)
             else:
-                df = df.append(_df.copy(deep=True))
+                df = pd.concat([df, _df])
         start += timedelta(days=1)
     return df
 
@@ -191,7 +191,7 @@ def get_acemag_gse_range(start_timestamp, end_timestamp, path=ace_path+'mfi'):
             if df is None:
                 df = _df.copy(deep=True)
             else:
-                df = df.append(_df.copy(deep=True))
+                df = pd.concat([df, _df])
         start += timedelta(days=1)
     return df
 
