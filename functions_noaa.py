@@ -37,6 +37,15 @@ def filter_bad_data(df, col, bad_val):
     return df
 
 
+def filter_bad_col(df, col, bad_val): #filter by individual columns
+    if bad_val < 0:
+        mask_vals = df[col] < bad_val  # boolean mask for all bad values
+    else:
+        mask_vals = df[col] > bad_val  # boolean mask for all bad values
+    df[col].mask(mask_vals, inplace=True)
+    return df
+
+
 """
 DSCOVR MAG and PLAS DATA
 # Can call MAG and PLAS last 7 days directly from https://services.swpc.noaa.gov/products/solar-wind/
