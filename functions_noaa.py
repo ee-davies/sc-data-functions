@@ -206,13 +206,16 @@ def get_dscovrplas_gse_range(start_timestamp, end_timestamp, path=f'{dscovr_path
     while start < end:
         year = start.year
         date_str = f'{year}{start.month:02}{start.day:02}'
-        fn = glob.glob(f'{path}/oe_f1m_dscovr_s{date_str}000000_*.nc')
-        _df = get_dscovrplas_gse(fn[0])
-        if _df is not None:
-            if df is None:
-                df = _df.copy(deep=True)
-            else:
-                df = pd.concat([df, _df])
+        try:
+            fn = glob.glob(f'{path}/oe_f1m_dscovr_s{date_str}000000_*.nc')
+            _df = get_dscovrplas_gse(fn[0])
+            if _df is not None:
+                if df is None:
+                    df = _df.copy(deep=True)
+                else:
+                    df = pd.concat([df, _df])
+        except Exception as e:
+            print('ERROR', e, f'{date_str} does not exist')
         start += timedelta(days=1)
     df = df.reset_index(drop=True)
     return df
@@ -245,12 +248,15 @@ def get_dscovrplas_gsm_range(start_timestamp, end_timestamp, path=f'{dscovr_path
         year = start.year
         date_str = f'{year}{start.month:02}{start.day:02}'
         fn = glob.glob(f'{path}/oe_f1m_dscovr_s{date_str}000000_*.nc')
-        _df = get_dscovrplas_gsm(fn[0])
-        if _df is not None:
-            if df is None:
-                df = _df.copy(deep=True)
-            else:
-                df = pd.concat([df, _df])
+        try:
+            _df = get_dscovrplas_gsm(fn[0])
+            if _df is not None:
+                if df is None:
+                    df = _df.copy(deep=True)
+                else:
+                    df = pd.concat([df, _df])
+        except Exception as e:
+            print('ERROR', e, f'{date_str} does not exist')
         start += timedelta(days=1)
     df = df.reset_index(drop=True)
     return df
@@ -280,13 +286,16 @@ def get_dscovrmag_gse_range(start_timestamp, end_timestamp, path=f'{dscovr_path}
     while start < end:
         year = start.year
         date_str = f'{year}{start.month:02}{start.day:02}'
-        fn = glob.glob(f'{path}/oe_m1m_dscovr_s{date_str}000000_*.nc')
-        _df = get_dscovrmag_gse(fn[0])
-        if _df is not None:
-            if df is None:
-                df = _df.copy(deep=True)
-            else:
-                df = pd.concat([df, _df])
+        try:
+            fn = glob.glob(f'{path}/oe_m1m_dscovr_s{date_str}000000_*.nc')
+            _df = get_dscovrmag_gse(fn[0])
+            if _df is not None:
+                if df is None:
+                    df = _df.copy(deep=True)
+                else:
+                    df = pd.concat([df, _df])
+        except Exception as e:
+            print('ERROR', e, f'{date_str} does not exist')
         start += timedelta(days=1)
     df = df.reset_index(drop=True)
     return df
@@ -316,13 +325,16 @@ def get_dscovrmag_gsm_range(start_timestamp, end_timestamp, path=f'{dscovr_path}
     while start < end:
         year = start.year
         date_str = f'{year}{start.month:02}{start.day:02}'
-        fn = glob.glob(f'{path}/oe_m1m_dscovr_s{date_str}000000_*.nc')
-        _df = get_dscovrmag_gsm(fn[0])
-        if _df is not None:
-            if df is None:
-                df = _df.copy(deep=True)
-            else:
-                df = pd.concat([df, _df])
+        try:
+            fn = glob.glob(f'{path}/oe_m1m_dscovr_s{date_str}000000_*.nc')
+            _df = get_dscovrmag_gsm(fn[0])
+            if _df is not None:
+                if df is None:
+                    df = _df.copy(deep=True)
+                else:
+                    df = pd.concat([df, _df])
+        except Exception as e:
+            print('ERROR', e, f'{date_str} does not exist')
         start += timedelta(days=1)
     df = df.reset_index(drop=True)
     return df
@@ -393,13 +405,16 @@ def get_dscovrpositions_gse(start_timestamp, end_timestamp):
     while start < end:
         year = start.year
         date_str = f'{year}{start.month:02}{start.day:02}'
-        fn = glob.glob(f'{dscovr_path}'+'orb/'+f'oe_pop_dscovr_s{date_str}000000_*.nc')
-        _df = get_dscovrpos_gse(fn[0])
-        if _df is not None:
-            if df is None:
-                df = _df.copy(deep=True)
-            else:
-                df = pd.concat([df, _df])
+        try:
+            fn = glob.glob(f'{dscovr_path}'+'orb/'+f'oe_pop_dscovr_s{date_str}000000_*.nc')
+            _df = get_dscovrpos_gse(fn[0])
+            if _df is not None:
+                if df is None:
+                    df = _df.copy(deep=True)
+                else:
+                    df = pd.concat([df, _df])
+        except Exception as e:
+            print('ERROR', e, f'{date_str} does not exist')
         start += timedelta(days=1)
     df = df.reset_index(drop=True)
     return df
@@ -412,13 +427,16 @@ def get_dscovrpositions_gsm(start_timestamp, end_timestamp):
     while start < end:
         year = start.year
         date_str = f'{year}{start.month:02}{start.day:02}'
-        fn = glob.glob(f'{dscovr_path}'+'orb/'+f'oe_pop_dscovr_s{date_str}000000_*.nc')
-        _df = get_dscovrpos_gsm(fn[0])
-        if _df is not None:
-            if df is None:
-                df = _df.copy(deep=True)
-            else:
-                df = pd.concat([df, _df])
+        try:
+            fn = glob.glob(f'{dscovr_path}'+'orb/'+f'oe_pop_dscovr_s{date_str}000000_*.nc')
+            _df = get_dscovrpos_gsm(fn[0])
+            if _df is not None:
+                if df is None:
+                    df = _df.copy(deep=True)
+                else:
+                    df = pd.concat([df, _df])
+        except Exception as e:
+            print('ERROR', e, f'{date_str} does not exist')
         start += timedelta(days=1)
     df = df.reset_index(drop=True)
     return df
