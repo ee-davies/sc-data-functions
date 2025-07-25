@@ -116,18 +116,29 @@ Geocentric position conversions
 
 
 def GSE_to_GSM(df):
-    B_GSM = []
-    for i in range(df.shape[0]):
-        T1, T2, T3 = get_geocentric_transformation_matrices(df['time'].iloc[i])
-        B_GSE_i = np.matrix([[df['x'].iloc[i]],[df['y'].iloc[i]],[df['z'].iloc[i]]]) 
-        B_GSM_i = np.dot(T3,B_GSE_i)
-        B_GSM_i_list = B_GSM_i.tolist()
-        flat_B_GSM_i = list(itertools.chain(*B_GSM_i_list))
-        r, lat, lon = cart2sphere(flat_B_GSM_i[0], flat_B_GSM_i[1], flat_B_GSM_i[2])
-        position = flat_B_GSM_i[0], flat_B_GSM_i[1], flat_B_GSM_i[2], r, lat, lon
-        B_GSM.append(position)
-    df_transformed = pd.DataFrame(B_GSM, columns=['x', 'y', 'z', 'r', 'lat', 'lon'])
-    df_transformed['time'] = df['time']
+    # Get all transformation matrices at once
+    times = df['time'].values
+    T3_matrices = np.array([get_geocentric_transformation_matrices(t)[2] for t in times])
+    # Create coordinate matrix (N x 3) where N is number of rows
+    coords = np.column_stack([df['x'].values, df['y'].values, df['z'].values])
+    # Vectorized matrix multiplication using einsum
+    # 'ijk,ik->ij' means: for each i, multiply matrix T3_matrices[i] with vector coords[i,:]
+    B_GSM_coords = np.einsum('ijk,ik->ij', T3_matrices, coords)
+    # Vectorized spherical coordinate conversion
+    x, y, z = B_GSM_coords[:, 0], B_GSM_coords[:, 1], B_GSM_coords[:, 2]
+    # If cart2sphere is vectorized, use it directly
+    # If not, you may need to vectorize it or use numpy operations
+    r, lat, lon = cart2sphere(x, y, z)
+    # Create result DataFrame
+    df_transformed = pd.DataFrame({
+        'time': df['time'].values,
+        'x': x,
+        'y': y, 
+        'z': z,
+        'r': r,
+        'lat': lat,
+        'lon': lon
+    })
     return df_transformed
 
 
