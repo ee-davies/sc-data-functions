@@ -202,18 +202,38 @@ def GSM_to_GSE_plas(df):
 
 
 def GSE_to_RTN_approx_mag(df):
-    df_transformed = pd.DataFrame()
-    df_transformed['time'] = df['time']
-    df_transformed['bt'] = df['bt']
-    df_transformed['bx'] = -df['bx']
-    df_transformed['by'] = -df['by']
-    df_transformed['bz'] = df['bz']
+    df_transformed = pd.DataFrame({
+        'time': df['time'].values,
+        'bt': df['bt'],
+        'bx': -df['bx'],
+        'by': -df['by'], 
+        'bz': df['bz'],
+    })
+    return df_transformed
+
+
+def GSE_to_RTN_approx_plas(df):
+    df_transformed = pd.DataFrame({
+        'time': df['time'].values,
+        'vt': df['vt'],
+        'vx': -df['vx'],
+        'vy': -df['vy'], 
+        'vz': df['vz'],
+        'tp': df['tp'],
+        'np': df['np'],
+    })
     return df_transformed
 
     
 def GSM_to_RTN_approx_mag(df):
     df_gse = GSM_to_GSE_mag(df)
     df_transformed = GSE_to_RTN_approx_mag(df_gse)
+    return df_transformed
+
+
+def GSM_to_RTN_approx_plas(df):
+    df_gse = GSM_to_GSE_plas(df)
+    df_transformed = GSE_to_RTN_approx_plas(df_gse)
     return df_transformed
 
 
