@@ -390,7 +390,7 @@ WIND PLASMA DATA (3DP hidden for now, and SWE)
 #     return df
 
 
-def get_windswe(fp): #choice between nonlin or moments
+def get_windswe_gse(fp): #choice between nonlin or moments
     try:
         cdf = pycdf.CDF(fp)
         cols_raw = ['Epoch', 'Proton_V_nonlin', 'Proton_VX_nonlin', 'Proton_VY_nonlin',
@@ -413,7 +413,7 @@ def get_windswe(fp): #choice between nonlin or moments
     return df
 
 
-def get_windswe_range(start_timestamp, end_timestamp, path=wind_path+'swe/h1'):
+def get_windswe_gse_range(start_timestamp, end_timestamp, path=wind_path+'swe/h1'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df = None
@@ -423,7 +423,7 @@ def get_windswe_range(start_timestamp, end_timestamp, path=wind_path+'swe/h1'):
         date_str = f'{start.year}{start.month:02}{start.day:02}'
         try:
             fn = glob.glob(f'{path}/wi_h1_swe_{date_str}*')[0]
-            _df = get_windswe(fn)
+            _df = get_windswe_gse(fn)
             if _df is not None:
                 if df is None:
                     df = _df.copy(deep=True)
@@ -474,6 +474,14 @@ def get_windswe_rtn_range(start_timestamp, end_timestamp, path=wind_path+'swe/rt
         except Exception as e:
             print('ERROR:', e, f'{date_str} does not exist')
         start += timedelta(days=1)
+    return df
+
+
+def get_windswe_range(start_timestamp, end_timestamp, coord_sys:str):
+    if coord_sys == 'GSE':
+        df = get_windmag_gse_range(start_timestamp, end_timestamp)
+    elif coord_sys == 'RTN':
+        df = get_windmag_rtn_range(start_timestamp, end_timestamp)
     return df
 
 
