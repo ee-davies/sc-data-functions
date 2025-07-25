@@ -3,6 +3,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 import itertools
 import spiceypy
+import os.path
 
 
 #input datetime to return T1, T2 and T3 based on Hapgood 1992
@@ -469,7 +470,46 @@ def RTN_to_GSM(df_rtn):
     return df_gsm
 
 
+def generic_furnish():
+    """Main"""
+    kernels_path='/Volumes/External/data/kernels/'
+    generic_path = kernels_path+'generic/'
+    generic_kernels = os.listdir(generic_path)
+    for kernel in generic_kernels:
+        spiceypy.furnsh(os.path.join(generic_path, kernel))
+
+
 def get_transform(epoch: datetime, base_frame: str, to_frame: str):
     """Return transformation matrix at a given epoch."""
     transform = spiceypy.pxform(base_frame, to_frame, spiceypy.datetime2et(epoch))
     return transform
+
+
+def perform_mag_transform(df, base_frame: str, to_frame: str):
+    generic_furnish()
+    timeseries = df.time
+    BASE = np.vstack((df.bx, df.by, df.bz)).T
+    transformation_matrices = np.array([get_transform(t, base_frame, to_frame) for t in timeseries])
+    TO = np.einsum('ijk,ik->ij', transformation_matrices, BASE)
+    df_transformed = pd.concat([timeseries], axis=1)
+    df_transformed['bt'] = df.bt
+    df_transformed['bx'] = TO[:,0]
+    df_transformed['by'] = TO[:,1]
+    df_transformed['bz'] = TO[:,2]
+    return df_transformed
+
+
+def perform_plas_transform(df, base_frame: str, to_frame: str):
+    generic_furnish()
+    timeseries = df.time
+    BASE = np.vstack((df.vx, df.vy, df.vz)).T
+    transformation_matrices = np.array([get_transform(t, base_frame, to_frame) for t in timeseries])
+    TO = np.einsum('ijk,ik->ij', transformation_matrices, BASE)
+    df_transformed = pd.concat([timeseries], axis=1)
+    df_transformed['vt'] = df.vt
+    df_transformed['vx'] = TO[:,0]
+    df_transformed['vy'] = TO[:,1]
+    df_transformed['vz'] = TO[:,2]
+    df_transformed['tp'] = df.tp
+    df_transformed['np'] = df.np
+    return df_transformed
