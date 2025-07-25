@@ -201,6 +201,11 @@ def GSM_to_GSE_plas(df):
     return df_transformed
 
 
+"""
+Geocentric to RTN frame conversions
+"""
+
+
 def GSE_to_RTN_approx_mag(df):
     df_transformed = pd.DataFrame({
         'time': df['time'].values,
@@ -237,48 +242,62 @@ def GSM_to_RTN_approx_plas(df):
     return df_transformed
 
 
+"""
+Geocentric - Heliocentric frame conversions
+"""
+
+
 def GSE_to_HEE_mag(df):
-    df_transformed = pd.DataFrame()
-    df_transformed['time'] = df['time']
-    df_transformed['bt'] = df['bt']
-    df_transformed['bx'] = -df['bx']
-    df_transformed['by'] = -df['by']
-    df_transformed['bz'] = df['bz']
+    df_transformed = pd.DataFrame({
+        'time': df['time'].values,
+        'bt': df['bt'],
+        'bx': -df['bx'],
+        'by': -df['by'], 
+        'bz': df['bz'],
+    })
     return df_transformed
 
 
 def GSE_to_HEE_plas(df):
-    df_transformed = pd.DataFrame()
-    df_transformed['time'] = df['time']
-    df_transformed['vx'] = -df['vx']
-    df_transformed['vy'] = -df['vy']
-    df_transformed['vz'] = df['vz']
-    df_transformed['vt'] = df['vt']
-    df_transformed['np'] = df['np']
-    df_transformed['tp'] = df['tp']
+    df_transformed = pd.DataFrame({
+        'time': df['time'].values,
+        'vt': df['vt'],
+        'vx': -df['vx'],
+        'vy': -df['vy'], 
+        'vz': df['vz'],
+        'tp': df['tp'],
+        'np': df['np'],
+    })
     return df_transformed
 
 
 def HEE_to_GSE_mag(df):
-    df_transformed = pd.DataFrame()
-    df_transformed['time'] = df['time']
-    df_transformed['bt'] = df['bt']
-    df_transformed['bx'] = -df['bx']
-    df_transformed['by'] = -df['by']
-    df_transformed['bz'] = df['bz']
+    df_transformed = pd.DataFrame({
+        'time': df['time'].values,
+        'bt': df['bt'],
+        'bx': -df['bx'],
+        'by': -df['by'], 
+        'bz': df['bz'],
+    })
     return df_transformed
 
 
 def HEE_to_GSE_plas(df):
-    df_transformed = pd.DataFrame()
-    df_transformed['time'] = df['time']
-    df_transformed['vx'] = -df['vx']
-    df_transformed['vy'] = -df['vy']
-    df_transformed['vz'] = df['vz']
-    df_transformed['vt'] = df['vt']
-    df_transformed['np'] = df['np']
-    df_transformed['tp'] = df['tp']
+    df_transformed = pd.DataFrame({
+        'time': df['time'].values,
+        'vt': df['vt'],
+        'vx': -df['vx'],
+        'vy': -df['vy'], 
+        'vz': df['vz'],
+        'tp': df['tp'],
+        'np': df['np'],
+    })
     return df_transformed
+
+
+"""
+Heliocentric frame conversions
+"""
 
 
 def HEE_to_HAE(df):
