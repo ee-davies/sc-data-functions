@@ -153,6 +153,54 @@ def GSE_to_GSM_plas(df):
     return df_transformed
 
 
+def GSM_to_GSE_mag(df):
+    # Get all transformation matrices at once
+    times = df['time'].values
+    T3_matrices = np.array([get_geocentric_transformation_matrices(t)[2] for t in times])
+    # Compute inverse matrices for all T3 matrices at once
+    T3_inv_matrices = np.linalg.inv(T3_matrices)
+    # Create coordinate matrix (N x 3) where N is number of rows
+    coords = np.column_stack([df['bx'].values, df['by'].values, df['bz'].values])
+    # Vectorized matrix multiplication using einsum
+    # 'ijk,ik->ij' means: for each i, multiply matrix T3_inv_matrices[i] with vector coords[i,:]
+    GSE_coords = np.einsum('ijk,ik->ij', T3_inv_matrices, coords)
+    bx, by, bz = GSE_coords[:, 0], GSE_coords[:, 1], GSE_coords[:, 2]
+    # Create result DataFrame
+    df_transformed = pd.DataFrame({
+        'time': df['time'].values,
+        'bt': df['bt'],
+        'bx': bx,
+        'by': by, 
+        'bz': bz,
+    })
+    return df_transformed
+
+
+def GSM_to_GSE_plas(df):
+    # Get all transformation matrices at once
+    times = df['time'].values
+    T3_matrices = np.array([get_geocentric_transformation_matrices(t)[2] for t in times])
+    # Compute inverse matrices for all T3 matrices at once
+    T3_inv_matrices = np.linalg.inv(T3_matrices)
+    # Create coordinate matrix (N x 3) where N is number of rows
+    coords = np.column_stack([df['vx'].values, df['vy'].values, df['vz'].values])
+    # Vectorized matrix multiplication using einsum
+    # 'ijk,ik->ij' means: for each i, multiply matrix T3_inv_matrices[i] with vector coords[i,:]
+    GSE_coords = np.einsum('ijk,ik->ij', T3_inv_matrices, coords)
+    vx, vy, vz = GSE_coords[:, 0], GSE_coords[:, 1], GSE_coords[:, 2]
+    # Create result DataFrame
+    df_transformed = pd.DataFrame({
+        'time': df['time'].values,
+        'vt': df['vt'],
+        'vx': vx,
+        'vy': vy, 
+        'vz': vz,
+        'tp': df['tp'],
+        'np': df['np'],
+    })
+    return df_transformed
+
+
 def GSM_to_GSE(df):
     B_GSE = []
     for i in range(df.shape[0]):
