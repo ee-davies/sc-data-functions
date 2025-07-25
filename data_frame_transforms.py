@@ -201,36 +201,7 @@ def GSM_to_GSE_plas(df):
     return df_transformed
 
 
-def GSM_to_GSE(df):
-    B_GSE = []
-    for i in range(df.shape[0]):
-        T1, T2, T3 = get_geocentric_transformation_matrices(df['time'].iloc[i])
-        T3_inv = np.linalg.inv(T3)
-        B_GSM_i = np.matrix([[df['bx'].iloc[i]],[df['by'].iloc[i]],[df['bz'].iloc[i]]]) 
-        B_GSE_i = np.dot(T3_inv,B_GSM_i)
-        B_GSE_i_list = B_GSE_i.tolist()
-        flat_B_GSE_i = list(itertools.chain(*B_GSE_i_list))
-        B_GSE.append(flat_B_GSE_i)
-    df_transformed = pd.DataFrame(B_GSE, columns=['bx', 'by', 'bz'])
-    df_transformed['bt'] = np.linalg.norm(df_transformed[['bx', 'by', 'bz']], axis=1)
-    df_transformed['time'] = df['time']
-    df_transformed['vx'] = df['vx']
-    df_transformed['vy'] = df['vy']
-    df_transformed['vz'] = df['vz']
-    df_transformed['vt'] = df['vt']
-    df_transformed['np'] = df['np']
-    df_transformed['tp'] = df['tp']
-    df_transformed['x'] = df['x']
-    df_transformed['y'] = df['y']
-    df_transformed['z'] = df['z']
-    df_transformed['y'] = df['y']
-    df_transformed['r'] = df['r']
-    df_transformed['lat'] = df['lat']
-    df_transformed['lon'] = df['lon']
-    return df_transformed
-
-
-def GSE_to_RTN_approx(df):
+def GSE_to_RTN_approx_mag(df):
     df_transformed = pd.DataFrame()
     df_transformed['time'] = df['time']
     df_transformed['bt'] = df['bt']
@@ -240,9 +211,9 @@ def GSE_to_RTN_approx(df):
     return df_transformed
 
     
-def GSM_to_RTN_approx(df):
-    df_gse = GSM_to_GSE(df)
-    df_transformed = GSE_to_RTN_approx(df_gse)
+def GSM_to_RTN_approx_mag(df):
+    df_gse = GSM_to_GSE_mag(df)
+    df_transformed = GSE_to_RTN_approx_mag(df_gse)
     return df_transformed
 
 
