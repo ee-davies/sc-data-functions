@@ -124,9 +124,9 @@ def GSE_to_GSM(df):
     coords = np.column_stack([df['x'].values, df['y'].values, df['z'].values])
     # Vectorized matrix multiplication using einsum
     # 'ijk,ik->ij' means: for each i, multiply matrix T3_matrices[i] with vector coords[i,:]
-    B_GSM_coords = np.einsum('ijk,ik->ij', T3_matrices, coords)
+    GSM_coords = np.einsum('ijk,ik->ij', T3_matrices, coords)
     # Vectorized spherical coordinate conversion
-    x, y, z = B_GSM_coords[:, 0], B_GSM_coords[:, 1], B_GSM_coords[:, 2]
+    x, y, z = GSM_coords[:, 0], GSM_coords[:, 1], GSM_coords[:, 2]
     r, lat, lon = cart2sphere(x, y, z)
     # Create result DataFrame
     df_transformed = pd.DataFrame({
@@ -151,9 +151,9 @@ def GSM_to_GSE(df):
     coords = np.column_stack([df['x'].values, df['y'].values, df['z'].values])
     # Vectorized matrix multiplication using einsum
     # 'ijk,ik->ij' means: for each i, multiply matrix T3_inv_matrices[i] with vector coords[i,:]
-    B_GSE_coords = np.einsum('ijk,ik->ij', T3_inv_matrices, coords)
+    GSE_coords = np.einsum('ijk,ik->ij', T3_inv_matrices, coords)
     # Vectorized spherical coordinate conversion
-    x, y, z = B_GSE_coords[:, 0], B_GSE_coords[:, 1], B_GSE_coords[:, 2]
+    x, y, z = GSE_coords[:, 0], GSE_coords[:, 1], GSE_coords[:, 2]
     r, lat, lon = cart2sphere(x, y, z)
     # Create result DataFrame
     df_transformed = pd.DataFrame({
