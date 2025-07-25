@@ -177,49 +177,47 @@ def GSM_to_RTN_approx(df):
     return df_transformed
 
 
-def GSE_to_HEE(df):
+def GSE_to_HEE_mag(df):
     df_transformed = pd.DataFrame()
     df_transformed['time'] = df['time']
     df_transformed['bt'] = df['bt']
     df_transformed['bx'] = -df['bx']
     df_transformed['by'] = -df['by']
     df_transformed['bz'] = df['bz']
-    df_transformed['vx'] = df['vx']
-    df_transformed['vy'] = df['vy']
-    df_transformed['vz'] = df['vz']
-    df_transformed['vt'] = df['vt']
-    df_transformed['np'] = df['np']
-    df_transformed['tp'] = df['tp']
-    df_transformed['x'] = df['x']
-    df_transformed['y'] = df['y']
-    df_transformed['z'] = df['z']
-    df_transformed['y'] = df['y']
-    df_transformed['r'] = df['r']
-    df_transformed['lat'] = df['lat']
-    df_transformed['lon'] = df['lon']
     return df_transformed
 
 
-def HEE_to_GSE(df):
+def GSE_to_HEE_plas(df):
+    df_transformed = pd.DataFrame()
+    df_transformed['time'] = df['time']
+    df_transformed['vx'] = -df['vx']
+    df_transformed['vy'] = -df['vy']
+    df_transformed['vz'] = df['vz']
+    df_transformed['vt'] = df['vt']
+    df_transformed['np'] = df['np']
+    df_transformed['tp'] = df['tp']
+    return df_transformed
+
+
+def HEE_to_GSE_mag(df):
     df_transformed = pd.DataFrame()
     df_transformed['time'] = df['time']
     df_transformed['bt'] = df['bt']
     df_transformed['bx'] = -df['bx']
     df_transformed['by'] = -df['by']
     df_transformed['bz'] = df['bz']
-    df_transformed['vx'] = df['vx']
-    df_transformed['vy'] = df['vy']
+    return df_transformed
+
+
+def HEE_to_GSE_plas(df):
+    df_transformed = pd.DataFrame()
+    df_transformed['time'] = df['time']
+    df_transformed['vx'] = -df['vx']
+    df_transformed['vy'] = -df['vy']
     df_transformed['vz'] = df['vz']
     df_transformed['vt'] = df['vt']
     df_transformed['np'] = df['np']
     df_transformed['tp'] = df['tp']
-    df_transformed['x'] = df['x']
-    df_transformed['y'] = df['y']
-    df_transformed['z'] = df['z']
-    df_transformed['y'] = df['y']
-    df_transformed['r'] = df['r']
-    df_transformed['lat'] = df['lat']
-    df_transformed['lon'] = df['lon']
     return df_transformed
 
 
