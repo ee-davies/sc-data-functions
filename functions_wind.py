@@ -479,9 +479,9 @@ def get_windswe_rtn_range(start_timestamp, end_timestamp, path=wind_path+'swe/rt
 
 def get_windswe_range(start_timestamp, end_timestamp, coord_sys:str):
     if coord_sys == 'GSE':
-        df = get_windmag_gse_range(start_timestamp, end_timestamp)
+        df = get_windswe_gse_range(start_timestamp, end_timestamp)
     elif coord_sys == 'RTN':
-        df = get_windmag_rtn_range(start_timestamp, end_timestamp)
+        df = get_windswe_rtn_range(start_timestamp, end_timestamp)
     return df
 
 
