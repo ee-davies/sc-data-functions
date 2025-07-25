@@ -3,6 +3,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 import itertools
 import spiceypy
+import os.path
 
 
 def cart2sphere(x,y,z):
@@ -328,27 +329,19 @@ def HEE_to_GSE(df): #same as GSE_to_HEE, included for simplicity
     return df_transformed
 
 
-# def GSE_to_HEE_old(df):
-#     B_HEE = []
-#     z_rot_180 = np.matrix([[-1, 0, 0],[0, -1, 0],[0, 0, 1]])
-#     for i in range(df.shape[0]):
-#         R_sun = get_rsun_position_vector(df['time'].iloc[i])
-#         B_GSE_i = np.matrix([[df['x'].iloc[i]],[df['y'].iloc[i]],[df['z'].iloc[i]]]) 
-#         B_HEE_i = R_sun + np.dot(z_rot_180,B_GSE_i)
-#         B_HEE_i_list = B_HEE_i.tolist()
-#         flat_B_HEE_i = list(itertools.chain(*B_HEE_i_list))
-#         r, lat, lon = cart2sphere(flat_B_HEE_i[0], flat_B_HEE_i[1], flat_B_HEE_i[2])
-#         position = flat_B_HEE_i[0], flat_B_HEE_i[1], flat_B_HEE_i[2], r, lat, lon
-#         B_HEE.append(position)
-#     df_transformed = pd.DataFrame(B_HEE, columns=['x', 'y', 'z', 'r', 'lat', 'lon'])
-#     #df time replication no longer works
-#     return df_transformed
-
-
 """
 Transform matrices directly from spice kernels
 #requires furnishing with generic kernels 
 """
+
+
+def generic_furnish():
+    """Main"""
+    kernels_path='/Volumes/External/data/kernels/'
+    generic_path = kernels_path+'generic/'
+    generic_kernels = os.listdir(generic_path)
+    for kernel in generic_kernels:
+        spiceypy.furnsh(os.path.join(generic_path, kernel))
 
 
 def get_transform(epoch: datetime, base_frame: str, to_frame: str):
@@ -358,6 +351,7 @@ def get_transform(epoch: datetime, base_frame: str, to_frame: str):
 
 
 def perform_transform(df, base_frame: str, to_frame: str):
+    generic_furnish()
     timeseries = df.time
     BASE = np.vstack((df.x, df.y, df.z)).T
     transformation_matrices = np.array([get_transform(t, base_frame, to_frame) for t in timeseries])
