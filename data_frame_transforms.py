@@ -432,6 +432,7 @@ Heliocentric to RTN frame conversions
 # RTN transforms require spacecraft position information
 # Often position files will not have same timestamps as datafiles, 
 # so first need to be interpolated to the same timestamps as the data being transformed
+# input DataFrames are required to be pre-combined with position xyz
 """
 
 
@@ -446,6 +447,16 @@ def interp_to_newtimes(df1, df2):
          .interpolate('time').loc[new_indices_mag])
     df_new = out.reset_index(drop=False)
     return df_new
+
+
+def combine_dataframes(df1,df2):
+        df1.set_index(df1.time, inplace=True)
+        df1 = df1.drop(columns=['time'])
+        df2.set_index(df2.time, inplace=True)
+        df2 = df2.drop(columns=['time'])
+        combined_df = pd.concat([df1, df2], axis=1)
+        combined_df = combined_df.reset_index(drop=False)
+        return combined_df
 
 
 #function to transform mag data from HEEQ to RTN, using a DataFrame which has already combined mag, plas and position with same timestamps
