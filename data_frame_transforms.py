@@ -426,6 +426,29 @@ def HEEQ_to_HEE(df):
     return df_transformed
 
 
+"""
+Heliocentric to RTN frame conversions
+
+# RTN transforms require spacecraft position information
+# Often position files will not have same timestamps as datafiles, 
+# so first need to be interpolated to the same timestamps as the data being transformed
+"""
+
+
+def interp_to_newtimes(df1, df2):
+    #set time as index of dataframe you want to interpolate
+    df1.set_index(df1.time, inplace=True)
+    df1 = df1.drop(columns=['time'])
+    #define new indices using different dataframe
+    new_indices_mag = pd.DatetimeIndex(df2.time)
+    #perform interpolation of df1 to df2 times
+    out = (df1.reindex(df1.index.union(new_indices_mag))
+         .interpolate('time').loc[new_indices_mag])
+    df_new = out.reset_index(drop=False)
+    return df_new
+
+
+#function to transform mag data from HEEQ to RTN, using a DataFrame which has already combined mag, plas and position with same timestamps
 def HEEQ_to_RTN(df):
     #unit vectors of HEEQ basis
     heeq_x=[1,0,0]
@@ -462,7 +485,7 @@ def HEEQ_to_RTN(df):
     return df_transformed
 
 
-def HEEQ_to_RTN(df):
+def HEEQ_to_RTN_mag(df):
     #unit vectors of HEEQ basis
     heeq_x=[1,0,0]
     heeq_y=[0,1,0]
