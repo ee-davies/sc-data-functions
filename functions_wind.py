@@ -506,6 +506,9 @@ def windswe_gse_to_rtn(df_swe_gse, df_pos_gse):
 def get_windswe_range(start_timestamp, end_timestamp, coord_sys:str):
     if coord_sys == 'GSE':
         df = get_windswe_gse_range(start_timestamp, end_timestamp)
+    elif coord_sys == 'GSM':
+        df_gse = get_windswe_gse_range(start_timestamp, end_timestamp)
+        df = data_transform.GSE_to_GSM_plas(df_gse)
     elif coord_sys == 'RTN':
         df = get_windswe_rtn_range(start_timestamp, end_timestamp)
     return df
