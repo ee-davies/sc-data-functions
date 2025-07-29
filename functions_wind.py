@@ -12,6 +12,9 @@ import os.path
 import pickle
 from bs4 import BeautifulSoup
 
+import data_frame_transforms as data_transform
+import position_frame_transforms as pos_transform
+
 
 """
 WIND SERVER DATA PATH
@@ -485,6 +488,16 @@ def get_windswe_rtn_range(start_timestamp, end_timestamp, path=wind_path+'swe'):
                 print('ERROR:', e, f'wi_h1_swe_{date_str} does not exist either...')
         start += timedelta(days=1)
     return df
+
+
+def windswe_gse_to_rtn(df_swe_gse, df_pos_gse):
+    df_swe_heeq = data_transform.perform_plas_transform(df_swe_gse, 'GSE', 'HEEQ')
+    df_pos_hee = pos_transform.GSE_to_HEE(df_pos_gse)
+    df_pos_heeq = pos_transform.perform_transform(df_pos_hee, 'HEE', 'HEEQ')
+    df_new_pos = data_transform.interp_to_newtimes(df_pos_heeq, df_swe_heeq)
+    combined_df = data_transform.combine_dataframes(df_swe_heeq,df_new_pos)
+    df_swe_rtn = data_transform.HEEQ_to_RTN_plas(combined_df)
+    return df_swe_rtn
 
 
 def get_windswe_range(start_timestamp, end_timestamp, coord_sys:str):
