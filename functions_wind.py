@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from spacepy import pycdf
 import cdflib
 import spiceypy
@@ -475,7 +475,7 @@ def get_windswe_rtn_range(start_timestamp, end_timestamp, path=wind_path):
                 else:
                     df = pd.concat([df, _df])
         except Exception as e:
-            print('ERROR:', e, f'wi_h1_swe_rtn_{date_str} does not exist, converting from wi_h1_swe_{date_str} (GSE) instead')
+            print('ERROR:', e, f'. wi_h1_swe_rtn_{date_str} does not exist, converting from wi_h1_swe_{date_str} (GSE) instead...')
             try:
                 fn_swe = glob.glob(f'{path}/swe/h1/wi_h1_swe_{date_str}*')[0]
                 _df_swe = get_windswe_gse(fn_swe)
@@ -488,7 +488,7 @@ def get_windswe_rtn_range(start_timestamp, end_timestamp, path=wind_path):
                     else:
                         df = pd.concat([df, _df])
             except Exception as e:
-                print('ERROR:', e, f'wi_h1_swe_{date_str} does not exist either...')
+                print('ERROR:', e, f'. wi_h1_swe_{date_str} does not exist either.')
         start += timedelta(days=1)
     return df
 
@@ -569,6 +569,125 @@ def get_wind_positions(start_timestamp, end_timestamp, coord_sys='GSE', path=win
     return df
 
 
+"""
+WIND DATA SAVING FUNCTIONS:
+"""
+
+
+def make_mag_recarray(df):
+    #create rec array
+    time_stamps = df['time']
+    dt_lst= [element.to_pydatetime() for element in list(time_stamps)] #extract timestamps in datetime.datetime format
+    rarr=np.zeros(len(dt_lst),dtype=[('time',object),('bt', float),('bx', float),('by', float),('bz', float)])
+    rarr = rarr.view(np.recarray)
+    rarr.time=dt_lst
+    rarr.bt=df['bt']
+    rarr.bx=df['bx']
+    rarr.by=df['by']
+    rarr.bz=df['bz']
+    return rarr
+
+
+def make_plas_recarray(df):
+    #create rec array
+    time_stamps = df['time']
+    dt_lst= [element.to_pydatetime() for element in list(time_stamps)] #extract timestamps in datetime.datetime format
+    rarr=np.zeros(len(dt_lst),dtype=[('time',object),('vt', float),('vx', float),('vy', float),('vz', float),\
+                                     ('np', float),('tp', float)])
+    rarr = rarr.view(np.recarray)
+    rarr.time=dt_lst
+    rarr.vt=df['vt']
+    rarr.vx=df['vx']
+    rarr.vy=df['vy']
+    rarr.vz=df['vz']
+    rarr.np=df['np']
+    rarr.tp=df['tp']
+    return rarr
+
+
+def make_pos_recarray(df):
+    #create rec array
+    time_stamps = df['time']
+    dt_lst= [element.to_pydatetime() for element in list(time_stamps)] #extract timestamps in datetime.datetime format
+    rarr=np.zeros(len(dt_lst),dtype=[('time',object),('x', float),('y', float),('z', float), ('r', float),('lat', float),('lon', float)])
+    rarr = rarr.view(np.recarray)
+    rarr.time=dt_lst
+    rarr.x=df['x']
+    rarr.y=df['y']
+    rarr.z=df['z']
+    rarr.r=df['r']
+    rarr.lat=df['lat']
+    rarr.lon=df['lon']
+    return rarr
+
+
+def create_wind_mag_pkl(start_timestamp, end_timestamp, coord_sys:str, output_path=wind_path):
+    df_mag = get_windmag_range(start_timestamp, end_timestamp, coord_sys)
+    if df_mag is None:
+        print(f'Wind MAG data is empty for this timerange')
+        df_mag = pd.DataFrame({'time':[], 'bt':[], 'bx':[], 'by':[], 'bz':[]})
+    rarr = make_mag_recarray(df_mag)
+    start = start_timestamp.date()
+    end = end_timestamp.date()
+    datestr_start = f'{start.year}{start.month:02}{start.day:02}'
+    datestr_end = f'{end.year}{end.month:02}{end.day:02}'
+    #create header
+    header='Science level magnetometer (MFI) data from Wind, sourced from https://cdaweb.gsfc.nasa.gov/pub/data/wind/mfi/.'+\
+    ' Timerange: '+rarr.time[0].strftime("%Y-%b-%d %H:%M")+' to '+rarr.time[-1].strftime("%Y-%b-%d %H:%M")+'.'+\
+    ' Magnetometer data available in original cadence of 1 min, units in nT.'+\
+    ' Available coordinate systems include GSE, GSM, and RTN. GSE and GSM data are taken directly from wi_h0_mfi files, RTN data from wi_h3-rtn_mfi.'+\
+    ' The data are available in a numpy recarray, fields can be accessed by wind.time, wind.bt, wind.bx, wind.by, wind.bz.'+\
+    ' Made with script by E. E. Davies (github @ee-davies, sc-data-functions). File creation date: '+\
+    datetime.now(timezone.utc).strftime("%Y-%b-%d %H:%M")+' UTC'
+    #dump to pickle file
+    pickle.dump([rarr,header], open(output_path+f'wind_mag_{coord_sys}_{datestr_start}_{datestr_end}.p', "wb"))
+
+
+def create_wind_plas_pkl(start_timestamp, end_timestamp, coord_sys:str, output_path=wind_path):
+    df_plas = get_windswe_range(start_timestamp, end_timestamp, coord_sys)
+    if df_plas is None:
+        print(f'Wind SWE data is empty for this timerange')
+        df_plas = pd.DataFrame({'time':[], 'vt':[], 'vx':[], 'vy':[], 'vz':[], 'np':[], 'tp':[]})
+    rarr = make_plas_recarray(df_plas)
+    start = start_timestamp.date()
+    end = end_timestamp.date()
+    datestr_start = f'{start.year}{start.month:02}{start.day:02}'
+    datestr_end = f'{end.year}{end.month:02}{end.day:02}'
+    #create header
+    header='Science level plasma (SWE) data from Wind, sourced from https://cdaweb.gsfc.nasa.gov/pub/data/wind/swe/.'+\
+    ' Timerange: '+rarr.time[0].strftime("%Y-%b-%d %H:%M")+' to '+rarr.time[-1].strftime("%Y-%b-%d %H:%M")+'.'+\
+    ' Plasma data available in original cadence of ~ 92 seconds. Parameters obtained from non-linear fitting to the ion CDF, rather than moment analysis (available by request).'+\
+    ' Units: proton velocity [km/s], proton temperature => proton thermal speed [km/s], proton number density [n/cc].'+\
+    ' Available coordinate systems include GSE, GSM, and RTN. GSE are taken directly from wi_h1_swe files, GSM data has been converted using data_frame_transforms based on Hapgood 1992.'+\
+    ' RTN data is taken directly from wi_h1_swe_rtn, except for the years 2010--2014 (inclusive). Where RTN files are unavailable, original GSE files are converted to RTN using data_frame_transforms (Hapgood 1992 and spice kernels).'+\
+    ' The data are available in a numpy recarray, fields can be accessed by wind.time, wind.vt, wind.vx, wind.vy, wind.vz, wind.np, and wind.tp.'+\
+    ' Made with script by E. E. Davies (github @ee-davies, sc-data-functions). File creation date: '+\
+    datetime.now(timezone.utc).strftime("%Y-%b-%d %H:%M")+' UTC'
+    #dump to pickle file
+    pickle.dump([rarr,header], open(output_path+f'wind_plas_{coord_sys}_{datestr_start}_{datestr_end}.p', "wb"))
+
+
+def create_wind_pos_pkl(start_timestamp, end_timestamp, coord_sys:str, output_path=wind_path):
+    df_pos = get_wind_positions(start_timestamp, end_timestamp, coord_sys)
+    if df_pos is None:
+        print(f'Wind predicted orbit data is empty for this timerange')
+        df_pos = pd.DataFrame({'time':[], 'x':[], 'y':[], 'z':[], 'r':[], 'lat':[], 'lon':[]})
+    rarr = make_pos_recarray(df_pos)
+    start = start_timestamp.date()
+    end = end_timestamp.date()
+    datestr_start = f'{start.year}{start.month:02}{start.day:02}'
+    datestr_end = f'{end.year}{end.month:02}{end.day:02}'
+    #create header
+    header='Predicted orbit data from Wind, sourced from https://cdaweb.gsfc.nasa.gov/pub/data/wind/orbit/pre_or/.'+\
+    ' Timerange: '+rarr.time[0].strftime("%Y-%b-%d %H:%M")+' to '+rarr.time[-1].strftime("%Y-%b-%d %H:%M")+'.'+\
+    ' Orbit available in original cadence of 10 minutes.'+\
+    ' Units: xyz [km], r [AU], lat/lon [deg].'+\
+    ' Available coordinate systems include GSE, GSM, J2000 GCI and HEC. GSE, GSM, J2000 GCI and HEC are taken directly from wi_or_pre files, others using data_frame_transforms based on Hapgood 1992 and spice kernels.'+\
+    ' The data are available in a numpy recarray, fields can be accessed by wind.x, wind.y, wind.z, wind.r, wind.lat, and wind.lon.'+\
+    ' Made with script by E. E. Davies (github @ee-davies, sc-data-functions). File creation date: '+\
+    datetime.now(timezone.utc).strftime("%Y-%b-%d %H:%M")+' UTC'
+    #dump to pickle file
+    pickle.dump([rarr,header], open(output_path+f'wind_pos_{coord_sys}_{datestr_start}_{datestr_end}.p', "wb"))
 
 
 # def transform_data(df, instrument, coord_system):
