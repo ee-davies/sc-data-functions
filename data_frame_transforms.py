@@ -513,9 +513,52 @@ def HEEQ_to_RTN_mag(df):
         bn_i=df['bx'].iloc[i]*np.dot(heeq_x,rtn_n)+df['by'].iloc[i]*np.dot(heeq_y,rtn_n)+df['bz'].iloc[i]*np.dot(heeq_z,rtn_n)
         B_RTN_i = [br_i, bt_i, bn_i]
         B_RTN.append(B_RTN_i)
-    df_transformed = pd.DataFrame(B_RTN, columns=['bx', 'by', 'bz'])
-    df_transformed['bt'] = np.linalg.norm(df_transformed[['bx', 'by', 'bz']], axis=1)
-    df_transformed['time'] = df['time']
+        
+    B_RTN = np.array(B_RTN)
+    bx, by, bz = B_RTN[:, 0], B_RTN[:, 1], B_RTN[:, 2]
+    bt = np.linalg.norm([bx,by,bz], axis=0)
+    # Create result DataFrame
+    df_transformed = pd.DataFrame({
+        'time': df['time'].values,
+        'bt': bt,
+        'bx': bx,
+        'by': by, 
+        'bz': bz,
+    })
+    return df_transformed
+
+
+def HEEQ_to_RTN_plas(df):
+    #unit vectors of HEEQ basis
+    heeq_x=[1,0,0]
+    heeq_y=[0,1,0]
+    heeq_z=[0,0,1]
+    V_RTN = []
+    for i in range(df.shape[0]):
+        #make unit vectors of RTN in basis of HEEQ
+        rtn_r = [df['x'].iloc[i],df['y'].iloc[i],df['z'].iloc[i]]/np.linalg.norm([df['x'].iloc[i],df['y'].iloc[i],df['z'].iloc[i]])
+        rtn_t=np.cross(heeq_z,rtn_r)/np.linalg.norm(np.cross(heeq_z,rtn_r))
+        rtn_n=np.cross(rtn_r,rtn_t)/np.linalg.norm(np.cross(rtn_r, rtn_t))
+
+        vr_i=df['vx'].iloc[i]*np.dot(heeq_x,rtn_r)+df['vy'].iloc[i]*np.dot(heeq_y,rtn_r)+df['vz'].iloc[i]*np.dot(heeq_z,rtn_r)
+        vt_i=df['vx'].iloc[i]*np.dot(heeq_x,rtn_t)+df['vy'].iloc[i]*np.dot(heeq_y,rtn_t)+df['vz'].iloc[i]*np.dot(heeq_z,rtn_t)
+        vn_i=df['vx'].iloc[i]*np.dot(heeq_x,rtn_n)+df['vy'].iloc[i]*np.dot(heeq_y,rtn_n)+df['vz'].iloc[i]*np.dot(heeq_z,rtn_n)
+        V_RTN_i = [vr_i, vt_i, vn_i]
+        V_RTN.append(V_RTN_i)
+
+    V_RTN = np.array(V_RTN)
+    vx, vy, vz = V_RTN[:, 0], V_RTN[:, 1], V_RTN[:, 2]
+    vt = np.linalg.norm([vx,vy,vz], axis=0)
+    # Create result DataFrame
+    df_transformed = pd.DataFrame({
+        'time': df['time'].values,
+        'vt': vt,
+        'vx': vx,
+        'vy': vy, 
+        'vz': vz,
+        'tp': df['tp'],
+        'np': df['np'],
+    })
     return df_transformed
 
 
