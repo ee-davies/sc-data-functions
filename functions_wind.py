@@ -690,6 +690,22 @@ def create_wind_pos_pkl(start_timestamp, end_timestamp, coord_sys:str, output_pa
     pickle.dump([rarr,header], open(output_path+f'wind_pos_{coord_sys}_{datestr_start}_{datestr_end}.p', "wb"))
 
 
+def make_yearly_pkl_files(start_timestamp, end_timestamp, instrument:str, coord_sys:str, output_path=wind_path):
+
+    start = start_timestamp.year
+    end = end_timestamp.year
+
+    while start <= end:
+        if instrument == 'MAG' or 'MFI':
+            create_wind_mag_pkl(datetime(start, 1, 1), datetime(start, 12, 31), coord_sys, output_path)
+        elif instrument == 'PLAS' or 'SWE':
+            create_wind_plas_pkl(datetime(start, 1, 1), datetime(start, 12, 31), coord_sys, output_path)
+        elif instrument == 'POS':
+            create_wind_pos_pkl(datetime(start, 1, 1), datetime(start, 12, 31), coord_sys, output_path)
+        print(f'Finished creating pkl file for Wind {instrument} {start}')
+        start += 1
+
+
 # def transform_data(df, instrument, coord_system):
 #     #TODO: apply logic to handle b and v data transformations here
 #     if instrument == 'mag':
