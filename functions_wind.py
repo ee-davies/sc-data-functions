@@ -455,7 +455,7 @@ def get_windswe_rtn(fp): #choice between nonlin or moments
     return df
 
 
-def get_windswe_rtn_range(start_timestamp, end_timestamp, path=wind_path+'swe/rtn'):
+def get_windswe_rtn_range(start_timestamp, end_timestamp, path=wind_path+'swe'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df = None
@@ -464,7 +464,7 @@ def get_windswe_rtn_range(start_timestamp, end_timestamp, path=wind_path+'swe/rt
     while start <= end:
         date_str = f'{start.year}{start.month:02}{start.day:02}'
         try:
-            fn = glob.glob(f'{path}/wi_h1_swe_rtn_{date_str}*')[0]
+            fn = glob.glob(f'{path}/rtn/wi_h1_swe_rtn_{date_str}*')[0]
             _df = get_windswe_rtn(fn)
             if _df is not None:
                 if df is None:
@@ -472,7 +472,17 @@ def get_windswe_rtn_range(start_timestamp, end_timestamp, path=wind_path+'swe/rt
                 else:
                     df = pd.concat([df, _df])
         except Exception as e:
-            print('ERROR:', e, f'{date_str} does not exist')
+            print('ERROR:', e, f'wi_h1_swe_rtn_{date_str} does not exist, converting from wi_h1_swe_{date_str} (GSE) instead')
+            try:
+                fn = glob.glob(f'{path}/h1/wi_h1_swe_{date_str}*')[0]
+                _df = get_windswe_gse(fn)
+                if _df is not None:
+                    if df is None:
+                        df = _df.copy(deep=True)
+                    else:
+                        df = pd.concat([df, _df])
+            except Exception as e:
+                print('ERROR:', e, f'wi_h1_swe_{date_str} does not exist either...')
         start += timedelta(days=1)
     return df
 
