@@ -555,7 +555,32 @@ def create_ace_plas_pkl(start_timestamp, end_timestamp, coord_sys:str, output_pa
     ' Made with script by E. E. Davies (github @ee-davies, sc-data-functions). File creation date: '+\
     datetime.now(timezone.utc).strftime("%Y-%b-%d %H:%M")+' UTC'
     #dump to pickle file
-    pickle.dump([rarr,header], open(output_path+f'wind_plas_{coord_sys}_{datestr_start}_{datestr_end}.p', "wb"))
+    pickle.dump([rarr,header], open(output_path+f'ace_plas_{coord_sys}_{datestr_start}_{datestr_end}.p', "wb"))
+
+
+def create_ace_pos_pkl(start_timestamp, end_timestamp, coord_sys:str, output_path=ace_path):
+    df_pos = get_acepos_frommag_range(start_timestamp, end_timestamp, coord_sys)
+    if df_pos is None:
+        df_pos = get_acepos_fromswe_range(start_timestamp, end_timestamp, coord_sys)
+        if df_pos is None:
+            print(f'ACE orbit data is empty for this timerange')
+            df_pos = pd.DataFrame({'time':[], 'x':[], 'y':[], 'z':[], 'r':[], 'lat':[], 'lon':[]})
+    rarr = fgen.make_pos_recarray(df_pos)
+    start = start_timestamp.date()
+    end = end_timestamp.date()
+    datestr_start = f'{start.year}{start.month:02}{start.day:02}'
+    datestr_end = f'{end.year}{end.month:02}{end.day:02}'
+    #create header
+    header='Orbit data from ACE, sourced from mag or plasma data files from https://spdf.gsfc.nasa.gov/pub/data/ace/mag/level_2_cdaweb/mfi_h0/ or https://spdf.gsfc.nasa.gov/pub/data/ace/swepam/level_2_cdaweb/swe_h0/.'+\
+    ' Timerange: '+rarr.time[0].strftime("%Y-%b-%d %H:%M")+' to '+rarr.time[-1].strftime("%Y-%b-%d %H:%M")+'.'+\
+    ' Orbit available in same cadence as data files: if taken from mag, ~15 seconds, if taken from swe, ~64 seconds.'+\
+    ' Units: xyz [km], r [AU], lat/lon [deg].'+\
+    ' Available coordinate systems include GSE and GSM. GSE and GSM are taken directly from files.'+\
+    ' The data are available in a numpy recarray, fields can be accessed by ace.x, ace.y, ace.z, ace.r, ace.lat, and ace.lon.'+\
+    ' Made with script by E. E. Davies (github @ee-davies, sc-data-functions). File creation date: '+\
+    datetime.now(timezone.utc).strftime("%Y-%b-%d %H:%M")+' UTC'
+    #dump to pickle file
+    pickle.dump([rarr,header], open(output_path+f'ace_pos_{coord_sys}_{datestr_start}_{datestr_end}.p', "wb"))
 
 
 def create_ace_gsm_pkl(start_timestamp, end_timestamp): #just initial quick version, may fail easily
