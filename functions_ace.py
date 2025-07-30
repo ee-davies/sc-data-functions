@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from spacepy import pycdf
 # import spiceypy
 # import os
@@ -13,6 +13,7 @@ from bs4 import BeautifulSoup
 
 import data_frame_transforms as data_transform
 import position_frame_transforms as pos_transform
+import functions_general as fgen
 
 
 """
@@ -508,8 +509,30 @@ def get_acepos_fromswe_range(start_timestamp, end_timestamp, coord_sys='GSE', pa
 
 
 """
-ACE PICKLE DATA
+ACE DATA SAVING FUNCTIONS:
 """
+
+
+def create_ace_mag_pkl(start_timestamp, end_timestamp, coord_sys:str, output_path=ace_path):
+    df_mag = get_acemag_range(start_timestamp, end_timestamp, coord_sys)
+    if df_mag is None:
+        print(f'ACE MAG data is empty for this timerange')
+        df_mag = pd.DataFrame({'time':[], 'bt':[], 'bx':[], 'by':[], 'bz':[]})
+    rarr = fgen.make_mag_recarray(df_mag)
+    start = start_timestamp.date()
+    end = end_timestamp.date()
+    datestr_start = f'{start.year}{start.month:02}{start.day:02}'
+    datestr_end = f'{end.year}{end.month:02}{end.day:02}'
+    #create header
+    header='Science level magnetometer (MFI) data from ACE, sourced from https://spdf.gsfc.nasa.gov/pub/data/ace/mag/level_2_cdaweb/mfi_h0/.'+\
+    ' Timerange: '+rarr.time[0].strftime("%Y-%b-%d %H:%M")+' to '+rarr.time[-1].strftime("%Y-%b-%d %H:%M")+'.'+\
+    ' Magnetometer data available in original cadence of ~15 seconds, units in nT.'+\
+    ' Available coordinate systems include GSE, GSM, and RTN. GSE and GSM data are taken directly from ac_h0_mfi files, RTN data is converted using data_transforms (Hapgood 1992 and spice kernels).'+\
+    ' The data are available in a numpy recarray, fields can be accessed by ace.time, ace.bt, ace.bx, ace.by, ace.bz.'+\
+    ' Made with script by E. E. Davies (github @ee-davies, sc-data-functions). File creation date: '+\
+    datetime.now(timezone.utc).strftime("%Y-%b-%d %H:%M")+' UTC'
+    #dump to pickle file
+    pickle.dump([rarr,header], open(output_path+f'ace_mag_{coord_sys}_{datestr_start}_{datestr_end}.p', "wb"))
 
 
 def create_ace_gsm_pkl(start_timestamp, end_timestamp): #just initial quick version, may fail easily
