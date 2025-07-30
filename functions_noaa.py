@@ -484,7 +484,78 @@ def get_dscovrpositions(start_timestamp, end_timestamp, coord_sys='GSE'):
     return df
 
 
-## COMBINED FILES
+"""
+DSCOVR DATA SAVING FUNCTIONS:
+"""
+
+
+def create_dscovr_mag_pkl(start_timestamp, end_timestamp, coord_sys:str, output_path=dscovr_path):
+    df_mag = get_dscovrmag_range(start_timestamp, end_timestamp, coord_sys)
+    if df_mag is None:
+        print(f'DSCOVR MAG data is empty for this timerange')
+        df_mag = pd.DataFrame({'time':[], 'bt':[], 'bx':[], 'by':[], 'bz':[]})
+    rarr = fgen.make_mag_recarray(df_mag)
+    start = start_timestamp.date()
+    end = end_timestamp.date()
+    datestr_start = f'{start.year}{start.month:02}{start.day:02}'
+    datestr_end = f'{end.year}{end.month:02}{end.day:02}'
+    #create header
+    header='Science level magnetometer (M1M) data from DSCOVR, called from https://www.ngdc.noaa.gov/dscovr-data-access/ or https://www.ngdc.noaa.gov/dscovr/portal/index.html#/download.'+\
+    ' Timerange: '+rarr.time[0].strftime("%Y-%b-%d %H:%M")+' to '+rarr.time[-1].strftime("%Y-%b-%d %H:%M")+'.'+\
+    ' Magnetometer data available in original cadence of 1 minute, units in nT.'+\
+    ' Available coordinate systems include GSE, GSM, and RTN. GSE and GSM data are taken directly from oe_m1m_dscovr files, RTN data is converted using data_transforms (Hapgood 1992 and spice kernels).'+\
+    ' The data are available in a numpy recarray, fields can be accessed by dscovr.time, dscovr.bt, dscovr.bx, dscovr.by, dscovr.bz.'+\
+    ' Made with script by E. E. Davies (github @ee-davies, sc-data-functions). File creation date: '+\
+    datetime.now(timezone.utc).strftime("%Y-%b-%d %H:%M")+' UTC'
+    #dump to pickle file
+    pickle.dump([rarr,header], open(output_path+f'dscovr_mag_{coord_sys}_{datestr_start}_{datestr_end}.p', "wb"))
+
+
+def create_dscovr_plas_pkl(start_timestamp, end_timestamp, coord_sys:str, output_path=dscovr_path):
+    df_plas = get_dscovrplas_range(start_timestamp, end_timestamp, coord_sys)
+    if df_plas is None:
+        print(f'DSCOVR PLAS data is empty for this timerange')
+        df_plas = pd.DataFrame({'time':[], 'vt':[], 'vx':[], 'vy':[], 'vz':[], 'np':[], 'tp':[]})
+    rarr = fgen.make_plas_recarray(df_plas)
+    start = start_timestamp.date()
+    end = end_timestamp.date()
+    datestr_start = f'{start.year}{start.month:02}{start.day:02}'
+    datestr_end = f'{end.year}{end.month:02}{end.day:02}'
+    #create header
+    header='Science level plasma (F1M) data from DSCOVR, called from https://www.ngdc.noaa.gov/dscovr-data-access/ or https://www.ngdc.noaa.gov/dscovr/portal/index.html#/download.'+\
+    ' Timerange: '+rarr.time[0].strftime("%Y-%b-%d %H:%M")+' to '+rarr.time[-1].strftime("%Y-%b-%d %H:%M")+'.'+\
+    ' Plasma data available in original cadence of 1 minute.'+\
+    ' Units: proton velocity [km/s], proton temperature [K], proton number density [n/cc].'+\
+    ' Available coordinate systems include GSE, GSM, and RTN. GSE and GSM data are taken directly from oe_f1m_dscovr files, RTN data is converted using data_transforms (Hapgood 1992 and spice kernels).'+\
+    ' The data are available in a numpy recarray, fields can be accessed by dscovr.time, dscovr.vt, dscovr.vx, dscovr.vy, dscovr.vz, dscovr.np, and dscovr.tp.'+\
+    ' Made with script by E. E. Davies (github @ee-davies, sc-data-functions). File creation date: '+\
+    datetime.now(timezone.utc).strftime("%Y-%b-%d %H:%M")+' UTC'
+    #dump to pickle file
+    pickle.dump([rarr,header], open(output_path+f'dscovr_plas_{coord_sys}_{datestr_start}_{datestr_end}.p', "wb"))
+
+
+def create_dscovr_pos_pkl(start_timestamp, end_timestamp, coord_sys:str, output_path=dscovr_path):
+    df_pos = get_dscovrpositions(start_timestamp, end_timestamp, coord_sys)
+    if df_pos is None:
+        print(f'DSCOVR orbit data is empty for this timerange')
+        df_pos = pd.DataFrame({'time':[], 'x':[], 'y':[], 'z':[], 'r':[], 'lat':[], 'lon':[]})
+    rarr = fgen.make_pos_recarray(df_pos)
+    start = start_timestamp.date()
+    end = end_timestamp.date()
+    datestr_start = f'{start.year}{start.month:02}{start.day:02}'
+    datestr_end = f'{end.year}{end.month:02}{end.day:02}'
+    #create header
+    header='Position data from DSCOVR, called from https://www.ngdc.noaa.gov/dscovr-data-access/ or https://www.ngdc.noaa.gov/dscovr/portal/index.html#/download.'+\
+    ' Timerange: '+rarr.time[0].strftime("%Y-%b-%d %H:%M")+' to '+rarr.time[-1].strftime("%Y-%b-%d %H:%M")+'.'+\
+    ' Orbit available in original cadence of 1 minute.'+\
+    ' Units: xyz [km], r [AU], lat/lon [deg].'+\
+    ' Available coordinate systems include GSE and GSM, taken directly from oe_pop_dscovr files.'+\
+    ' The data are available in a numpy recarray, fields can be accessed by dscovr.x, dscovr.y, dscovr.z, dscovr.r, dscovr.lat, and dscovr.lon.'+\
+    ' Made with script by E. E. Davies (github @ee-davies, sc-data-functions). File creation date: '+\
+    datetime.now(timezone.utc).strftime("%Y-%b-%d %H:%M")+' UTC'
+    #dump to pickle file
+    pickle.dump([rarr,header], open(output_path+f'dscovr_pos_{coord_sys}_{datestr_start}_{datestr_end}.p', "wb"))
+
 
 #use this function for consistent co-ord system e.g. mag, plas, pos all GSM
 def create_dscovr_pkl(start_timestamp, end_timestamp, output_path=dscovr_path):
