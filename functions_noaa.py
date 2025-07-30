@@ -16,6 +16,11 @@ import gzip
 import shutil
 
 
+import data_frame_transforms as data_transform
+import position_frame_transforms as pos_transform
+import functions_general as fgen
+
+
 """
 NOAA/DSCOVR DATA PATH
 """
@@ -117,7 +122,7 @@ def download_dscovr(start_datetime, end_datetime, datatype:str, path=dscovr_path
 
 
 """
-DSCOVR MAG and PLAS DATA
+DSCOVR REALTIME MAG and PLAS DATA
 # Can call MAG and PLAS last 7 days directly from https://services.swpc.noaa.gov/products/solar-wind/
 # If those files aren't working, can download manually from https://www.swpc.noaa.gov/products/real-time-solar-wind and load both using get_noaa_realtime_alt 
 # Raw data is in GSM coordinates; will implement transform to GSE/RTN
@@ -178,6 +183,12 @@ def get_noaa_realtime_alt(path=f'{dscovr_path}'):
 
 
 ## DSCOVR DATA UP TO CURRENT DAY (INCL COMPONENTS, MORE PARAMETERS)
+
+
+"""
+DSCOVR PLAS DATA
+# Raw data is in GSM or GSE coordinates; transform to RTN available
+"""
 
 
 def get_dscovrplas_gse(fp):
@@ -260,6 +271,34 @@ def get_dscovrplas_gsm_range(start_timestamp, end_timestamp, path=f'{dscovr_path
         start += timedelta(days=1)
     df = df.reset_index(drop=True)
     return df
+
+
+def dscovrplas_gse_to_rtn(df_plas_gse, df_pos_gse):
+    df_plas_heeq = data_transform.perform_plas_transform(df_plas_gse, 'GSE', 'HEEQ')
+    df_pos_hee = pos_transform.GSE_to_HEE(df_pos_gse)
+    df_pos_heeq = pos_transform.perform_transform(df_pos_hee, 'HEE', 'HEEQ')
+    df_new_pos = data_transform.interp_to_newtimes(df_pos_heeq, df_plas_heeq) #these times should be the same, interp is mostly unnecessary
+    combined_df = data_transform.combine_dataframes(df_plas_heeq,df_new_pos)
+    df_plas_rtn = data_transform.HEEQ_to_RTN_plas(combined_df)
+    return df_plas_rtn
+
+
+def get_dscovrplas_range(start_timestamp, end_timestamp, coord_sys:str):
+    if coord_sys == 'GSE':
+        df = get_dscovrplas_gse_range(start_timestamp, end_timestamp)
+    elif coord_sys == 'GSM':
+        df = get_dscovrplas_gsm_range(start_timestamp, end_timestamp)
+    elif coord_sys == 'RTN':
+        df_gse = get_dscovrplas_gse_range(start_timestamp, end_timestamp)
+        df_pos_gse = get_dscovrpositions(start_timestamp, end_timestamp, coord_sys='GSE')
+        df = dscovrplas_gse_to_rtn(df_gse, df_pos_gse)
+    return df
+
+
+"""
+DSCOVR MAG DATA
+# Raw data is in GSM or GSE coordinates; transform to RTN available
+"""
 
 
 def get_dscovrmag_gse(fp):
