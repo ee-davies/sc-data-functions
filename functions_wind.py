@@ -14,6 +14,7 @@ from bs4 import BeautifulSoup
 
 import data_frame_transforms as data_transform
 import position_frame_transforms as pos_transform
+import functions_general as fgen
 
 
 """
@@ -603,87 +604,12 @@ WIND DATA SAVING FUNCTIONS:
 """
 
 
-def make_mag_recarray(df):
-    #create rec array
-    time_stamps = df['time']
-    dt_lst= [element.to_pydatetime() for element in list(time_stamps)] #extract timestamps in datetime.datetime format
-    rarr=np.zeros(len(dt_lst),dtype=[('time',object),('bt', float),('bx', float),('by', float),('bz', float)])
-    rarr = rarr.view(np.recarray)
-    rarr.time=dt_lst
-    rarr.bt=df['bt']
-    rarr.bx=df['bx']
-    rarr.by=df['by']
-    rarr.bz=df['bz']
-    return rarr
-
-
-def make_plas_recarray(df):
-    #create rec array
-    time_stamps = df['time']
-    dt_lst= [element.to_pydatetime() for element in list(time_stamps)] #extract timestamps in datetime.datetime format
-    rarr=np.zeros(len(dt_lst),dtype=[('time',object),('vt', float),('vx', float),('vy', float),('vz', float),\
-                                     ('np', float),('tp', float)])
-    rarr = rarr.view(np.recarray)
-    rarr.time=dt_lst
-    rarr.vt=df['vt']
-    rarr.vx=df['vx']
-    rarr.vy=df['vy']
-    rarr.vz=df['vz']
-    rarr.np=df['np']
-    rarr.tp=df['tp']
-    return rarr
-
-
-def make_pos_recarray(df):
-    #create rec array
-    time_stamps = df['time']
-    dt_lst= [element.to_pydatetime() for element in list(time_stamps)] #extract timestamps in datetime.datetime format
-    rarr=np.zeros(len(dt_lst),dtype=[('time',object),('x', float),('y', float),('z', float), ('r', float),('lat', float),('lon', float)])
-    rarr = rarr.view(np.recarray)
-    rarr.time=dt_lst
-    rarr.x=df['x']
-    rarr.y=df['y']
-    rarr.z=df['z']
-    rarr.r=df['r']
-    rarr.lat=df['lat']
-    rarr.lon=df['lon']
-    return rarr
-
-
-def make_combined_recarray(df):
-    #create rec array
-    time_stamps = df['time']
-    dt_lst= [element.to_pydatetime() for element in list(time_stamps)] #extract timestamps in datetime.datetime format
-    rarr=np.zeros(len(dt_lst),dtype=[('time',object),('bt', float),('bx', float),('by', float),('bz', float),\
-                ('vt', float),('vx', float),('vy', float),('vz', float),('np', float),('tp', float),\
-                ('x', float),('y', float),('z', float), ('r', float),('lat', float),('lon', float)])
-    rarr = rarr.view(np.recarray)
-    rarr.time=dt_lst
-    rarr.bt=df['bt']
-    rarr.bx=df['bx']
-    rarr.by=df['by']
-    rarr.bz=df['bz']
-    rarr.vt=df['vt']
-    rarr.vx=df['vx']
-    rarr.vy=df['vy']
-    rarr.vz=df['vz']
-    rarr.np=df['np']
-    rarr.tp=df['tp']
-    rarr.x=df['x']
-    rarr.y=df['y']
-    rarr.z=df['z']
-    rarr.r=df['r']
-    rarr.lat=df['lat']
-    rarr.lon=df['lon']
-    return rarr
-
-
 def create_wind_mag_pkl(start_timestamp, end_timestamp, coord_sys:str, output_path=wind_path):
     df_mag = get_windmag_range(start_timestamp, end_timestamp, coord_sys)
     if df_mag is None:
         print(f'Wind MAG data is empty for this timerange')
         df_mag = pd.DataFrame({'time':[], 'bt':[], 'bx':[], 'by':[], 'bz':[]})
-    rarr = make_mag_recarray(df_mag)
+    rarr = fgen.make_mag_recarray(df_mag)
     start = start_timestamp.date()
     end = end_timestamp.date()
     datestr_start = f'{start.year}{start.month:02}{start.day:02}'
@@ -705,7 +631,7 @@ def create_wind_plas_pkl(start_timestamp, end_timestamp, coord_sys:str, output_p
     if df_plas is None:
         print(f'Wind SWE data is empty for this timerange')
         df_plas = pd.DataFrame({'time':[], 'vt':[], 'vx':[], 'vy':[], 'vz':[], 'np':[], 'tp':[]})
-    rarr = make_plas_recarray(df_plas)
+    rarr = fgen.make_plas_recarray(df_plas)
     start = start_timestamp.date()
     end = end_timestamp.date()
     datestr_start = f'{start.year}{start.month:02}{start.day:02}'
@@ -729,7 +655,7 @@ def create_wind_pos_pkl(start_timestamp, end_timestamp, coord_sys:str, output_pa
     if df_pos is None:
         print(f'Wind predicted orbit data is empty for this timerange')
         df_pos = pd.DataFrame({'time':[], 'x':[], 'y':[], 'z':[], 'r':[], 'lat':[], 'lon':[]})
-    rarr = make_pos_recarray(df_pos)
+    rarr = fgen.make_pos_recarray(df_pos)
     start = start_timestamp.date()
     end = end_timestamp.date()
     datestr_start = f'{start.year}{start.month:02}{start.day:02}'
@@ -801,7 +727,7 @@ def create_wind_all_pkl(start_timestamp, end_timestamp, data_coord_sys='RTN', po
     #Combine again: 
     comb_df = pd.concat([magplas_rdf, pos_rdf], axis=1)
     #Create rec array
-    rarr = make_combined_recarray(comb_df)
+    rarr = fgen.make_combined_recarray(comb_df)
     #Make header for pickle file
     start = start_timestamp.date()
     end = end_timestamp.date()
@@ -820,7 +746,6 @@ def create_wind_all_pkl(start_timestamp, end_timestamp, data_coord_sys='RTN', po
     ' Units: xyz [km], r [AU], lat/lon [deg].'+\
     ' Available coordinate systems include GSE, GSM, J2000 GCI, HEC, HEE, HAE, and HEEQ. GSE, GSM, J2000 GCI and HEC are taken directly from wi_or_pre files, others using data_frame_transforms based on Hapgood 1992 and spice kernels.'+\
     ' The data are available in a numpy recarray, fields can be accessed by wind.x, wind.y, wind.z, wind.r, wind.lat, and wind.lon.'+\
-    ' Timerange: '+rarr.time[0].strftime("%Y-%b-%d %H:%M")+' to '+rarr.time[-1].strftime("%Y-%b-%d %H:%M")+'.'+\
     ' All data resampled to cadence of 1 min. Position data has been linearly interpolated.'+\
     ' Made with script by E. E. Davies (github @ee-davies, sc-data-functions). File creation date: '+\
     datetime.now(timezone.utc).strftime("%Y-%b-%d %H:%M")+' UTC'
