@@ -379,6 +379,28 @@ def get_dscovrmag_gsm_range(start_timestamp, end_timestamp, path=f'{dscovr_path}
     return df
 
 
+def dscovrmag_gse_to_rtn(df_mag_gse, df_pos_gse):
+    df_mag_heeq = data_transform.perform_mag_transform(df_mag_gse, 'GSE', 'HEEQ')
+    df_pos_hee = pos_transform.GSE_to_HEE(df_pos_gse)
+    df_pos_heeq = pos_transform.perform_transform(df_pos_hee, 'HEE', 'HEEQ')
+    df_new_pos = data_transform.interp_to_newtimes(df_pos_heeq, df_mag_heeq) #these times should be the same, interp is mostly unnecessary
+    combined_df = data_transform.combine_dataframes(df_mag_heeq,df_new_pos)
+    df_mag_rtn = data_transform.HEEQ_to_RTN_mag(combined_df)
+    return df_mag_rtn
+
+
+def get_dscovrmag_range(start_timestamp, end_timestamp, coord_sys:str):
+    if coord_sys == 'GSE':
+        df = get_dscovrmag_gse_range(start_timestamp, end_timestamp)
+    elif coord_sys == 'GSM':
+        df = get_dscovrmag_gsm_range(start_timestamp, end_timestamp)
+    elif coord_sys == 'RTN':
+        df_gse = get_dscovrmag_gse_range(start_timestamp, end_timestamp)
+        df_pos_gse = get_dscovrpositions(start_timestamp, end_timestamp, coord_sys='GSE')
+        df = dscovrmag_gse_to_rtn(df_gse, df_pos_gse)
+    return df
+
+
 """
 DSCOVR POSITIONS
 # Can call POS from last 7 days directly from https://services.swpc.noaa.gov/products/solar-wind/
