@@ -549,6 +549,13 @@ def get_wind_pos(fp, coord_sys='GSE'):
 def get_wind_positions(start_timestamp, end_timestamp, coord_sys='GSE', path=wind_path+'orbit/'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
+    coord_sys2 = coord_sys
+    if coord_sys == 'HEE':
+        coord_sys = 'GSE'
+    elif coord_sys == 'HEEQ':
+        coord_sys = 'GSE'
+    elif coord_sys == 'HAE':
+        coord_sys = 'GSE'
     df=None
     start = start_timestamp.date()
     end = end_timestamp.date()
@@ -566,7 +573,19 @@ def get_wind_positions(start_timestamp, end_timestamp, coord_sys='GSE', path=win
         except Exception as e:
             print('ERROR:', e, f'{date_str} does not exist')
         start += timedelta(days=1)
-    return df
+    if coord_sys2 == 'HEE':
+        df_hee = pos_transform.GSE_to_HEE(df)
+        return df_hee
+    elif coord_sys2 == 'HEEQ':
+        df_hee = pos_transform.GSE_to_HEE(df)
+        df_heeq = pos_transform.perform_transform(df_hee, 'HEE', 'HEEQ')
+        return df_heeq
+    elif coord_sys2 == 'HAE':
+        df_hee = pos_transform.GSE_to_HEE(df)
+        df_hae = pos_transform.perform_transform(df_hee, 'HEE', 'ECLIPJ2000')
+        return df_hae
+    else:
+        return df
 
 
 """
@@ -682,7 +701,7 @@ def create_wind_pos_pkl(start_timestamp, end_timestamp, coord_sys:str, output_pa
     ' Timerange: '+rarr.time[0].strftime("%Y-%b-%d %H:%M")+' to '+rarr.time[-1].strftime("%Y-%b-%d %H:%M")+'.'+\
     ' Orbit available in original cadence of 10 minutes.'+\
     ' Units: xyz [km], r [AU], lat/lon [deg].'+\
-    ' Available coordinate systems include GSE, GSM, J2000 GCI and HEC. GSE, GSM, J2000 GCI and HEC are taken directly from wi_or_pre files, others using data_frame_transforms based on Hapgood 1992 and spice kernels.'+\
+    ' Available coordinate systems include GSE, GSM, J2000 GCI, HEC, HEE, HAE, and HEEQ. GSE, GSM, J2000 GCI and HEC are taken directly from wi_or_pre files, others using data_frame_transforms based on Hapgood 1992 and spice kernels.'+\
     ' The data are available in a numpy recarray, fields can be accessed by wind.x, wind.y, wind.z, wind.r, wind.lat, and wind.lon.'+\
     ' Made with script by E. E. Davies (github @ee-davies, sc-data-functions). File creation date: '+\
     datetime.now(timezone.utc).strftime("%Y-%b-%d %H:%M")+' UTC'
@@ -690,19 +709,17 @@ def create_wind_pos_pkl(start_timestamp, end_timestamp, coord_sys:str, output_pa
     pickle.dump([rarr,header], open(output_path+f'wind_pos_{coord_sys}_{datestr_start}_{datestr_end}.p', "wb"))
 
 
-def make_yearly_pkl_files(start_timestamp, end_timestamp, instrument:str, coord_sys:str, output_path=wind_path):
-
+def make_yearly_pkl_files(start_timestamp, end_timestamp, data_type:str, coord_sys:str, output_path=wind_path):
     start = start_timestamp.year
     end = end_timestamp.year
-
     while start <= end:
-        if instrument == 'MAG' or 'MFI':
+        if data_type == 'MAG':
             create_wind_mag_pkl(datetime(start, 1, 1), datetime(start, 12, 31), coord_sys, output_path)
-        elif instrument == 'PLAS' or 'SWE':
+        elif data_type == 'PLAS':
             create_wind_plas_pkl(datetime(start, 1, 1), datetime(start, 12, 31), coord_sys, output_path)
-        elif instrument == 'POS':
+        elif data_type == 'POS':
             create_wind_pos_pkl(datetime(start, 1, 1), datetime(start, 12, 31), coord_sys, output_path)
-        print(f'Finished creating pkl file for Wind {instrument} {start}')
+        print(f'Finished creating pkl file for Wind {data_type} {start}')
         start += 1
 
 
