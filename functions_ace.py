@@ -535,6 +535,29 @@ def create_ace_mag_pkl(start_timestamp, end_timestamp, coord_sys:str, output_pat
     pickle.dump([rarr,header], open(output_path+f'ace_mag_{coord_sys}_{datestr_start}_{datestr_end}.p', "wb"))
 
 
+def create_ace_plas_pkl(start_timestamp, end_timestamp, coord_sys:str, output_path=ace_path):
+    df_plas = get_aceswe_range(start_timestamp, end_timestamp, coord_sys)
+    if df_plas is None:
+        print(f'ACE SWE data is empty for this timerange')
+        df_plas = pd.DataFrame({'time':[], 'vt':[], 'vx':[], 'vy':[], 'vz':[], 'np':[], 'tp':[]})
+    rarr = fgen.make_plas_recarray(df_plas)
+    start = start_timestamp.date()
+    end = end_timestamp.date()
+    datestr_start = f'{start.year}{start.month:02}{start.day:02}'
+    datestr_end = f'{end.year}{end.month:02}{end.day:02}'
+    #create header
+    header='Science level plasma (SWE) data from ACE, sourced from https://spdf.gsfc.nasa.gov/pub/data/ace/swepam/level_2_cdaweb/swe_h0/.'+\
+    ' Timerange: '+rarr.time[0].strftime("%Y-%b-%d %H:%M")+' to '+rarr.time[-1].strftime("%Y-%b-%d %H:%M")+'.'+\
+    ' Plasma data available in original cadence of 64 seconds. Proton temp and density derived by integrating the ion distribution function.'+\
+    ' Units: proton velocity [km/s], proton temperature -> radial component of temperature tensor, proton number density [cm-3].'+\
+    ' Available coordinate systems include GSE, GSM, and RTN. All are taken directly from ac_h0_swe_ files.'+\
+    ' The data are available in a numpy recarray, fields can be accessed by ace.time, ace.vt, ace.vx, ace.vy, ace.vz, ace.np, and ace.tp.'+\
+    ' Made with script by E. E. Davies (github @ee-davies, sc-data-functions). File creation date: '+\
+    datetime.now(timezone.utc).strftime("%Y-%b-%d %H:%M")+' UTC'
+    #dump to pickle file
+    pickle.dump([rarr,header], open(output_path+f'wind_plas_{coord_sys}_{datestr_start}_{datestr_end}.p', "wb"))
+
+
 def create_ace_gsm_pkl(start_timestamp, end_timestamp): #just initial quick version, may fail easily
     #create dataframes for mag, plas, and position
     df_mag = get_acemag_gsm_range(start_timestamp, end_timestamp)
