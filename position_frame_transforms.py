@@ -356,7 +356,7 @@ def perform_transform(df, base_frame: str, to_frame: str):
     BASE = np.vstack((df.x, df.y, df.z)).T
     transformation_matrices = np.array([get_transform(t, base_frame, to_frame) for t in timeseries])
     TO = np.einsum('ijk,ik->ij', transformation_matrices, BASE)
-    r, lat, lon = cart2sphere(TO[:,0],TO[:,1],TO[:,2]) #r is not right with this conversion
+    r, lat, lon = cart2sphere(TO[:,0],TO[:,1],TO[:,2]) #r is not right with this conversion for geocentric to heliocentric conversions
     df_transformed = pd.concat([timeseries], axis=1)
     df_transformed['x'] = TO[:,0]
     df_transformed['y'] = TO[:,1]
@@ -364,4 +364,5 @@ def perform_transform(df, base_frame: str, to_frame: str):
     df_transformed['r'] = r
     df_transformed['lat'] = lat
     df_transformed['lon'] = lon
+    spiceypy.kclear()
     return df_transformed
