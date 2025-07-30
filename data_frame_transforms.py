@@ -513,7 +513,7 @@ def HEEQ_to_RTN_mag(df):
         bn_i=df['bx'].iloc[i]*np.dot(heeq_x,rtn_n)+df['by'].iloc[i]*np.dot(heeq_y,rtn_n)+df['bz'].iloc[i]*np.dot(heeq_z,rtn_n)
         B_RTN_i = [br_i, bt_i, bn_i]
         B_RTN.append(B_RTN_i)
-        
+
     B_RTN = np.array(B_RTN)
     bx, by, bz = B_RTN[:, 0], B_RTN[:, 1], B_RTN[:, 2]
     bt = np.linalg.norm([bx,by,bz], axis=0)
@@ -650,6 +650,7 @@ def perform_mag_transform(df, base_frame: str, to_frame: str):
     df_transformed['bx'] = TO[:,0]
     df_transformed['by'] = TO[:,1]
     df_transformed['bz'] = TO[:,2]
+    spiceypy.kclear()
     return df_transformed
 
 
@@ -666,4 +667,5 @@ def perform_plas_transform(df, base_frame: str, to_frame: str):
     df_transformed['vz'] = TO[:,2]
     df_transformed['tp'] = df.tp
     df_transformed['np'] = df.np
+    spiceypy.kclear()
     return df_transformed
