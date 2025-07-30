@@ -164,7 +164,7 @@ def get_acemag_gsm(fp):
 
 
 #RANGES
-def get_acemag_rtn_range(start_timestamp, end_timestamp, path=ace_path+'mfi'):
+def get_acemag_rtn_approx_range(start_timestamp, end_timestamp, path=ace_path+'mfi'):
     """Pass two datetime objects and grab .STS files between dates, from
     directory given."""
     df = None
@@ -238,6 +238,18 @@ def acemag_gse_to_rtn(df_mag_gse, df_pos_gse):
     combined_df = data_transform.combine_dataframes(df_mag_heeq,df_new_pos)
     df_mag_rtn = data_transform.HEEQ_to_RTN_mag(combined_df)
     return df_mag_rtn
+
+
+def get_acemag_range(start_timestamp, end_timestamp, coord_sys:str):
+    if coord_sys == 'GSE':
+        df = get_acemag_gse_range(start_timestamp, end_timestamp)
+    elif coord_sys == 'GSM':
+        df = get_acemag_gsm_range(start_timestamp, end_timestamp)
+    elif coord_sys == 'RTN':
+        df_gse = get_acemag_gse_range(start_timestamp, end_timestamp)
+        df_pos = get_acepos_frommag_range(start_timestamp, end_timestamp, coord_sys='GSE')
+        df = acemag_gse_to_rtn(df_gse, df_pos)
+    return df
 
 
 """
