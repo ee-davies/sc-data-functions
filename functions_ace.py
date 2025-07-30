@@ -407,7 +407,7 @@ def get_acepos(fp, coord_sys='GSE'): #GSE and GSM available
     return df
 
 
-def get_acepos_frommag_range(start_timestamp, end_timestamp, coord_sys='GSE', path=ace_path):
+def get_acepos_frommag_range(start_timestamp, end_timestamp, coord_sys='GSE', path=ace_path+'mfi'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df = None
@@ -416,7 +416,29 @@ def get_acepos_frommag_range(start_timestamp, end_timestamp, coord_sys='GSE', pa
     while start <= end:
         fn = f'ac_h0_mfi_{start.year}{start.month:02}{start.day:02}'
         try:
-            path_fn = glob.glob(f'{path}/mfi/{fn}*.cdf')[0]
+            path_fn = glob.glob(f'{path}/{fn}*.cdf')[0]
+        except Exception as e:
+            path_fn = None
+        _df = get_acepos(f'{path_fn}', coord_sys)
+        if _df is not None:
+            if df is None:
+                df = _df.copy(deep=True)
+            else:
+                df = pd.concat([df, _df])
+        start += timedelta(days=1)
+    return df
+
+
+def get_acepos_fromswe_range(start_timestamp, end_timestamp, coord_sys='GSE', path=ace_path+'swe'):
+    """Pass two datetime objects and grab .cdf files between dates, from
+    directory given."""
+    df = None
+    start = start_timestamp.date()
+    end = end_timestamp.date()
+    while start <= end:
+        fn = f'ac_h0_swe_{start.year}{start.month:02}{start.day:02}'
+        try:
+            path_fn = glob.glob(f'{path}/{fn}*.cdf')[0]
         except Exception as e:
             path_fn = None
         _df = get_acepos(f'{path_fn}', coord_sys)
