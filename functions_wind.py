@@ -725,7 +725,8 @@ def create_wind_all_pkl(start_timestamp, end_timestamp, data_coord_sys='RTN', po
         if pos_rdf.shape[0] != 0:
             pos_rdf = pos_rdf.drop(columns=['time'])
     #Combine again: 
-    comb_df = pd.concat([magplas_rdf, pos_rdf], axis=1)
+    comb_df_nans = pd.concat([magplas_rdf, pos_rdf], axis=1)
+    comb_df = comb_df_nans[comb_df_nans['bt'].notna()]
     #Create rec array
     rarr = fgen.make_combined_recarray(comb_df)
     #Make header for pickle file
