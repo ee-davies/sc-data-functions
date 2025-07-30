@@ -234,7 +234,7 @@ def acemag_gse_to_rtn(df_mag_gse, df_pos_gse):
     df_mag_heeq = data_transform.perform_mag_transform(df_mag_gse, 'GSE', 'HEEQ')
     df_pos_hee = pos_transform.GSE_to_HEE(df_pos_gse)
     df_pos_heeq = pos_transform.perform_transform(df_pos_hee, 'HEE', 'HEEQ')
-    df_new_pos = data_transform.interp_to_newtimes(df_pos_heeq, df_mag_heeq)
+    df_new_pos = data_transform.interp_to_newtimes(df_pos_heeq, df_mag_heeq) #should be same timestamps, nan depending
     combined_df = data_transform.combine_dataframes(df_mag_heeq,df_new_pos)
     df_mag_rtn = data_transform.HEEQ_to_RTN_mag(combined_df)
     return df_mag_rtn
@@ -388,16 +388,16 @@ def cart2sphere(x,y,z):
 
 
 #positions in units of km
-def get_acepos_gsm(fp):
+def get_acepos(fp, coord_sys='GSE'): #GSE and GSM available
     try:
         cdf = pycdf.CDF(fp)
         data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch'], ['time'])}
         df = pd.DataFrame.from_dict(data)
-        x, y, z = cdf['SC_pos_GSM'][:].T
+        x, y, z = cdf[f'SC_pos_{coord_sys}'][:].T
+        r, lat, lon = cart2sphere(x,y,z)
         df['x'] = x
         df['y'] = y
         df['z'] = z
-        r, lat, lon = cart2sphere(x,y,z)
         df['r'] = r
         df['lat'] = lat
         df['lon'] = lon
