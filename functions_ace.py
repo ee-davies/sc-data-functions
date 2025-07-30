@@ -12,6 +12,9 @@ import os.path
 import pickle
 from bs4 import BeautifulSoup
 
+import data_frame_transforms as data_transform
+import position_frame_transforms as pos_transform
+
 
 """
 ACE DATA PATH
@@ -227,6 +230,16 @@ def get_acemag_gsm_range(start_timestamp, end_timestamp, path=ace_path+'mfi'):
     return df
 
 
+def acemag_gse_to_rtn(df_mag_gse, df_pos_gse):
+    df_mag_heeq = data_transform.perform_mag_transform(df_mag_gse, 'GSE', 'HEEQ')
+    df_pos_hee = pos_transform.GSE_to_HEE(df_pos_gse)
+    df_pos_heeq = pos_transform.perform_transform(df_pos_hee, 'HEE', 'HEEQ')
+    df_new_pos = data_transform.interp_to_newtimes(df_pos_heeq, df_mag_heeq)
+    combined_df = data_transform.combine_dataframes(df_mag_heeq,df_new_pos)
+    df_mag_rtn = data_transform.HEEQ_to_RTN_mag(combined_df)
+    return df_mag_rtn
+
+
 """
 LOAD ACE SWE DATA
 """
@@ -394,7 +407,7 @@ def get_acepos_gsm(fp):
     return df
 
 
-#initially attempts to get position from SWE file, if empty, tries MAG file
+#initially attempts to get position from MAG file, if empty, tries SWE file
 def get_acepos_gsm_range(start_timestamp, end_timestamp, path=r'/Volumes/External/Data/ACE'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
@@ -402,9 +415,9 @@ def get_acepos_gsm_range(start_timestamp, end_timestamp, path=r'/Volumes/Externa
     start = start_timestamp.date()
     end = end_timestamp.date()
     while start <= end:
-        fn = f'ac_h0_swe_{start.year}{start.month:02}{start.day:02}'
+        fn = f'ac_h0_mfi_{start.year}{start.month:02}{start.day:02}'
         try:
-            path_fn = glob.glob(f'{path}/swe/{fn}*.cdf')[0]
+            path_fn = glob.glob(f'{path}/mfi/{fn}*.cdf')[0]
         except Exception as e:
             path_fn = None
         _df = get_acepos_gsm(f'{path_fn}')
@@ -414,9 +427,9 @@ def get_acepos_gsm_range(start_timestamp, end_timestamp, path=r'/Volumes/Externa
             else:
                 df = pd.concat([df, _df])
         else:
-            fn = f'ac_h0_mfi_{start.year}{start.month:02}{start.day:02}'
+            fn = f'ac_h0_swe_{start.year}{start.month:02}{start.day:02}'
             try:
-                path_fn = glob.glob(f'{path}/mfi/{fn}*.cdf')[0]
+                path_fn = glob.glob(f'{path}/swe/{fn}*.cdf')[0]
             except Exception as e:
                 path_fn = None
             _df = get_acepos_gsm(f'{path_fn}')
