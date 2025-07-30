@@ -370,83 +370,57 @@ def get_noaa_pos_realtime_7days():
 #https://www.ngdc.noaa.gov/dscovr/portal/index.html#/download//pop
 #Load single position file from specific path using netcdf from scipy.io
 #Will show depreciated warning message for netcdf namespace
-def get_dscovrpos_gse(fp):
-    """raw = gse"""
-    try:
-        ncdf = netcdf.NetCDFFile(fp,'r')
-        #print(file2read.variables.keys()) to read variable names
-        data = {df_col: ncdf.variables[cdf_col][:] for cdf_col, df_col in zip(['time', 'sat_x_gse', 'sat_y_gse', 'sat_z_gse'], ['time', 'x', 'y', 'z'])}
-        df = pd.DataFrame.from_dict(data)
-        df['time'] = pd.to_datetime(df['time'], unit='ms')
-    except Exception as e:
-        print('ERROR:', e, fp)
-        df = None
-    return df
-
-
-def get_dscovrpos_gsm(fp):
-    """raw = gsm"""
-    try:
-        ncdf = netcdf.NetCDFFile(fp,'r')
-        #print(file2read.variables.keys()) to read variable names
-        data = {df_col: ncdf.variables[cdf_col][:] for cdf_col, df_col in zip(['time', 'sat_x_gsm', 'sat_y_gsm', 'sat_z_gsm'], ['time', 'x', 'y', 'z'])}
-        df = pd.DataFrame.from_dict(data)
-        df['time'] = pd.to_datetime(df['time'], unit='ms')
-    except Exception as e:
-        print('ERROR:', e, fp)
-        df = None
-    return df
-
-
-def get_dscovrpositions_gse(start_timestamp, end_timestamp):
-    df = None
-    start = start_timestamp.date()
-    end = end_timestamp.date() + timedelta(days=1)
-    while start < end:
-        year = start.year
-        date_str = f'{year}{start.month:02}{start.day:02}'
-        try:
-            fn = glob.glob(f'{dscovr_path}'+'orb/'+f'oe_pop_dscovr_s{date_str}000000_*.nc')
-            _df = get_dscovrpos_gse(fn[0])
-            if _df is not None:
-                if df is None:
-                    df = _df.copy(deep=True)
-                else:
-                    df = pd.concat([df, _df])
-        except Exception as e:
-            print('ERROR', e, f'{date_str} does not exist')
-        start += timedelta(days=1)
-    df = df.reset_index(drop=True)
-    return df
-
-
-def get_dscovrpositions_gsm(start_timestamp, end_timestamp):
-    df = None
-    start = start_timestamp.date()
-    end = end_timestamp.date() + timedelta(days=1)
-    while start < end:
-        year = start.year
-        date_str = f'{year}{start.month:02}{start.day:02}'
-        try:
-            fn = glob.glob(f'{dscovr_path}'+'orb/'+f'oe_pop_dscovr_s{date_str}000000_*.nc')
-            _df = get_dscovrpos_gsm(fn[0])
-            if _df is not None:
-                if df is None:
-                    df = _df.copy(deep=True)
-                else:
-                    df = pd.concat([df, _df])
-        except Exception as e:
-            print('ERROR', e, f'{date_str} does not exist')
-        start += timedelta(days=1)
-    df = df.reset_index(drop=True)
-    return df
 
 
 def cart2sphere(x,y,z):
-    r = np.sqrt(x**2+ y**2 + z**2) /1.495978707E8         
-    theta = np.arctan2(z,np.sqrt(x**2+ y**2)) * 360 / 2 / np.pi
+    r = np.sqrt(x**2 + y**2 + z**2) /1.495978707E8         
+    theta = np.arctan2(z,np.sqrt(x**2 + y**2)) * 360 / 2 / np.pi
     phi = np.arctan2(y,x) * 360 / 2 / np.pi                   
     return (r, theta, phi)
+
+
+def get_dscovrpos(fp, coord_sys='GSE'):
+    """raw = gse or gsm"""
+    if coord_sys == 'GSE':
+        coord_sys = 'gse'
+    elif coord_sys == 'GSM':
+        coord_sys = 'gsm'
+    try:
+        ncdf = netcdf.NetCDFFile(fp,'r')
+        #print(file2read.variables.keys()) to read variable names
+        data = {df_col: ncdf.variables[cdf_col][:] for cdf_col, df_col in zip(['time', f'sat_x_{coord_sys}', f'sat_y_{coord_sys}', f'sat_z_{coord_sys}'], ['time', 'x', 'y', 'z'])}
+        df = pd.DataFrame.from_dict(data)
+        df['time'] = pd.to_datetime(df['time'], unit='ms')
+        r, lat, lon = cart2sphere(data['x'].astype('int64'),data['y'].astype('int64'),data['z'].astype('int64'))
+        df['r'] = r
+        df['lat'] = lat
+        df['lon'] = lon
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
+    return df
+
+
+def get_dscovrpositions(start_timestamp, end_timestamp, coord_sys='GSE'):
+    df = None
+    start = start_timestamp.date()
+    end = end_timestamp.date() + timedelta(days=1)
+    while start < end:
+        year = start.year
+        date_str = f'{year}{start.month:02}{start.day:02}'
+        try:
+            fn = glob.glob(f'{dscovr_path}'+'orb/'+f'oe_pop_dscovr_s{date_str}000000_*.nc')
+            _df = get_dscovrpos(fn[0], coord_sys)
+            if _df is not None:
+                if df is None:
+                    df = _df.copy(deep=True)
+                else:
+                    df = pd.concat([df, _df])
+        except Exception as e:
+            print('ERROR', e, f'{date_str} does not exist')
+        start += timedelta(days=1)
+    df = df.reset_index(drop=True)
+    return df
 
 
 ## COMBINED FILES
