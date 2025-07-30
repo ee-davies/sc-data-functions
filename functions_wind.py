@@ -53,6 +53,16 @@ def filter_bad_col(df, col, bad_val): #filter by individual columns
 
 
 """
+WIND DATA INFO
+"""
+
+# Wind: earliest time available:
+wind_earliest_mag = datetime(1994,11,13)
+wind_earliest_swe = datetime(1994,11,17)
+wind_earliest_pos = datetime(1994,11,1)
+
+
+"""
 WIND DOWNLOAD DATA
 """
 
@@ -550,11 +560,11 @@ def get_wind_positions(start_timestamp, end_timestamp, coord_sys='GSE', path=win
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     coord_sys2 = coord_sys
-    if coord_sys == 'HEE':
+    if coord_sys2 == 'HEE':
         coord_sys = 'GSE'
-    elif coord_sys == 'HEEQ':
+    elif coord_sys2 == 'HEEQ':
         coord_sys = 'GSE'
-    elif coord_sys == 'HAE':
+    elif coord_sys2 == 'HAE':
         coord_sys = 'GSE'
     df=None
     start = start_timestamp.date()
@@ -631,6 +641,34 @@ def make_pos_recarray(df):
     rarr=np.zeros(len(dt_lst),dtype=[('time',object),('x', float),('y', float),('z', float), ('r', float),('lat', float),('lon', float)])
     rarr = rarr.view(np.recarray)
     rarr.time=dt_lst
+    rarr.x=df['x']
+    rarr.y=df['y']
+    rarr.z=df['z']
+    rarr.r=df['r']
+    rarr.lat=df['lat']
+    rarr.lon=df['lon']
+    return rarr
+
+
+def make_combined_recarray(df):
+    #create rec array
+    time_stamps = df['time']
+    dt_lst= [element.to_pydatetime() for element in list(time_stamps)] #extract timestamps in datetime.datetime format
+    rarr=np.zeros(len(dt_lst),dtype=[('time',object),('bt', float),('bx', float),('by', float),('bz', float),\
+                ('vt', float),('vx', float),('vy', float),('vz', float),('np', float),('tp', float),\
+                ('x', float),('y', float),('z', float), ('r', float),('lat', float),('lon', float)])
+    rarr = rarr.view(np.recarray)
+    rarr.time=dt_lst
+    rarr.bt=df['bt']
+    rarr.bx=df['bx']
+    rarr.by=df['by']
+    rarr.bz=df['bz']
+    rarr.vt=df['vt']
+    rarr.vx=df['vx']
+    rarr.vy=df['vy']
+    rarr.vz=df['vz']
+    rarr.np=df['np']
+    rarr.tp=df['tp']
     rarr.x=df['x']
     rarr.y=df['y']
     rarr.z=df['z']
@@ -721,6 +759,72 @@ def make_yearly_pkl_files(start_timestamp, end_timestamp, data_type:str, coord_s
             create_wind_pos_pkl(datetime(start, 1, 1), datetime(start, 12, 31), coord_sys, output_path)
         print(f'Finished creating pkl file for Wind {data_type} {start}')
         start += 1
+
+
+def create_wind_all_pkl(start_timestamp, end_timestamp, data_coord_sys='RTN', pos_coord_sys='HEEQ', output_path=wind_path):
+    #MAG DATA
+    df_mag = get_windmag_range(start_timestamp, end_timestamp, data_coord_sys)
+    if df_mag is None:
+        print(f'Wind MAG data is empty for this timerange')
+        df_mag = pd.DataFrame({'time':[], 'bt':[], 'bx':[], 'by':[], 'bz':[]})
+        mag_rdf = df_mag.drop(columns=['time'])
+    else:
+        mag_rdf = df_mag.set_index('time').resample('1min').mean().reset_index(drop=False)
+        mag_rdf.set_index(pd.to_datetime(mag_rdf['time']), inplace=True)
+    #PLASMA DATA
+    df_plas = get_windswe_range(start_timestamp, end_timestamp, data_coord_sys)
+    if df_plas is None:
+        print(f'WIND SWE data is empty for this timerange')
+        df_plas = pd.DataFrame({'time':[], 'vt':[], 'vx':[], 'vy':[], 'vz':[], 'np':[], 'tp':[]})
+        plas_rdf = df_plas
+    else:
+        plas_rdf = df_plas.set_index('time').resample('1min').mean().reset_index(drop=False)
+        plas_rdf.set_index(pd.to_datetime(plas_rdf['time']), inplace=True)
+        if mag_rdf.shape[0] != 0:
+            plas_rdf = plas_rdf.drop(columns=['time'])
+    #Combine MAG and PLASMA dfs
+    magplas_rdf = pd.concat([mag_rdf, plas_rdf], axis=1)
+    #some timestamps may be NaT so after joining, drop time column and reinstate from combined index col
+    magplas_rdf = magplas_rdf.drop(columns=['time'])
+    magplas_rdf['time'] = magplas_rdf.index
+    #POSITION DATA
+    df_pos = get_wind_positions(start_timestamp, end_timestamp, pos_coord_sys)
+    if df_pos is None:
+        print(f'Wind POS data is empty for this timerange')
+        df_pos = pd.DataFrame({'time':[], 'x':[], 'y':[], 'z':[], 'r':[], 'lat':[], 'lon':[]})
+        pos_rdf = df_pos
+    else:
+        pos_rdf = df_pos.set_index('time').resample('1min').interpolate(method='linear').reset_index(drop=False)
+        pos_rdf.set_index(pd.to_datetime(pos_rdf['time']), inplace=True)
+        if pos_rdf.shape[0] != 0:
+            pos_rdf = pos_rdf.drop(columns=['time'])
+    #Combine again: 
+    comb_df = pd.concat([magplas_rdf, pos_rdf], axis=1)
+    #Create rec array
+    rarr = make_combined_recarray(comb_df)
+    #Make header for pickle file
+    start = start_timestamp.date()
+    end = end_timestamp.date()
+    datestr_start = f'{start.year}{start.month:02}{start.day:02}'
+    datestr_end = f'{end.year}{end.month:02}{end.day:02}'
+    header='Science level magnetometer (MFI) data from Wind, sourced from https://cdaweb.gsfc.nasa.gov/pub/data/wind/mfi/.'+\
+    ' Available coordinate systems include GSE, GSM, and RTN. GSE and GSM data are taken directly from wi_h0_mfi files, RTN data from wi_h3-rtn_mfi.'+\
+    ' The data are available in a numpy recarray, fields can be accessed by wind.time, wind.bt, wind.bx, wind.by, wind.bz.'+\
+    ' Science level plasma (SWE) data from Wind, sourced from https://cdaweb.gsfc.nasa.gov/pub/data/wind/swe/.'+\
+    ' Parameters obtained from non-linear fitting to the ion CDF, rather than moment analysis (available by request).'+\
+    ' Units: proton velocity [km/s], proton temperature => proton thermal speed [km/s], proton number density [n/cc].'+\
+    ' Available coordinate systems include GSE, GSM, and RTN. GSE are taken directly from wi_h1_swe files, GSM data has been converted using data_frame_transforms based on Hapgood 1992.'+\
+    ' RTN data is taken directly from wi_h1_swe_rtn, except for the years 2010--2014 (inclusive). Where RTN files are unavailable, original GSE files are converted to RTN using data_frame_transforms (Hapgood 1992 and spice kernels).'+\
+    ' The data are available in a numpy recarray, fields can be accessed by wind.time, wind.vt, wind.vx, wind.vy, wind.vz, wind.np, and wind.tp.'+\
+    ' Predicted orbit data from Wind, sourced from https://cdaweb.gsfc.nasa.gov/pub/data/wind/orbit/pre_or/.'+\
+    ' Units: xyz [km], r [AU], lat/lon [deg].'+\
+    ' Available coordinate systems include GSE, GSM, J2000 GCI, HEC, HEE, HAE, and HEEQ. GSE, GSM, J2000 GCI and HEC are taken directly from wi_or_pre files, others using data_frame_transforms based on Hapgood 1992 and spice kernels.'+\
+    ' The data are available in a numpy recarray, fields can be accessed by wind.x, wind.y, wind.z, wind.r, wind.lat, and wind.lon.'+\
+    ' Timerange: '+rarr.time[0].strftime("%Y-%b-%d %H:%M")+' to '+rarr.time[-1].strftime("%Y-%b-%d %H:%M")+'.'+\
+    ' All data resampled to cadence of 1 min. Position data has been linearly interpolated.'+\
+    ' Made with script by E. E. Davies (github @ee-davies, sc-data-functions). File creation date: '+\
+    datetime.now(timezone.utc).strftime("%Y-%b-%d %H:%M")+' UTC'
+    pickle.dump([rarr,header], open(output_path+f'wind_data_{data_coord_sys}_pos_{pos_coord_sys}_{datestr_start}_{datestr_end}.p', "wb"))
 
 
 # def transform_data(df, instrument, coord_system):
