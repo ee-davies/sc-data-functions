@@ -375,6 +375,16 @@ def get_aceswe_gsm_range(start_timestamp, end_timestamp, path=ace_path+'swe'):
     return df
 
 
+def get_aceswe_range(start_timestamp, end_timestamp, coord_sys:str):
+    if coord_sys == 'GSE':
+        df = get_aceswe_gse_range(start_timestamp, end_timestamp)
+    elif coord_sys == 'GSM':
+        df = get_aceswe_gsm_range(start_timestamp, end_timestamp)
+    elif coord_sys == 'RTN':
+        df = get_aceswe_rtn_range(start_timestamp, end_timestamp)
+    return df
+
+
 """
 ACE POSITION FUNCTIONS: no spice kernels, uses data file
 """
@@ -451,39 +461,39 @@ def get_acepos_fromswe_range(start_timestamp, end_timestamp, coord_sys='GSE', pa
     return df
 
 
-#initially attempts to get position from MAG file, if empty, tries SWE file
-def get_acepos_gsm_range(start_timestamp, end_timestamp, path=r'/Volumes/External/Data/ACE'):
-    """Pass two datetime objects and grab .cdf files between dates, from
-    directory given."""
-    df = None
-    start = start_timestamp.date()
-    end = end_timestamp.date()
-    while start <= end:
-        fn = f'ac_h0_mfi_{start.year}{start.month:02}{start.day:02}'
-        try:
-            path_fn = glob.glob(f'{path}/mfi/{fn}*.cdf')[0]
-        except Exception as e:
-            path_fn = None
-        _df = get_acepos_gsm(f'{path_fn}')
-        if _df is not None:
-            if df is None:
-                df = _df.copy(deep=True)
-            else:
-                df = pd.concat([df, _df])
-        else:
-            fn = f'ac_h0_swe_{start.year}{start.month:02}{start.day:02}'
-            try:
-                path_fn = glob.glob(f'{path}/swe/{fn}*.cdf')[0]
-            except Exception as e:
-                path_fn = None
-            _df = get_acepos_gsm(f'{path_fn}')
-            if _df is not None:
-                if df is None:
-                    df = _df.copy(deep=True)
-                else:
-                    df = pd.concat([df, _df])
-        start += timedelta(days=1)
-    return df
+# #initially attempts to get position from MAG file, if empty, tries SWE file
+# def get_acepos_gsm_range(start_timestamp, end_timestamp, path=r'/Volumes/External/Data/ACE'):
+#     """Pass two datetime objects and grab .cdf files between dates, from
+#     directory given."""
+#     df = None
+#     start = start_timestamp.date()
+#     end = end_timestamp.date()
+#     while start <= end:
+#         fn = f'ac_h0_mfi_{start.year}{start.month:02}{start.day:02}'
+#         try:
+#             path_fn = glob.glob(f'{path}/mfi/{fn}*.cdf')[0]
+#         except Exception as e:
+#             path_fn = None
+#         _df = get_acepos_gsm(f'{path_fn}')
+#         if _df is not None:
+#             if df is None:
+#                 df = _df.copy(deep=True)
+#             else:
+#                 df = pd.concat([df, _df])
+#         else:
+#             fn = f'ac_h0_swe_{start.year}{start.month:02}{start.day:02}'
+#             try:
+#                 path_fn = glob.glob(f'{path}/swe/{fn}*.cdf')[0]
+#             except Exception as e:
+#                 path_fn = None
+#             _df = get_acepos_gsm(f'{path_fn}')
+#             if _df is not None:
+#                 if df is None:
+#                     df = _df.copy(deep=True)
+#                 else:
+#                     df = pd.concat([df, _df])
+#         start += timedelta(days=1)
+#     return df
 
 
 """
