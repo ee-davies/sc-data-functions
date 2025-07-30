@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
 from spacepy import pycdf
-from scipy import constants
 # import spiceypy
 # import os
 import glob
@@ -506,35 +505,6 @@ def get_acepos_fromswe_range(start_timestamp, end_timestamp, coord_sys='GSE', pa
 #                     df = pd.concat([df, _df])
 #         start += timedelta(days=1)
 #     return df
-
-
-"""
-EXTRA FUNCTIONS (TO MOVE TO GENERAL IN SITU ANALYSIS)
-"""
-
-
-def resample_df(df, resample_min):
-    rdf = df.set_index('time').resample(f'{resample_min}min').mean().reset_index(drop=False)
-    return rdf
-
-
-def merge_rdfs(df1, df2):
-    df1.set_index(pd.to_datetime(df1['time']), inplace=True)
-    df2.set_index(pd.to_datetime(df2['time']), inplace=True)
-    mdf = pd.concat([df1, df2], axis=1)
-    mdf = mdf.drop(['time'], axis=1)
-    mdf = mdf.reset_index(drop=False)
-    return mdf
-
-
-def calc_pressure_params(plasmag_df):
-# assuming Tpr is the (isotropic) temperature
-# in reality is temperature in radial direction: https://cdaweb.gsfc.nasa.gov/misc/NotesA.html#AC_H0_SWE
-    plasmag_df['p_plas'] = (plasmag_df['density']*10**6)*constants.k*plasmag_df['temperature']
-    plasmag_df['p_mag'] = 0.5*(plasmag_df['b_tot']*10**(-9))**2./constants.mu_0
-    plasmag_df['beta'] = plasmag_df['p_plas']/plasmag_df['p_mag']
-    plasmag_df['p_tot'] = plasmag_df['p_plas'] + plasmag_df['p_mag']
-    return plasmag_df
 
 
 """
