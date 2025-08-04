@@ -153,6 +153,38 @@ def GSE_to_GSM_plas(df):
     return df_transformed
 
 
+def GSE_to_GSM(df):
+    # Get all transformation matrices at once
+    times = df['time'].values
+    T3_matrices = np.array([get_geocentric_transformation_matrices(t)[2] for t in times])
+    b_coords = np.column_stack([df['bx'].values, df['by'].values, df['bz'].values])
+    v_coords = np.column_stack([df['vx'].values, df['vy'].values, df['vz'].values])
+    B_GSM_coords = np.einsum('ijk,ik->ij', T3_matrices, b_coords)
+    V_GSM_coords = np.einsum('ijk,ik->ij', T3_matrices, v_coords)
+    bx, by, bz = B_GSM_coords[:, 0], B_GSM_coords[:, 1], B_GSM_coords[:, 2]
+    vx, vy, vz = V_GSM_coords[:, 0], V_GSM_coords[:, 1], V_GSM_coords[:, 2]
+    df_transformed = pd.DataFrame({
+        'time': df['time'].values,
+        'bt': df['bt'],
+        'bx': bx,
+        'by': by, 
+        'bz': bz,
+        'vt': df['vt'],
+        'vx': vx,
+        'vy': vy, 
+        'vz': vz,
+        'tp': df['tp'],
+        'np': df['np'],
+        'x': df['x'], #positions remain unchanged as this is a data transform, not position
+        'y': df['y'],
+        'z': df['z'],
+        'r': df['r'],
+        'lat': df['lat'],
+        'lon': df['lon']
+    })
+    return df_transformed
+
+
 def GSM_to_GSE_mag(df):
     # Get all transformation matrices at once
     times = df['time'].values
@@ -291,6 +323,29 @@ def HEE_to_GSE_plas(df):
         'vz': df['vz'],
         'tp': df['tp'],
         'np': df['np'],
+    })
+    return df_transformed
+
+
+def HEE_to_GSE(df):
+    df_transformed = pd.DataFrame({
+        'time': df['time'].values,
+        'bt': df['bt'],
+        'bx': -df['bx'],
+        'by': -df['by'], 
+        'bz': df['bz'],
+        'vt': df['vt'],
+        'vx': -df['vx'],
+        'vy': -df['vy'], 
+        'vz': df['vz'],
+        'tp': df['tp'],
+        'np': df['np'],
+        'x': df['x'], #positions remain unchanged as this is a data transform, not position
+        'y': df['y'],
+        'z': df['z'],
+        'r': df['r'],
+        'lat': df['lat'],
+        'lon': df['lon']
     })
     return df_transformed
 
