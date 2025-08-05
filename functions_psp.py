@@ -39,10 +39,10 @@ def filter_bad_data(df, col, bad_val):
 
 def filter_bad_col(df, col, bad_val): #filter by individual columns
     if bad_val < 0:
-        mask = df[col] < bad_val  # boolean mask for all bad values
+        mask_vals = df[col] < bad_val  # boolean mask for all bad values
     else:
-        mask = df[col] > bad_val  # boolean mask for all bad values
-    df[col][mask] = np.nan
+        mask_vals = df[col] > bad_val  # boolean mask for all bad values
+    df[col].mask(mask_vals, inplace=True)
     return df
 
 
