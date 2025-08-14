@@ -10,7 +10,7 @@ import urllib.request
 from urllib.request import urlopen
 import os.path
 import pickle
-from bs4 import BeautifulSoup
+import netCDF4 as nc
 
 import data_frame_transforms as data_transform
 import position_frame_transforms as pos_transform
@@ -27,6 +27,7 @@ kernels_path='/Volumes/External/data/kernels/'
 
 """
 ADITYA DOWNLOAD DATA
+#Can't currently download automatically as requires log in
 MAG: MAG data available from 20240701
 """
 
@@ -34,25 +35,56 @@ MAG: MAG data available from 20240701
 #MAG DATA: https://pradan1.issdc.gov.in/al1/protected/browse.xhtml?id=mag
 # FORMAT example: /al1/protected/downloadData/mag/level2/2025/08/13/L2_AL1_MAG_20250813_V00.nc?mag
 
-def download_adityamag(start_timestamp, end_timestamp, path=f'{aditya_path}'+'mag/'):
-    start = start_timestamp.date()
-    end = end_timestamp.date() + timedelta(days=1)
-    while start < end:
-        year = start.year
-        date_str = f'{year}{start.month:02}{start.day:02}'
-        data_item_id = f'L2_AL1_MAG_{date_str}_V00'
-        if os.path.isfile(f"{path}/{data_item_id}.nc") == True:
-            print(f'{data_item_id}.nc has already been downloaded.')
-            start += timedelta(days=1)
-        else:
-            try:
-                data_url = f'https://pradan1.issdc.gov.in/al1/protected/downloadData/mag/level2/{year}/{start.month:02}/{start.day:02}/{data_item_id}.nc?mag'
-                urllib.request.urlretrieve(data_url, f"{path}/{data_item_id}.nc")
-                print(f'Successfully downloaded {data_item_id}.nc')
-                start += timedelta(days=1)
-            except Exception as e:
-                print('ERROR', e, data_item_id)
-                start += timedelta(days=1)
+# def download_adityamag(start_timestamp, end_timestamp, path=f'{aditya_path}'+'mag/'):
+#     start = start_timestamp.date()
+#     end = end_timestamp.date() + timedelta(days=1)
+#     while start < end:
+#         year = start.year
+#         date_str = f'{year}{start.month:02}{start.day:02}'
+#         data_item_id = f'L2_AL1_MAG_{date_str}_V00'
+#         if os.path.isfile(f"{path}/{data_item_id}.nc") == True:
+#             print(f'{data_item_id}.nc has already been downloaded.')
+#             start += timedelta(days=1)
+#         else:
+#             try:
+#                 data_url = f'https://pradan1.issdc.gov.in/al1/protected/downloadData/mag/level2/{year}/{start.month:02}/{start.day:02}/{data_item_id}.nc?mag'
+#                 urllib.request.urlretrieve(data_url, f"{path}/{data_item_id}.nc")
+#                 print(f'Successfully downloaded {data_item_id}.nc')
+#                 start += timedelta(days=1)
+#             except Exception as e:
+#                 print('ERROR', e, data_item_id)
+#                 start += timedelta(days=1)
+
+
+"""
+ADITYA MAG DATA
+MAG: MAG data available from 20240701
+"""
+
+def get_adityamag_gse(fp): #need to modify time format and add bt column
+    """raw = gse"""
+    try:
+        ncdf = nc.Dataset(fp,'r');
+        data = {df_col: ncdf.variables[cdf_col][:] for cdf_col, df_col in zip(['time', 'Bx_gse', 'By_gse', 'Bz_gse'], ['time', 'bx', 'by', 'bz'])}
+        df = pd.DataFrame.from_dict(data)
+#         df['time'] = pd.to_datetime(df['time'])
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
+    return df
+
+
+def get_adityamag_gsm(fp): #need to modify time format and add bt column
+    """raw = gse"""
+    try:
+        ncdf = nc.Dataset(fp,'r');
+        data = {df_col: ncdf.variables[cdf_col][:] for cdf_col, df_col in zip(['time', 'Bx_gsm', 'By_gsm', 'Bz_gsm'], ['time', 'bx', 'by', 'bz'])}
+        df = pd.DataFrame.from_dict(data)
+#         df['time'] = pd.to_datetime(df['time'])
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
+    return df
 
 
 """
