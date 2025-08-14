@@ -67,7 +67,7 @@ def get_adityamag_gse(fp):
         ncdf = nc.Dataset(fp,'r')
         data = {df_col: ncdf.variables[cdf_col][:] for cdf_col, df_col in zip(['time', 'Bx_gse', 'By_gse', 'Bz_gse'], ['time', 'bx', 'by', 'bz'])}
         df = pd.DataFrame.from_dict(data)
-        df['time'] = pd.to_datetime(df['time'])
+        df['time'] = pd.to_datetime(df['time']*1E9)
         bt = np.linalg.norm([df.bx,df.by,df.bz], axis=0)
         df['bt'] = bt
     except Exception as e:
@@ -76,7 +76,7 @@ def get_adityamag_gse(fp):
     return df
 
 
-def get_adityamag_gsm_range(start_timestamp, end_timestamp, path=aditya_path+'mag'):
+def get_adityamag_gse_range(start_timestamp, end_timestamp, path=aditya_path+'mag'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df = None
@@ -132,6 +132,14 @@ def get_adityamag_gsm_range(start_timestamp, end_timestamp, path=aditya_path+'ma
             else:
                 df = pd.concat([df, _df])
         start += timedelta(days=1)
+    return df
+
+
+def get_adityamag_range(start_timestamp, end_timestamp, coord_sys:str):
+    if coord_sys == 'GSE':
+        df = get_adityamag_gse_range(start_timestamp, end_timestamp)
+    elif coord_sys == 'GSM':
+        df = get_adityamag_gsm_range(start_timestamp, end_timestamp)
     return df
 
 
