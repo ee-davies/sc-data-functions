@@ -58,14 +58,24 @@ def get_lagrange_pos(t, lagrange_point, coord_sys='GSE'): #doesn't automatically
         lagrange_code = "394"
     elif lagrange_point == "L5":
         lagrange_code = "395"
-    try:
-        pos = spiceypy.spkpos(lagrange_code, spiceypy.datetime2et(t), f'{coord_sys}', "NONE", "SUN")[0] 
-        r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
-        position = t, pos[0], pos[1], pos[2], r, lat, lon
-        return position
-    except Exception as e:
-        print(e)
-        return [t, None, None, None, None, None, None]
+    if coord_sys == 'GSE':
+            try:
+                pos = spiceypy.spkpos(lagrange_code, spiceypy.datetime2et(t), f'{coord_sys}', "NONE", "EARTH")[0] 
+                r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
+                position = t, pos[0], pos[1], pos[2], r, lat, lon
+                return position
+            except Exception as e:
+                print(e)
+                return [t, None, None, None, None, None, None]
+    else:
+        try:
+            pos = spiceypy.spkpos(lagrange_code, spiceypy.datetime2et(t), f'{coord_sys}', "NONE", "SUN")[0] 
+            r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
+            position = t, pos[0], pos[1], pos[2], r, lat, lon
+            return position
+        except Exception as e:
+            print(e)
+            return [t, None, None, None, None, None, None]
 
 
 def get_lagrange_positions_daily(start, end, lagrange_point, coord_sys, cadence, dist_unit='au', ang_unit='deg'):
