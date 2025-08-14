@@ -61,26 +61,30 @@ ADITYA MAG DATA
 MAG: MAG data available from 20240701
 """
 
-def get_adityamag_gse(fp): #need to modify time format and add bt column
+def get_adityamag_gse(fp):
     """raw = gse"""
     try:
-        ncdf = nc.Dataset(fp,'r');
+        ncdf = nc.Dataset(fp,'r')
         data = {df_col: ncdf.variables[cdf_col][:] for cdf_col, df_col in zip(['time', 'Bx_gse', 'By_gse', 'Bz_gse'], ['time', 'bx', 'by', 'bz'])}
         df = pd.DataFrame.from_dict(data)
-#         df['time'] = pd.to_datetime(df['time'])
+        df['time'] = pd.to_datetime(df['time'])
+        bt = np.linalg.norm([df.bx,df.by,df.bz], axis=0)
+        df['bt'] = bt
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
     return df
 
 
-def get_adityamag_gsm(fp): #need to modify time format and add bt column
+def get_adityamag_gsm(fp):
     """raw = gse"""
     try:
-        ncdf = nc.Dataset(fp,'r');
+        ncdf = nc.Dataset(fp,'r')
         data = {df_col: ncdf.variables[cdf_col][:] for cdf_col, df_col in zip(['time', 'Bx_gsm', 'By_gsm', 'Bz_gsm'], ['time', 'bx', 'by', 'bz'])}
         df = pd.DataFrame.from_dict(data)
-#         df['time'] = pd.to_datetime(df['time'])
+        df['time'] = pd.to_datetime(df['time']*1E9)
+        bt = np.linalg.norm([df.bx,df.by,df.bz], axis=0)
+        df['bt'] = bt
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
