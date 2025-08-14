@@ -76,6 +76,28 @@ def get_adityamag_gse(fp):
     return df
 
 
+def get_adityamag_gsm_range(start_timestamp, end_timestamp, path=aditya_path+'mag'):
+    """Pass two datetime objects and grab .cdf files between dates, from
+    directory given."""
+    df = None
+    start = start_timestamp.date()
+    end = end_timestamp.date()
+    while start <= end:
+        fn = f'L2_AL1_MAG_{start.year}{start.month:02}{start.day:02}'
+        try:
+            path_fn = glob.glob(f'{path}/{fn}*.nc')[0]
+        except Exception as e:
+            path_fn = None
+        _df = get_adityamag_gse(f'{path_fn}')
+        if _df is not None:
+            if df is None:
+                df = _df.copy(deep=True)
+            else:
+                df = pd.concat([df, _df])
+        start += timedelta(days=1)
+    return df
+
+
 def get_adityamag_gsm(fp):
     """raw = gse"""
     try:
@@ -88,6 +110,28 @@ def get_adityamag_gsm(fp):
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
+    return df
+
+
+def get_adityamag_gsm_range(start_timestamp, end_timestamp, path=aditya_path+'mag'):
+    """Pass two datetime objects and grab .cdf files between dates, from
+    directory given."""
+    df = None
+    start = start_timestamp.date()
+    end = end_timestamp.date()
+    while start <= end:
+        fn = f'L2_AL1_MAG_{start.year}{start.month:02}{start.day:02}'
+        try:
+            path_fn = glob.glob(f'{path}/{fn}*.nc')[0]
+        except Exception as e:
+            path_fn = None
+        _df = get_adityamag_gsm(f'{path_fn}')
+        if _df is not None:
+            if df is None:
+                df = _df.copy(deep=True)
+            else:
+                df = pd.concat([df, _df])
+        start += timedelta(days=1)
     return df
 
 
