@@ -44,7 +44,7 @@ def lagrange_furnish():
         spiceypy.furnsh(os.path.join(generic_path, kernel))
 
 
-def get_lagrange_pos(t, lagrange_point): #doesn't automatically furnish, furnish first
+def get_lagrange_pos(t, lagrange_point, coord_sys='GSE'): #doesn't automatically furnish, furnish first
     if lagrange_point == "L1":
         lagrange_code = "391"
     elif lagrange_point == "L2":
@@ -57,7 +57,7 @@ def get_lagrange_pos(t, lagrange_point): #doesn't automatically furnish, furnish
     elif lagrange_point == "L5":
         lagrange_code = "395"
     try:
-        pos = spiceypy.spkpos(lagrange_code, spiceypy.datetime2et(t), "HEEQ", "NONE", "SUN")[0] #calls positions in HEEQ; can be changed
+        pos = spiceypy.spkpos(lagrange_code, spiceypy.datetime2et(t), f'{coord_sys}', "NONE", "SUN")[0] 
         r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
         position = t, pos[0], pos[1], pos[2], r, lat, lon
         return position
