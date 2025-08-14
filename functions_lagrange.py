@@ -9,6 +9,8 @@ import urllib.request
 import os.path
 import pickle
 
+import functions_general as fgen
+
 
 """
 LAGRANGE POINT functions: positions of L1, L2, L4 and L4 from generic and specific lagrange spice kernels
@@ -66,11 +68,11 @@ def get_lagrange_pos(t, lagrange_point, coord_sys='GSE'): #doesn't automatically
         return [t, None, None, None, None, None, None]
 
 
-def get_lagrange_positions_daily(start, end, lagrange_point, cadence, dist_unit='au', ang_unit='deg'):
+def get_lagrange_positions_daily(start, end, lagrange_point, coord_sys, cadence, dist_unit='au', ang_unit='deg'):
     t = start
     positions = []
     while t < end:
-        position = get_lagrange_pos(t, lagrange_point)
+        position = get_lagrange_pos(t, lagrange_point, coord_sys)
         positions.append(position)
         t += timedelta(days=cadence)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
@@ -85,11 +87,11 @@ def get_lagrange_positions_daily(start, end, lagrange_point, cadence, dist_unit=
     return df_positions
 
 
-def get_lagrange_positions_hourly(start, end, lagrange_point, cadence, dist_unit='au', ang_unit='deg'):
+def get_lagrange_positions_hourly(start, end, lagrange_point, coord_sys, cadence, dist_unit='au', ang_unit='deg'):
     t = start
     positions = []
     while t < end:
-        position = get_lagrange_pos(t, lagrange_point)
+        position = get_lagrange_pos(t, lagrange_point, coord_sys)
         positions.append(position)
         t += timedelta(hours=cadence)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
@@ -104,11 +106,11 @@ def get_lagrange_positions_hourly(start, end, lagrange_point, cadence, dist_unit
     return df_positions
 
 
-def get_lagrange_positions_minute(start, end, lagrange_point, cadence, dist_unit='au', ang_unit='deg'):
+def get_lagrange_positions_minute(start, end, lagrange_point, coord_sys, cadence, dist_unit='au', ang_unit='deg'):
     t = start
     positions = []
     while t < end:
-        position = get_lagrange_pos(t, lagrange_point)
+        position = get_lagrange_pos(t, lagrange_point, coord_sys)
         positions.append(position)
         t += timedelta(minutes=cadence)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
@@ -121,3 +123,27 @@ def get_lagrange_positions_minute(start, end, lagrange_point, cadence, dist_unit
         df_positions.lon = df_positions.lon * np.pi / 180
     spiceypy.kclear()
     return df_positions
+
+
+def create_lagrange_pos_pkl(start_timestamp, end_timestamp, lagrange_point, coord_sys:str, cadence, dist_unit='au', ang_unit='deg', output_path="/"):
+    lagrange_furnish()
+    df_pos = get_lagrange_positions_minute(start_timestamp, end_timestamp,lagrange_point, coord_sys, cadence, dist_unit, ang_unit)
+    if df_pos is None:
+        print(f'L1 orbit data is empty for this timerange')
+        df_pos = pd.DataFrame({'time':[], 'x':[], 'y':[], 'z':[], 'r':[], 'lat':[], 'lon':[]})
+    rarr = fgen.make_pos_recarray(df_pos)
+    start = start_timestamp.date()
+    end = end_timestamp.date()
+    datestr_start = f'{start.year}{start.month:02}{start.day:02}'
+    datestr_end = f'{end.year}{end.month:02}{end.day:02}'
+    #create header
+    header='L1 position data from spice kernels.'+\
+    ' Timerange: '+rarr.time[0].strftime("%Y-%b-%d %H:%M")+' to '+rarr.time[-1].strftime("%Y-%b-%d %H:%M")+'.'+\
+    ' Orbit available in cadence of x minutes.'+\
+    ' Units: xyz [km], r [AU], lat/lon [deg].'+\
+    ' Available coordinate systems include GSE, HEE, HEEQ, ECLIPJ2000 and any others that work directly with spice kernels.'+\
+    ' The data are available in a numpy recarray, fields can be accessed by lagrange.x, lagrange.y, lagrange.z, lagrange.r, lagrange.lat, and lagrange.lon.'+\
+    ' Made with script by E. E. Davies (github @ee-davies, sc-data-functions). File creation date: '+\
+    datetime.now(timezone.utc).strftime("%Y-%b-%d %H:%M")+' UTC'
+    #dump to pickle file
+    pickle.dump([rarr,header], open(output_path+f'{lagrange_point}_pos_{coord_sys}_{datestr_start}_{datestr_end}.p', "wb"))
