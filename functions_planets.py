@@ -46,11 +46,11 @@ options include:
 """
 
 
-def get_planet_pos(t, planet): #doesn't automatically furnish, fix
+def get_planet_pos(t, planet, coord_sys): #doesn't automatically furnish, fix
     if spiceypy.ktotal('ALL') < 1:
         generic_furnish()
     try:
-        pos = spiceypy.spkpos(planet, spiceypy.datetime2et(t), "HEEQ", "NONE", "SUN")[0] #calls positions in HEEQ; can be changed
+        pos = spiceypy.spkpos(planet, spiceypy.datetime2et(t), coord_sys, "NONE", "SUN")[0] #works for heliocentric coords
         r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
         position = t, pos[0], pos[1], pos[2], r, lat, lon
         return position
@@ -59,20 +59,20 @@ def get_planet_pos(t, planet): #doesn't automatically furnish, fix
         return [t, None, None, None, None, None, None]
 
 
-def get_planet_positions(time_series, planet):
+def get_planet_positions(time_series, planet, coord_sys):
     positions = []
     for t in time_series:
-        position = get_planet_pos(t, planet)
+        position = get_planet_pos(t, planet, coord_sys)
         positions.append(position)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
     return df_positions
 
 
-def get_planet_positions_daily(start, end, planet, cadence, dist_unit='au', ang_unit='deg'):
+def get_planet_positions_daily(start, end, planet, coord_sys, cadence, dist_unit='au', ang_unit='deg'):
     t = start
     positions = []
     while t < end:
-        position = get_planet_pos(t, planet)
+        position = get_planet_pos(t, planet, coord_sys)
         positions.append(position)
         t += timedelta(days=cadence)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
@@ -87,11 +87,11 @@ def get_planet_positions_daily(start, end, planet, cadence, dist_unit='au', ang_
     return df_positions
 
 
-def get_planet_positions_hourly(start, end, planet, cadence, dist_unit='au', ang_unit='deg'):
+def get_planet_positions_hourly(start, end, planet, coord_sys, cadence, dist_unit='au', ang_unit='deg'):
     t = start
     positions = []
     while t < end:
-        position = get_planet_pos(t, planet)
+        position = get_planet_pos(t, planet, coord_sys)
         positions.append(position)
         t += timedelta(hours=cadence)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
@@ -106,11 +106,11 @@ def get_planet_positions_hourly(start, end, planet, cadence, dist_unit='au', ang
     return df_positions
 
 
-def get_planet_positions_minute(start, end, planet, cadence, dist_unit='au', ang_unit='deg'):
+def get_planet_positions_minute(start, end, planet, coord_sys, cadence, dist_unit='au', ang_unit='deg'):
     t = start
     positions = []
     while t < end:
-        position = get_planet_pos(t, planet)
+        position = get_planet_pos(t, planet, coord_sys)
         positions.append(position)
         t += timedelta(minutes=cadence)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
