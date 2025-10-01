@@ -216,6 +216,11 @@ def HAE_to_HEE_alt(df):
 
 
 def HAE_to_HEEQ(df):
+    df_transformed = perform_transform(df, 'ECLIPJ2000', 'HEEQ')
+    return df_transformed
+
+
+def HAE_to_HEEQ_alt(df):
     timeseries = df.time
     HAE = np.vstack((df.x, df.y, df.z)).T
     transformation_matrices = np.array([get_heliocentric_transformation_matrices(t)[1] for t in timeseries])
@@ -232,6 +237,11 @@ def HAE_to_HEEQ(df):
 
 
 def HEEQ_to_HAE(df):
+    df_transformed = perform_transform(df, 'HEEQ', 'ECLIPJ2000')
+    return df_transformed
+
+
+def HEEQ_to_HAE_alt(df):
     timeseries = df.time
     HEEQ = np.vstack((df.x, df.y, df.z)).T
     transformation_matrices = np.array([np.linalg.inv(get_heliocentric_transformation_matrices(t)[1]) for t in timeseries])
