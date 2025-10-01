@@ -174,6 +174,11 @@ Heliocentric position conversions
 
 
 def HEE_to_HAE(df):
+    df_transformed = perform_transform(df, 'HEE', 'ECLIPJ2000')
+    return df_transformed
+
+
+def HEE_to_HAE_alt(df):
     timeseries = df.time
     HEE = np.vstack((df.x, df.y, df.z)).T
     transformation_matrices = np.array([np.linalg.inv(get_heliocentric_transformation_matrices(t)[0]) for t in timeseries])
@@ -190,6 +195,11 @@ def HEE_to_HAE(df):
 
 
 def HAE_to_HEE(df):
+    df_transformed = perform_transform(df, 'ECLIPJ2000', 'HEE')
+    return df_transformed
+
+
+def HAE_to_HEE_alt(df):
     timeseries = df.time
     HAE = np.vstack((df.x, df.y, df.z)).T
     transformation_matrices = np.array([get_heliocentric_transformation_matrices(t)[0] for t in timeseries])
