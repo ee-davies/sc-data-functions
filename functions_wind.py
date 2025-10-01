@@ -588,12 +588,10 @@ def get_wind_positions(start_timestamp, end_timestamp, coord_sys='GSE', path=win
         df_hee = pos_transform.GSE_to_HEE(df)
         return df_hee
     elif coord_sys2 == 'HEEQ':
-        df_hee = pos_transform.GSE_to_HEE(df)
-        df_heeq = pos_transform.perform_transform(df_hee, 'HEE', 'HEEQ')
+        df_heeq = pos_transform.GSE_to_HEEQ(df)
         return df_heeq
     elif coord_sys2 == 'HAE':
-        df_hee = pos_transform.GSE_to_HEE(df)
-        df_hae = pos_transform.perform_transform(df_hee, 'HEE', 'ECLIPJ2000')
+        df_hae = pos_transform.GSE_to_HAE(df)
         return df_hae
     else:
         return df
