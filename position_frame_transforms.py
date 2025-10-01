@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import itertools
 import spiceypy
 import os.path
-
+import functions_planets as planets
 
 def cart2sphere(x,y,z):
     r = np.sqrt(x**2+ y**2 + z**2) /1.495978707E8         
@@ -296,6 +296,25 @@ def get_rsun_position(time):
 
 
 def GSE_to_HEE(df):
+    generic_furnish()
+    timeseries = df.time
+    earth_hee = planets.get_planet_positions(df.time, 'EARTH BARYCENTER', 'HEE')
+    spice_gse_to_hee = perform_transform(df, 'GSE', 'HEE')
+    x = np.array(earth_hee.x) + np.array(spice_gse_to_hee.x)
+    y = np.array(earth_hee.y) + np.array(spice_gse_to_hee.y)
+    z = np.array(earth_hee.z) + np.array(spice_gse_to_hee.z)
+    r, lat, lon = cart2sphere(x,y,z)
+    df_transformed = pd.concat([timeseries], axis=1)
+    df_transformed['x'] = x
+    df_transformed['y'] = y
+    df_transformed['z'] = z
+    df_transformed['r'] = r
+    df_transformed['lat'] = lat
+    df_transformed['lon'] = lon
+    return df_transformed
+
+
+def GSE_to_HEE_alt(df):
     timeseries = df.time
     r_suns = []
     for t in timeseries:
@@ -349,14 +368,14 @@ def get_transform(epoch: datetime, base_frame: str, to_frame: str):
     transform = spiceypy.pxform(base_frame, to_frame, spiceypy.datetime2et(epoch))
     return transform
 
-
+#DO NOT USE DIRECTLY FOR GEOCENTRIC TO HELIOCENTRIC CONVERSIONS, SUN-EARTH DIST IS NOT ADDED
 def perform_transform(df, base_frame: str, to_frame: str):
     generic_furnish()
     timeseries = df.time
     BASE = np.vstack((df.x, df.y, df.z)).T
     transformation_matrices = np.array([get_transform(t, base_frame, to_frame) for t in timeseries])
     TO = np.einsum('ijk,ik->ij', transformation_matrices, BASE)
-    r, lat, lon = cart2sphere(TO[:,0],TO[:,1],TO[:,2]) #r is not right with this conversion for geocentric to heliocentric conversions
+    r, lat, lon = cart2sphere(TO[:,0],TO[:,1],TO[:,2])
     df_transformed = pd.concat([timeseries], axis=1)
     df_transformed['x'] = TO[:,0]
     df_transformed['y'] = TO[:,1]
@@ -366,3 +385,4 @@ def perform_transform(df, base_frame: str, to_frame: str):
     df_transformed['lon'] = lon
     spiceypy.kclear()
     return df_transformed
+
