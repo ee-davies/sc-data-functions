@@ -408,6 +408,18 @@ def HEEQ_to_GSE(df):
     return df_GSE
 
 
+def GSE_to_HAE(df):
+    df_HEE = GSE_to_HEE(df)
+    df_HAE = HEE_to_HAE(df_HEE)
+    return df_HAE
+
+
+def HAE_to_GSE(df):
+    df_HEE = HAE_to_HEE(df)
+    df_GSE = HEE_to_GSE(df_HEE)
+    return df_GSE
+
+
 """
 Transform matrices directly from spice kernels
 #requires furnishing with generic kernels 
