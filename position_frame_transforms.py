@@ -331,7 +331,25 @@ def GSE_to_HEE_alt(df):
     return df_transformed
 
 
-def HEE_to_GSE(df): #same as GSE_to_HEE, included for simplicity
+def HEE_to_GSE(df):
+    timeseries = df.time
+    earth_hee = planets.get_planet_positions(df.time, 'EARTH BARYCENTER', 'HEE')
+    spice_hee_to_gse = perform_transform(df, 'HEE', 'GSE')
+    x = np.array(earth_hee.x) + np.array(spice_hee_to_gse.x)
+    y = np.array(earth_hee.y) + np.array(spice_hee_to_gse.y)
+    z = np.array(spice_hee_to_gse.z) - np.array(earth_hee.z)
+    r, lat, lon = cart2sphere(x,y,z)
+    df_transformed = pd.concat([timeseries], axis=1)
+    df_transformed['x'] = x
+    df_transformed['y'] = y
+    df_transformed['z'] = z
+    df_transformed['r'] = r
+    df_transformed['lat'] = lat
+    df_transformed['lon'] = lon
+    return df_transformed
+
+
+def HEE_to_GSE_alt(df): #same as GSE_to_HEE, included for simplicity
     timeseries = df.time
     r_suns = []
     for t in timeseries:
