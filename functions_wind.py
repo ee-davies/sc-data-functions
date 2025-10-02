@@ -68,7 +68,10 @@ WIND DOWNLOAD DATA
 """
 
 
-def download_wind_orb(start_timestamp, end_timestamp, path=wind_path+'orbit/'):
+def download_wind_orb(start_timestamp, end_timestamp, path=wind_path):
+    path = path+'orbit/'
+    if not os.path.exists(path):
+        os.makedirs(path)
     start = start_timestamp.date()
     end = end_timestamp.date() + timedelta(days=1)
     while start < end:
@@ -91,7 +94,10 @@ def download_wind_orb(start_timestamp, end_timestamp, path=wind_path+'orbit/'):
         start += timedelta(days=1)
 
 
-def download_wind_mag_rtn(start_timestamp, end_timestamp, path=wind_path+'mfi/rtn/'):
+def download_wind_mag_rtn(start_timestamp, end_timestamp, path=wind_path):
+    path = path+'mfi/rtn/'
+    if not os.path.exists(path):
+        os.makedirs(path)
     start = start_timestamp.date()
     end = end_timestamp.date() + timedelta(days=1)
     while start < end:
@@ -114,7 +120,10 @@ def download_wind_mag_rtn(start_timestamp, end_timestamp, path=wind_path+'mfi/rt
         start += timedelta(days=1)
         
 
-def download_wind_mag_h0(start_timestamp, end_timestamp, path=wind_path+'mfi/h0/'):
+def download_wind_mag_h0(start_timestamp, end_timestamp, path=wind_path):
+    path = path+'mfi/h0/'
+    if not os.path.exists(path):
+        os.makedirs(path)
     start = start_timestamp.date()
     end = end_timestamp.date() + timedelta(days=1)
     while start < end:
@@ -137,7 +146,10 @@ def download_wind_mag_h0(start_timestamp, end_timestamp, path=wind_path+'mfi/h0/
         start += timedelta(days=1)
 
 
-def download_wind_swe(start_timestamp, end_timestamp, path=wind_path+'swe/h1/'):
+def download_wind_swe(start_timestamp, end_timestamp, path=wind_path):
+    path = path+'swe/h1/'
+    if not os.path.exists(path):
+        os.makedirs(path)
     start = start_timestamp.date()
     end = end_timestamp.date() + timedelta(days=1)
     while start < end:
@@ -160,7 +172,10 @@ def download_wind_swe(start_timestamp, end_timestamp, path=wind_path+'swe/h1/'):
         start += timedelta(days=1)
 
 
-def download_wind_swe_rtn(start_timestamp, end_timestamp, path=wind_path+'swe/rtn/'):
+def download_wind_swe_rtn(start_timestamp, end_timestamp, path=wind_path):
+    path = path+'swe/rtn/'
+    if not os.path.exists(path):
+        os.makedirs(path)
     start = start_timestamp.date()
     end = end_timestamp.date() + timedelta(days=1)
     while start < end:
