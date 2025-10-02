@@ -49,7 +49,7 @@ def filter_bad_col(df, col, bad_val): #filter by individual columns
         mask_vals = df[col] < bad_val  # boolean mask for all bad values
     else:
         mask_vals = df[col] > bad_val  # boolean mask for all bad values
-    df[col].mask(mask_vals, inplace=True)
+    df[col].mask(mask_vals)
     return df
 
 
