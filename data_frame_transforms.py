@@ -233,6 +233,41 @@ def GSM_to_GSE_plas(df):
     return df_transformed
 
 
+def GSM_to_GSE(df):
+    # Get all transformation matrices at once
+    times = df['time'].values
+    T3_matrices = np.array([get_geocentric_transformation_matrices(t)[2] for t in times])
+    # Compute inverse matrices for all T3 matrices at once
+    T3_inv_matrices = np.linalg.inv(T3_matrices)
+    # Create coordinate matrix (N x 3) where N is number of rows
+    b_coords = np.column_stack([df['bx'].values, df['by'].values, df['bz'].values])
+    v_coords = np.column_stack([df['vx'].values, df['vy'].values, df['vz'].values])
+    B_GSE_coords = np.einsum('ijk,ik->ij', T3_inv_matrices, b_coords)
+    V_GSE_coords = np.einsum('ijk,ik->ij', T3_inv_matrices, v_coords)
+    bx, by, bz = B_GSE_coords[:, 0], B_GSE_coords[:, 1], B_GSE_coords[:, 2]
+    vx, vy, vz = V_GSE_coords[:, 0], V_GSE_coords[:, 1], V_GSE_coords[:, 2]
+    df_transformed = pd.DataFrame({
+        'time': df['time'].values,
+        'bt': df['bt'],
+        'bx': bx,
+        'by': by, 
+        'bz': bz,
+        'vt': df['vt'],
+        'vx': vx,
+        'vy': vy, 
+        'vz': vz,
+        'tp': df['tp'],
+        'np': df['np'],
+        'x': df['x'], #positions remain unchanged as this is a data transform, not position
+        'y': df['y'],
+        'z': df['z'],
+        'r': df['r'],
+        'lat': df['lat'],
+        'lon': df['lon']
+    })
+    return df_transformed
+
+
 """
 Geocentric to RTN frame conversions
 """
