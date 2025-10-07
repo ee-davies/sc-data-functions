@@ -737,6 +737,12 @@ def RTN_to_GSM(df_rtn):
     return df_gsm
 
 
+"""
+Transform matrices directly from spice kernels
+#requires furnishing with generic kernels 
+"""
+
+
 def generic_furnish():
     """Main"""
     kernels_path='/Volumes/External/data/kernels/'
@@ -782,3 +788,34 @@ def perform_plas_transform(df, base_frame: str, to_frame: str):
     df_transformed['np'] = df.np
     spiceypy.kclear()
     return df_transformed
+
+
+def perform_transform(df, base_frame: str, to_frame: str):
+    generic_furnish()
+    timeseries = df.time
+    B_BASE = np.vstack((df.bx, df.by, df.bz)).T
+    V_BASE = np.vstack((df.vx, df.vy, df.vz)).T
+    transformation_matrices = np.array([get_transform(t, base_frame, to_frame) for t in timeseries])
+    B_TO = np.einsum('ijk,ik->ij', transformation_matrices, B_BASE)
+    V_TO = np.einsum('ijk,ik->ij', transformation_matrices, V_BASE)
+    df_transformed = pd.concat([timeseries], axis=1)
+    df_transformed['bt'] = df.bt
+    df_transformed['bx'] = B_TO[:,0]
+    df_transformed['by'] = B_TO[:,1]
+    df_transformed['bz'] = B_TO[:,2]
+    df_transformed['vt'] = df.vt
+    df_transformed['vx'] = V_TO[:,0]
+    df_transformed['vy'] = V_TO[:,1]
+    df_transformed['vz'] = V_TO[:,2]
+    df_transformed['tp'] = df.tp
+    df_transformed['np'] = df.np
+    df_transformed['x'] = df['x'] #positions same: no transform applied
+    df_transformed['y'] = df['y']
+    df_transformed['z'] = df['z']
+    df_transformed['y'] = df['y']
+    df_transformed['r'] = df['r']
+    df_transformed['lat'] = df['lat']
+    df_transformed['lon'] = df['lon']
+    spiceypy.kclear()
+    return df_transformed
+
