@@ -338,6 +338,29 @@ def GSE_to_HEE_plas(df):
     return df_transformed
 
 
+def GSE_to_HEE(df):
+    df_transformed = pd.DataFrame({
+        'time': df['time'].values,
+        'bt': df['bt'],
+        'bx': -df['bx'],
+        'by': -df['by'], 
+        'bz': df['bz'],
+        'vt': df['vt'],
+        'vx': -df['vx'],
+        'vy': -df['vy'], 
+        'vz': df['vz'],
+        'tp': df['tp'],
+        'np': df['np'],
+        'x': df['x'], #positions remain unchanged as this is a data transform, not position
+        'y': df['y'],
+        'z': df['z'],
+        'r': df['r'],
+        'lat': df['lat'],
+        'lon': df['lon']
+    })
+    return df_transformed
+
+
 def HEE_to_GSE_mag(df):
     df_transformed = pd.DataFrame({
         'time': df['time'].values,
