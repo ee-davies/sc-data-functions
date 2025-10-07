@@ -223,7 +223,7 @@ def get_windmag_gse(fp):
     return df
 
 
-def get_windmag_gse_range(start_timestamp, end_timestamp, path=wind_path+'mfi/h0'):
+def get_windmag_gse_range(start_timestamp, end_timestamp, path=wind_path):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df = None
@@ -233,7 +233,7 @@ def get_windmag_gse_range(start_timestamp, end_timestamp, path=wind_path+'mfi/h0
         year = start.year
         date_str = f'{year}{start.month:02}{start.day:02}'       
         try:
-            fn = glob.glob(f'{path}/wi_h0_mfi_{date_str}*.cdf')[0]
+            fn = glob.glob(f'{path}mfi/h0/wi_h0_mfi_{date_str}*.cdf')[0]
             _df = get_windmag_gse(fn)
             if _df is not None:
                 if df is None:
@@ -266,7 +266,7 @@ def get_windmag_gsm(fp):
     return df
 
 
-def get_windmag_gsm_range(start_timestamp, end_timestamp, path=wind_path+'mfi/h0'):
+def get_windmag_gsm_range(start_timestamp, end_timestamp, path=wind_path):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df = None
@@ -276,7 +276,7 @@ def get_windmag_gsm_range(start_timestamp, end_timestamp, path=wind_path+'mfi/h0
         year = start.year
         date_str = f'{year}{start.month:02}{start.day:02}'
         try:
-            fn = glob.glob(f'{path}/wi_h0_mfi_{date_str}*.cdf')[0]
+            fn = glob.glob(f'{path}mfi/h0/wi_h0_mfi_{date_str}*.cdf')[0]
             _df = get_windmag_gsm(fn)
             if _df is not None:
                 if df is None:
@@ -309,7 +309,7 @@ def get_windmag_rtn(fp):
     return df
 
 
-def get_windmag_rtn_range(start_timestamp, end_timestamp, path=wind_path+'mfi/rtn'):
+def get_windmag_rtn_range(start_timestamp, end_timestamp, path=wind_path):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df = None
@@ -318,7 +318,7 @@ def get_windmag_rtn_range(start_timestamp, end_timestamp, path=wind_path+'mfi/rt
     while start < end:
         date_str = f'{start.year}{start.month:02}{start.day:02}'
         try:
-            fn = glob.glob(f'{path}/wi_h3-rtn_mfi_{date_str}*')[0]
+            fn = glob.glob(f'{path}mfi/rtn/wi_h3-rtn_mfi_{date_str}*')[0]
             _df = get_windmag_rtn(fn)
             if _df is not None:
                 if df is None:
@@ -442,7 +442,7 @@ def get_windswe_gse(fp): #choice between nonlin or moments
     return df
 
 
-def get_windswe_gse_range(start_timestamp, end_timestamp, path=wind_path+'swe/h1'):
+def get_windswe_gse_range(start_timestamp, end_timestamp, path=wind_path):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df = None
@@ -451,7 +451,7 @@ def get_windswe_gse_range(start_timestamp, end_timestamp, path=wind_path+'swe/h1
     while start <= end:
         date_str = f'{start.year}{start.month:02}{start.day:02}'
         try:
-            fn = glob.glob(f'{path}/wi_h1_swe_{date_str}*')[0]
+            fn = glob.glob(f'{path}swe/h1/wi_h1_swe_{date_str}*')[0]
             _df = get_windswe_gse(fn)
             if _df is not None:
                 if df is None:
@@ -493,7 +493,7 @@ def get_windswe_rtn_range(start_timestamp, end_timestamp, path=wind_path):
     while start <= end:
         date_str = f'{start.year}{start.month:02}{start.day:02}'
         try:
-            fn = glob.glob(f'{path}/swe/rtn/wi_h1_swe_rtn_{date_str}*')[0]
+            fn = glob.glob(f'{path}swe/rtn/wi_h1_swe_rtn_{date_str}*')[0]
             _df = get_windswe_rtn(fn)
             if _df is not None:
                 if df is None:
@@ -503,9 +503,9 @@ def get_windswe_rtn_range(start_timestamp, end_timestamp, path=wind_path):
         except Exception as e:
             print('ERROR:', e, f'. wi_h1_swe_rtn_{date_str} does not exist, converting from wi_h1_swe_{date_str} (GSE) instead...')
             try:
-                fn_swe = glob.glob(f'{path}/swe/h1/wi_h1_swe_{date_str}*')[0]
+                fn_swe = glob.glob(f'{path}swe/h1/wi_h1_swe_{date_str}*')[0]
                 _df_swe = get_windswe_gse(fn_swe)
-                fn_pos = glob.glob(f'{path}/orbit/wi_or_pre_{date_str}*')[0]
+                fn_pos = glob.glob(f'{path}orbit/wi_or_pre_{date_str}*')[0]
                 _df_pos = get_wind_pos(fn_pos, 'GSE')
                 _df = windswe_gse_to_rtn(_df_swe, _df_pos)
                 if _df is not None:
