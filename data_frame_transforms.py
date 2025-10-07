@@ -548,14 +548,24 @@ def HEEQ_to_HAE_alt(df):
 
 
 def HEE_to_HEEQ(df):
-    df_hae = HEE_to_HAE(df)
-    df_transformed = HAE_to_HEEQ(df_hae)
+    df_transformed = perform_transform(df, 'HEE', 'HEEQ')
+    return df_transformed
+
+
+def HEE_to_HEEQ_alt(df):
+    df_hae = HEE_to_HAE_alt(df)
+    df_transformed = HAE_to_HEEQ_alt(df_hae)
     return df_transformed
 
 
 def HEEQ_to_HEE(df):
-    df_hae = HEEQ_to_HAE(df)
-    df_transformed = HAE_to_HEE(df_hae)
+    df_transformed = perform_transform(df, 'HEEQ', 'HEE')
+    return df_transformed
+
+
+def HEEQ_to_HEE_alt(df):
+    df_hae = HEEQ_to_HAE_alt(df)
+    df_transformed = HAE_to_HEE_alt(df_hae)
     return df_transformed
 
 
