@@ -147,8 +147,8 @@ def GSE_to_GSM_plas(df):
         'vx': vx,
         'vy': vy, 
         'vz': vz,
-        'tp': df['tp'],
         'np': df['np'],
+        'tp': df['tp'],
     })
     return df_transformed
 
@@ -173,8 +173,8 @@ def GSE_to_GSM(df):
         'vx': vx,
         'vy': vy, 
         'vz': vz,
-        'tp': df['tp'],
         'np': df['np'],
+        'tp': df['tp'],
         'x': df['x'], #positions remain unchanged as this is a data transform, not position
         'y': df['y'],
         'z': df['z'],
@@ -227,8 +227,8 @@ def GSM_to_GSE_plas(df):
         'vx': vx,
         'vy': vy, 
         'vz': vz,
-        'tp': df['tp'],
         'np': df['np'],
+        'tp': df['tp'],
     })
     return df_transformed
 
@@ -256,8 +256,8 @@ def GSM_to_GSE(df):
         'vx': vx,
         'vy': vy, 
         'vz': vz,
-        'tp': df['tp'],
         'np': df['np'],
+        'tp': df['tp'],
         'x': df['x'], #positions remain unchanged as this is a data transform, not position
         'y': df['y'],
         'z': df['z'],
@@ -291,8 +291,8 @@ def GSE_to_RTN_approx_plas(df):
         'vx': -df['vx'],
         'vy': -df['vy'], 
         'vz': df['vz'],
-        'tp': df['tp'],
         'np': df['np'],
+        'tp': df['tp'],
     })
     return df_transformed
 
@@ -332,8 +332,8 @@ def GSE_to_HEE_plas(df):
         'vx': -df['vx'],
         'vy': -df['vy'], 
         'vz': df['vz'],
-        'tp': df['tp'],
         'np': df['np'],
+        'tp': df['tp'],
     })
     return df_transformed
 
@@ -349,8 +349,8 @@ def GSE_to_HEE(df):
         'vx': -df['vx'],
         'vy': -df['vy'], 
         'vz': df['vz'],
-        'tp': df['tp'],
         'np': df['np'],
+        'tp': df['tp'],
         'x': df['x'], #positions remain unchanged as this is a data transform, not position
         'y': df['y'],
         'z': df['z'],
@@ -379,8 +379,8 @@ def HEE_to_GSE_plas(df):
         'vx': -df['vx'],
         'vy': -df['vy'], 
         'vz': df['vz'],
-        'tp': df['tp'],
         'np': df['np'],
+        'tp': df['tp'],
     })
     return df_transformed
 
@@ -396,8 +396,8 @@ def HEE_to_GSE(df):
         'vx': -df['vx'],
         'vy': -df['vy'], 
         'vz': df['vz'],
-        'tp': df['tp'],
         'np': df['np'],
+        'tp': df['tp'],
         'x': df['x'], #positions remain unchanged as this is a data transform, not position
         'y': df['y'],
         'z': df['z'],
@@ -414,6 +414,11 @@ Heliocentric frame conversions
 
 
 def HEE_to_HAE(df):
+    df_transformed = perform_transform(df, 'HEE', 'ECLIPJ2000')
+    return df_transformed
+
+
+def HEE_to_HAE_alt(df):
     B_HAE = []
     for i in range(df.shape[0]):
         S1, S2 = get_heliocentric_transformation_matrices(df['time'].iloc[i])
