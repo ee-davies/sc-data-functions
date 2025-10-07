@@ -269,7 +269,7 @@ def GSM_to_GSE(df):
 
 
 """
-Geocentric to RTN frame conversions
+Geocentric to approximate RTN frame conversions
 """
 
 
@@ -405,6 +405,26 @@ def HEE_to_GSE(df):
         'lat': df['lat'],
         'lon': df['lon']
     })
+    return df_transformed
+
+
+def GSE_to_HAE(df):
+    df_transformed = perform_transform(df, 'GSE', 'ECLIPJ2000')
+    return df_transformed
+
+
+def HAE_to_GSE(df):
+    df_transformed = perform_transform(df, 'ECLIPJ2000', 'GSE')
+    return df_transformed
+
+
+def GSE_to_HEEQ(df):
+    df_transformed = perform_transform(df, 'GSE', 'HEEQ')
+    return df_transformed
+
+
+def HEEQ_to_GSE(df):
+    df_transformed = perform_transform(df, 'HEEQ', 'GSE')
     return df_transformed
 
 
@@ -750,8 +770,8 @@ def RTN_to_HAE(df_rtn):
 
 
 def RTN_to_HEE(df_rtn):
-    df_hae = RTN_to_HAE(df_rtn)
-    df_hee = HAE_to_HEE(df_hae)
+    df_heeq = RTN_to_HEEQ(df_rtn)
+    df_hee = HEEQ_to_HEE(df_heeq)
     return df_hee
 
 
