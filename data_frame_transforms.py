@@ -766,7 +766,13 @@ def RTN_to_HEEQ(df):
 def RTN_to_HAE(df_rtn):
     df_heeq = RTN_to_HEEQ(df_rtn)
     df_hae = HEEQ_to_HAE(df_heeq)
-    return df_hae
+    return 
+
+
+def HAE_to_RTN(df_hae):
+    df_heeq = HAE_to_HEEQ(df_hae)
+    df_rtn = HEEQ_to_RTN(df_heeq)
+    return df_rtn
 
 
 def RTN_to_HEE(df_rtn):
@@ -775,16 +781,34 @@ def RTN_to_HEE(df_rtn):
     return df_hee
 
 
+def HEE_to_RTN(df_hee):
+    df_heeq = HEE_to_HEEQ(df_hee)
+    df_rtn = HEEQ_to_RTN(df_heeq)
+    return df_rtn
+
+
 def RTN_to_GSE(df_rtn):
-    df_hee = RTN_to_HEE(df_rtn)
-    df_gse = HEE_to_GSE(df_hee)
+    df_heeq = RTN_to_HEEQ(df_rtn)
+    df_gse = HEEQ_to_GSE(df_heeq)
     return df_gse
+
+
+def GSE_to_RTN(df_gse):
+    df_heeq = GSE_to_HEEQ(df_gse)
+    df_rtn = HEEQ_to_RTN(df_heeq)
+    return df_rtn
 
 
 def RTN_to_GSM(df_rtn):
     df_gse = RTN_to_GSE(df_rtn)
     df_gsm = GSE_to_GSM(df_gse)
     return df_gsm
+
+
+def GSM_to_RTN(df_gsm):
+    df_gse = GSM_to_GSE(df_gsm)
+    df_rtn = GSE_to_RTN(df_gse)
+    return df_rtn
 
 
 """
