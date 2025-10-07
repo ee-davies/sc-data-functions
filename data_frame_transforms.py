@@ -481,6 +481,11 @@ def HAE_to_HEE_alt(df):
 
 
 def HAE_to_HEEQ(df):
+    df_transformed = perform_transform(df, 'ECLIPJ2000', 'HEEQ')
+    return df_transformed
+
+
+def HAE_to_HEEQ_alt(df):
     B_HEEQ = []
     for i in range(df.shape[0]):
         S1, S2 = get_heliocentric_transformation_matrices(df['time'].iloc[i])
@@ -509,6 +514,11 @@ def HAE_to_HEEQ(df):
 
 
 def HEEQ_to_HAE(df):
+    df_transformed = perform_transform(df, 'HEEQ', 'ECLIPJ2000')
+    return df_transformed
+
+
+def HEEQ_to_HAE_alt(df):
     B_HAE = []
     for i in range(df.shape[0]):
         S1, S2 = get_heliocentric_transformation_matrices(df['time'].iloc[i])
