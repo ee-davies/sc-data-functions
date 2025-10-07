@@ -651,20 +651,20 @@ def HEEQ_to_RTN(df):
     
     B_RTN = np.array(B_RTN)
     bx, by, bz = B_RTN[:, 0], B_RTN[:, 1], B_RTN[:, 2]
-    bt = np.linalg.norm([bx,by,bz], axis=0)
+    #bt = np.linalg.norm([bx,by,bz], axis=0)
 
     V_RTN = np.array(V_RTN)
     vx, vy, vz = V_RTN[:, 0], V_RTN[:, 1], V_RTN[:, 2]
-    vt = np.linalg.norm([vx,vy,vz], axis=0)
+    #vt = np.linalg.norm([vx,vy,vz], axis=0)
 
     # Create result DataFrame
     df_transformed = pd.DataFrame({
         'time': df['time'].values,
-        'bt': bt,
+        'bt': df['bt'],
         'bx': bx,
         'by': by, 
         'bz': bz,
-        'vt': vt,
+        'vt': df['vt'],
         'vx': vx,
         'vy': vy, 
         'vz': vz,
@@ -753,6 +753,7 @@ def RTN_to_HEEQ(df):
     heeq_y=[0,1,0]
     heeq_z=[0,0,1]
     B_HEEQ = []
+    V_HEEQ = []
     # go through all data points    
     for i in range(df.shape[0]):                
         #make normalized RTN unit vectors from spacecraft position in HEEQ basis
@@ -766,22 +767,42 @@ def RTN_to_HEEQ(df):
         bz_i=np.dot(np.dot(df['bx'].iloc[i],rtn_x)+np.dot(df['by'].iloc[i],rtn_y)+np.dot(df['bz'].iloc[i],rtn_z),heeq_z)
         B_HEEQ_i = [bx_i, by_i, bz_i]
         B_HEEQ.append(B_HEEQ_i)
-    df_transformed = pd.DataFrame(B_HEEQ, columns=['bx', 'by', 'bz'])
-    df_transformed['bt'] = np.linalg.norm(df_transformed[['bx', 'by', 'bz']], axis=1)
-    df_transformed['time'] = df['time']
-    df_transformed['vx'] = df['vx']
-    df_transformed['vy'] = df['vy']
-    df_transformed['vz'] = df['vz']
-    df_transformed['vt'] = df['vt']
-    df_transformed['np'] = df['np']
-    df_transformed['tp'] = df['tp']
-    df_transformed['x'] = df['x']
-    df_transformed['y'] = df['y']
-    df_transformed['z'] = df['z']
-    df_transformed['y'] = df['y']
-    df_transformed['r'] = df['r']
-    df_transformed['lat'] = df['lat']
-    df_transformed['lon'] = df['lon']
+
+        vx_i=np.dot(np.dot(df['vx'].iloc[i],rtn_x)+np.dot(df['vy'].iloc[i],rtn_y)+np.dot(df['vz'].iloc[i],rtn_z),heeq_x)
+        vy_i=np.dot(np.dot(df['vx'].iloc[i],rtn_x)+np.dot(df['vy'].iloc[i],rtn_y)+np.dot(df['vz'].iloc[i],rtn_z),heeq_y)
+        vz_i=np.dot(np.dot(df['vx'].iloc[i],rtn_x)+np.dot(df['vy'].iloc[i],rtn_y)+np.dot(df['vz'].iloc[i],rtn_z),heeq_z)
+        V_HEEQ_i = [vx_i, vy_i, vz_i]
+        V_HEEQ.append(V_HEEQ_i)
+
+    B_HEEQ = np.array(B_HEEQ)
+    bx, by, bz = B_HEEQ[:, 0], B_HEEQ[:, 1], B_HEEQ[:, 2]
+    #bt = np.linalg.norm([bx,by,bz], axis=0)
+
+    V_HEEQ = np.array(V_HEEQ)
+    vx, vy, vz = V_HEEQ[:, 0], V_HEEQ[:, 1], V_HEEQ[:, 2]
+    #vt = np.linalg.norm([vx,vy,vz], axis=0)
+
+    # Create result DataFrame
+    df_transformed = pd.DataFrame({
+        'time': df['time'].values,
+        'bt': df['bt'],
+        'bx': bx,
+        'by': by, 
+        'bz': bz,
+        'vt': df['vt'],
+        'vx': vx,
+        'vy': vy, 
+        'vz': vz,
+        'np': df['np'],
+        'tp': df['tp'],
+        'x': df['x'],
+        'y': df['y'],
+        'z': df['z'],
+        'y': df['y'],
+        'r': df['r'],
+        'lat': df['lat'],
+        'lon': df['lon'],
+    })
     return df_transformed
 
 
