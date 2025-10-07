@@ -741,8 +741,8 @@ def HEEQ_to_RTN_plas(df):
         'vx': vx,
         'vy': vy, 
         'vz': vz,
-        'tp': df['tp'],
         'np': df['np'],
+        'tp': df['tp'],
     })
     return df_transformed
 
@@ -901,8 +901,8 @@ def perform_plas_transform(df, base_frame: str, to_frame: str):
     df_transformed['vx'] = TO[:,0]
     df_transformed['vy'] = TO[:,1]
     df_transformed['vz'] = TO[:,2]
-    df_transformed['tp'] = df.tp
     df_transformed['np'] = df.np
+    df_transformed['tp'] = df.tp
     spiceypy.kclear()
     return df_transformed
 
@@ -924,8 +924,8 @@ def perform_transform(df, base_frame: str, to_frame: str):
     df_transformed['vx'] = V_TO[:,0]
     df_transformed['vy'] = V_TO[:,1]
     df_transformed['vz'] = V_TO[:,2]
-    df_transformed['tp'] = df.tp
     df_transformed['np'] = df.np
+    df_transformed['tp'] = df.tp
     df_transformed['x'] = df['x'] #positions same: no transform applied
     df_transformed['y'] = df['y']
     df_transformed['z'] = df['z']
