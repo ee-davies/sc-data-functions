@@ -382,11 +382,18 @@ def GSM_to_RTN_approx_plas(df):
 ############################################
 ############################################
 
-
 """
 Geocentric - Heliocentric frame conversions
 """
 
+############################################
+############################################
+# GSE_to_HEE_mag for separate components, useful for transforming arrays without pandas overhead
+def GSE_to_HEE_mag_components(bx, by, bz):
+    bx_hee = -bx
+    by_hee = -by
+    bz_hee = bz
+    return bx_hee, by_hee, bz_hee
 
 def GSE_to_HEE_mag(df):
     df_transformed = pd.DataFrame({
@@ -397,7 +404,19 @@ def GSE_to_HEE_mag(df):
         'bz': df['bz'],
     })
     return df_transformed
+############################################
+############################################
 
+
+
+############################################
+############################################
+# GSE_to_HEE_plas for separate components, useful for transforming arrays without pandas overhead
+def GSE_to_HEE_plas_components(vx, vy, vz):
+    vx_hee = -vx
+    vy_hee = -vy
+    vz_hee = vz
+    return vx_hee, vy_hee, vz_hee
 
 def GSE_to_HEE_plas(df):
     df_transformed = pd.DataFrame({
@@ -410,8 +429,13 @@ def GSE_to_HEE_plas(df):
         'tp': df['tp'],
     })
     return df_transformed
+############################################
+############################################
 
 
+
+############################################
+############################################
 def GSE_to_HEE(df):
     df_transformed = pd.DataFrame({
         'time': df['time'].values,
@@ -433,6 +457,8 @@ def GSE_to_HEE(df):
         'lon': df['lon']
     })
     return df_transformed
+############################################
+############################################
 
 
 def HEE_to_GSE_mag(df):
