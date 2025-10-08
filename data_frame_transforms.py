@@ -119,15 +119,15 @@ def GSE_to_GSM_mag_components(bx, by, bz, times):
     # Vectorized matrix multiplication using einsum
     # 'ijk,ik->ij' means: for each i, multiply matrix T3_matrices[i] with vector coords[i,:]
     GSM_coords = np.einsum('ijk,ik->ij', T3_matrices, coords)
-    bx_gsm, by_gsm, bz_gsm = GSM_coords[:, 0], GSM_coords[:, 1], GSM_coords[:, 2]
-    return bx_gsm, by_gsm, bz_gsm
+    bx, by, bz = GSM_coords[:, 0], GSM_coords[:, 1], GSM_coords[:, 2]
+    return bx, by, bz
 
 def GSE_to_GSM_mag(df):
     times = df['time'].values
     bx, by, bz = GSE_to_GSM_mag_components(df['bx'].values, df['by'].values, df['bz'].values, times)
     # Create result DataFrame
     df_transformed = pd.DataFrame({
-        'time': df['time'].values,
+        'time': times,
         'bt': df['bt'],
         'bx': bx,
         'by': by, 
@@ -152,13 +152,12 @@ def GSE_to_GSM_plas_components(vx, vy, vz, times):
     vx, vy, vz = GSM_coords[:, 0], GSM_coords[:, 1], GSM_coords[:, 2]
     return vx, vy, vz
 
-
 def GSE_to_GSM_plas(df):
     times = df['time'].values
     vx, vy, vz = GSE_to_GSM_plas_components(df['vx'].values, df['vy'].values, df['vz'].values, times)
     # Create result DataFrame
     df_transformed = pd.DataFrame({
-        'time': df['time'].values,
+        'time': times,
         'vt': df['vt'],
         'vx': vx,
         'vy': vy, 
@@ -203,32 +202,43 @@ def GSE_to_GSM(df):
 ############################################
 
 
-def GSM_to_GSE_mag(df):
-    # Get all transformation matrices at once
-    times = df['time'].values
+############################################
+############################################
+# GSM_to_GSE_mag for separate components, useful for transforming arrays without pandas overhead
+def GSM_to_GSE_mag_components(bx, by, bz, times):
     T3_matrices = np.array([get_geocentric_transformation_matrices(t)[2] for t in times])
     # Compute inverse matrices for all T3 matrices at once
     T3_inv_matrices = np.linalg.inv(T3_matrices)
     # Create coordinate matrix (N x 3) where N is number of rows
-    coords = np.column_stack([df['bx'].values, df['by'].values, df['bz'].values])
+    coords = np.column_stack([bx, by, bz])
     # Vectorized matrix multiplication using einsum
     # 'ijk,ik->ij' means: for each i, multiply matrix T3_inv_matrices[i] with vector coords[i,:]
     GSE_coords = np.einsum('ijk,ik->ij', T3_inv_matrices, coords)
     bx, by, bz = GSE_coords[:, 0], GSE_coords[:, 1], GSE_coords[:, 2]
+    return bx, by, bz
+
+def GSM_to_GSE_mag(df):
+    # Get all transformation matrices at once
+    times = df['time'].values
+    bx, by, bz = GSM_to_GSE_mag_components(df['bx'].values, df['by'].values, df['bz'].values, times)
     # Create result DataFrame
     df_transformed = pd.DataFrame({
-        'time': df['time'].values,
+        'time': times,
         'bt': df['bt'],
         'bx': bx,
         'by': by, 
         'bz': bz,
     })
     return df_transformed
+############################################
+############################################
 
 
-def GSM_to_GSE_plas(df):
-    # Get all transformation matrices at once
-    times = df['time'].values
+
+############################################
+############################################
+# GSM_to_GSE_plas for separate components, useful for transforming arrays without pandas overhead
+def GSM_to_GSE_plas_components(vx, vy, vz, times):
     T3_matrices = np.array([get_geocentric_transformation_matrices(t)[2] for t in times])
     # Compute inverse matrices for all T3 matrices at once
     T3_inv_matrices = np.linalg.inv(T3_matrices)
@@ -238,9 +248,15 @@ def GSM_to_GSE_plas(df):
     # 'ijk,ik->ij' means: for each i, multiply matrix T3_inv_matrices[i] with vector coords[i,:]
     GSE_coords = np.einsum('ijk,ik->ij', T3_inv_matrices, coords)
     vx, vy, vz = GSE_coords[:, 0], GSE_coords[:, 1], GSE_coords[:, 2]
+    return vx, vy, vz
+
+def GSM_to_GSE_plas(df):
+    # Get all transformation matrices at once
+    times = df['time'].values
+    vx, vy, vz = GSM_to_GSE_plas_components(df['vx'].values, df['vy'].values, df['vz'].values, times)
     # Create result DataFrame
     df_transformed = pd.DataFrame({
-        'time': df['time'].values,
+        'time': times,
         'vt': df['vt'],
         'vx': vx,
         'vy': vy, 
@@ -249,21 +265,18 @@ def GSM_to_GSE_plas(df):
         'tp': df['tp'],
     })
     return df_transformed
+############################################
+############################################
 
 
+
+############################################
+############################################
 def GSM_to_GSE(df):
     # Get all transformation matrices at once
     times = df['time'].values
-    T3_matrices = np.array([get_geocentric_transformation_matrices(t)[2] for t in times])
-    # Compute inverse matrices for all T3 matrices at once
-    T3_inv_matrices = np.linalg.inv(T3_matrices)
-    # Create coordinate matrix (N x 3) where N is number of rows
-    b_coords = np.column_stack([df['bx'].values, df['by'].values, df['bz'].values])
-    v_coords = np.column_stack([df['vx'].values, df['vy'].values, df['vz'].values])
-    B_GSE_coords = np.einsum('ijk,ik->ij', T3_inv_matrices, b_coords)
-    V_GSE_coords = np.einsum('ijk,ik->ij', T3_inv_matrices, v_coords)
-    bx, by, bz = B_GSE_coords[:, 0], B_GSE_coords[:, 1], B_GSE_coords[:, 2]
-    vx, vy, vz = V_GSE_coords[:, 0], V_GSE_coords[:, 1], V_GSE_coords[:, 2]
+    bx, by, bz = GSM_to_GSE_mag_components(df['bx'].values, df['by'].values, df['bz'].values, times)
+    vx, vy, vz = GSM_to_GSE_plas_components(df['vx'].values, df['vy'].values, df['vz'].values, times)
     df_transformed = pd.DataFrame({
         'time': df['time'].values,
         'bt': df['bt'],
@@ -284,7 +297,8 @@ def GSM_to_GSE(df):
         'lon': df['lon']
     })
     return df_transformed
-
+############################################
+############################################
 
 """
 Geocentric to approximate RTN frame conversions
