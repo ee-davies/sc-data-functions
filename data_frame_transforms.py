@@ -461,6 +461,15 @@ def GSE_to_HEE(df):
 ############################################
 
 
+############################################
+############################################
+# HEE_to_GSE_mag for separate components, useful for transforming arrays without pandas overhead
+def HEE_to_GSE_mag_components(bx, by, bz):
+    bx_gse = -bx
+    by_gse = -by
+    bz_gse = bz
+    return bx_gse, by_gse, bz_gse
+
 def HEE_to_GSE_mag(df):
     df_transformed = pd.DataFrame({
         'time': df['time'].values,
@@ -470,7 +479,19 @@ def HEE_to_GSE_mag(df):
         'bz': df['bz'],
     })
     return df_transformed
+############################################
+############################################
 
+
+
+############################################
+############################################
+# HEE_to_GSE_plas for separate components, useful for transforming arrays without pandas overhead
+def HEE_to_GSE_plas_components(vx, vy, vz):
+    vx_gse = -vx
+    vy_gse = -vy
+    vz_gse = vz
+    return vx_gse, vy_gse, vz_gse
 
 def HEE_to_GSE_plas(df):
     df_transformed = pd.DataFrame({
@@ -483,8 +504,13 @@ def HEE_to_GSE_plas(df):
         'tp': df['tp'],
     })
     return df_transformed
+############################################
+############################################
 
 
+
+############################################
+############################################
 def HEE_to_GSE(df):
     df_transformed = pd.DataFrame({
         'time': df['time'].values,
@@ -506,6 +532,8 @@ def HEE_to_GSE(df):
         'lon': df['lon']
     })
     return df_transformed
+############################################
+############################################
 
 
 def GSE_to_HAE(df):
@@ -1047,12 +1075,10 @@ def GSM_to_RTN(df_gsm):
     df_rtn = GSE_to_RTN(df_gse)
     return df_rtn
 
-
 """
 Transform matrices directly from spice kernels
 #requires furnishing with generic kernels 
 """
-
 
 def generic_furnish():
     """Main"""
@@ -1062,62 +1088,78 @@ def generic_furnish():
     for kernel in generic_kernels:
         spiceypy.furnsh(os.path.join(generic_path, kernel))
 
-
 def get_transform(epoch: datetime, base_frame: str, to_frame: str):
     """Return transformation matrix at a given epoch."""
     transform = spiceypy.pxform(base_frame, to_frame, spiceypy.datetime2et(epoch))
     return transform
 
+##############################################
+##############################################
+def perform_transform_mag_components(bx, by, bz, timeseries, base_frame: str, to_frame: str):
+    generic_furnish()
+    B_BASE = np.vstack((bx, by, bz)).T
+    transformation_matrices = np.array([get_transform(t, base_frame, to_frame) for t in timeseries])
+    B_TO = np.einsum('ijk,ik->ij', transformation_matrices, B_BASE)
+    spiceypy.kclear()
+    return B_TO[:,0], B_TO[:,1], B_TO[:,2]
 
 def perform_mag_transform(df, base_frame: str, to_frame: str):
-    generic_furnish()
     timeseries = df.time
-    BASE = np.vstack((df.bx, df.by, df.bz)).T
-    transformation_matrices = np.array([get_transform(t, base_frame, to_frame) for t in timeseries])
-    TO = np.einsum('ijk,ik->ij', transformation_matrices, BASE)
+    bx, by, bz = perform_transform_mag_components(df.bx, df.by, df.bz, timeseries, base_frame, to_frame)
     df_transformed = pd.concat([timeseries], axis=1)
     df_transformed['bt'] = df.bt
-    df_transformed['bx'] = TO[:,0]
-    df_transformed['by'] = TO[:,1]
-    df_transformed['bz'] = TO[:,2]
+    df_transformed['bx'] = bx
+    df_transformed['by'] = by
+    df_transformed['bz'] = bz
     spiceypy.kclear()
     return df_transformed
+##############################################
+##############################################
 
+
+
+##############################################
+##############################################
+def perform_transform_plas_components(vx, vy, vz, timeseries, base_frame: str, to_frame: str):
+    generic_furnish()
+    V_BASE = np.vstack((vx, vy, vz)).T
+    transformation_matrices = np.array([get_transform(t, base_frame, to_frame) for t in timeseries])
+    V_TO = np.einsum('ijk,ik->ij', transformation_matrices, V_BASE)
+    spiceypy.kclear()
+    return V_TO[:,0], V_TO[:,1], V_TO[:,2]
 
 def perform_plas_transform(df, base_frame: str, to_frame: str):
-    generic_furnish()
     timeseries = df.time
-    BASE = np.vstack((df.vx, df.vy, df.vz)).T
-    transformation_matrices = np.array([get_transform(t, base_frame, to_frame) for t in timeseries])
-    TO = np.einsum('ijk,ik->ij', transformation_matrices, BASE)
+    vx, vy, vz = perform_transform_plas_components(df.vx, df.vy, df.vz, timeseries, base_frame, to_frame)
     df_transformed = pd.concat([timeseries], axis=1)
     df_transformed['vt'] = df.vt
-    df_transformed['vx'] = TO[:,0]
-    df_transformed['vy'] = TO[:,1]
-    df_transformed['vz'] = TO[:,2]
+    df_transformed['vx'] = vx
+    df_transformed['vy'] = vy
+    df_transformed['vz'] = vz
     df_transformed['np'] = df.np
     df_transformed['tp'] = df.tp
     spiceypy.kclear()
     return df_transformed
+##############################################
+##############################################
 
 
+
+##############################################
+##############################################
 def perform_transform(df, base_frame: str, to_frame: str):
-    generic_furnish()
     timeseries = df.time
-    B_BASE = np.vstack((df.bx, df.by, df.bz)).T
-    V_BASE = np.vstack((df.vx, df.vy, df.vz)).T
-    transformation_matrices = np.array([get_transform(t, base_frame, to_frame) for t in timeseries])
-    B_TO = np.einsum('ijk,ik->ij', transformation_matrices, B_BASE)
-    V_TO = np.einsum('ijk,ik->ij', transformation_matrices, V_BASE)
+    bx, by, bz = perform_transform_mag_components(df.bx, df.by, df.bz, timeseries, base_frame, to_frame)
+    vx, vy, vz = perform_transform_plas_components(df.vx, df.vy, df.vz, timeseries, base_frame, to_frame)
     df_transformed = pd.concat([timeseries], axis=1)
     df_transformed['bt'] = df.bt
-    df_transformed['bx'] = B_TO[:,0]
-    df_transformed['by'] = B_TO[:,1]
-    df_transformed['bz'] = B_TO[:,2]
+    df_transformed['bx'] = bx
+    df_transformed['by'] = by
+    df_transformed['bz'] = bz
     df_transformed['vt'] = df.vt
-    df_transformed['vx'] = V_TO[:,0]
-    df_transformed['vy'] = V_TO[:,1]
-    df_transformed['vz'] = V_TO[:,2]
+    df_transformed['vx'] = vx
+    df_transformed['vy'] = vy
+    df_transformed['vz'] = vz
     df_transformed['np'] = df.np
     df_transformed['tp'] = df.tp
     df_transformed['x'] = df['x'] #positions same: no transform applied
@@ -1129,4 +1171,5 @@ def perform_transform(df, base_frame: str, to_frame: str):
     df_transformed['lon'] = df['lon']
     spiceypy.kclear()
     return df_transformed
-
+#############################################
+#############################################
