@@ -108,17 +108,24 @@ def get_heliocentric_transformation_matrices(time):
 Geocentric frame conversions
 """
 
+############################################
+############################################
+# GSE_to_GSM_mag for separate components, useful for transforming arrays without pandas overhead
+def GSE_to_GSM_mag_components(bx, by, bz, times):
+    # Get all transformation matrices at once
+    T3_matrices = np.array([get_geocentric_transformation_matrices(t)[2] for t in times])
+    # Create coordinate matrix (N x 3) where N is number of rows
+    coords = np.column_stack([bx, by, bz])
+    # Vectorized matrix multiplication using einsum
+    # 'ijk,ik->ij' means: for each i, multiply matrix T3_matrices[i] with vector coords[i,:]
+    GSM_coords = np.einsum('ijk,ik->ij', T3_matrices, coords)
+    bx_gsm, by_gsm, bz_gsm = GSM_coords[:, 0], GSM_coords[:, 1], GSM_coords[:, 2]
+    return bx_gsm, by_gsm, bz_gsm
 
 def GSE_to_GSM_mag(df):
     # Get all transformation matrices at once
     times = df['time'].values
-    T3_matrices = np.array([get_geocentric_transformation_matrices(t)[2] for t in times])
-    # Create coordinate matrix (N x 3) where N is number of rows
-    coords = np.column_stack([df['bx'].values, df['by'].values, df['bz'].values])
-    # Vectorized matrix multiplication using einsum
-    # 'ijk,ik->ij' means: for each i, multiply matrix T3_matrices[i] with vector coords[i,:]
-    GSM_coords = np.einsum('ijk,ik->ij', T3_matrices, coords)
-    bx, by, bz = GSM_coords[:, 0], GSM_coords[:, 1], GSM_coords[:, 2]
+    bx, by, bz = GSE_to_GSM_mag_components(df['bx'].values, df['by'].values, df['bz'].values, times)
     # Create result DataFrame
     df_transformed = pd.DataFrame({
         'time': df['time'].values,
@@ -128,7 +135,8 @@ def GSE_to_GSM_mag(df):
         'bz': bz,
     })
     return df_transformed
-
+############################################
+############################################
 
 def GSE_to_GSM_plas(df):
     # Get all transformation matrices at once
