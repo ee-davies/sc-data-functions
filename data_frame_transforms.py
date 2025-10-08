@@ -304,6 +304,14 @@ def GSM_to_GSE(df):
 Geocentric to approximate RTN frame conversions
 """
 
+############################################
+############################################
+# GSE_to_RTN_approx_mag for separate components, useful for transforming arrays without pandas overhead
+def GSE_to_RTN_approx_mag_components(bx, by, bz):
+    bx_rtn = -bx
+    by_rtn = -by
+    bz_rtn = bz
+    return bx_rtn, by_rtn, bz_rtn
 
 def GSE_to_RTN_approx_mag(df):
     df_transformed = pd.DataFrame({
@@ -314,7 +322,19 @@ def GSE_to_RTN_approx_mag(df):
         'bz': df['bz'],
     })
     return df_transformed
+############################################
+############################################
 
+
+
+############################################
+############################################
+# GSE_to_RTN_approx_plas for separate components, useful for transforming arrays without pandas overhead
+def GSE_to_RTN_approx_plas_components(vx, vy, vz):
+    vx_rtn = -vx
+    vy_rtn = -vy
+    vz_rtn = vz
+    return vx_rtn, vy_rtn, vz_rtn
 
 def GSE_to_RTN_approx_plas(df):
     df_transformed = pd.DataFrame({
@@ -328,17 +348,39 @@ def GSE_to_RTN_approx_plas(df):
     })
     return df_transformed
 
-    
+
+
+############################################
+############################################
+# GSE_to_RTN_approx_mag for separate components, useful for transforming arrays without pandas overhead
+def GSE_to_RTN_approx_mag_components(bx, by, bz):
+    bx_gse, by_gse, bz_gse = GSM_to_GSE_mag_components(bx, by, bz)
+    bx, by, bz = GSE_to_RTN_approx_mag_components(bx_gse, by_gse, bz_gse)
+    return bx, by, bz
+
 def GSM_to_RTN_approx_mag(df):
     df_gse = GSM_to_GSE_mag(df)
     df_transformed = GSE_to_RTN_approx_mag(df_gse)
     return df_transformed
+############################################
+############################################
 
+
+
+############################################
+############################################
+# GSE_to_RTN_approx_plas for separate components, useful for transforming arrays without pandas overhead
+def GSE_to_RTN_approx_plas_components(vx, vy, vz):
+    vx_gse, vy_gse, vz_gse = GSM_to_GSE_plas_components(vx, vy, vz)
+    vx, vy, vz = GSE_to_RTN_approx_plas_components(vx_gse, vy_gse, vz_gse)
+    return vx, vy, vz
 
 def GSM_to_RTN_approx_plas(df):
     df_gse = GSM_to_GSE_plas(df)
     df_transformed = GSE_to_RTN_approx_plas(df_gse)
     return df_transformed
+############################################
+############################################
 
 
 """
