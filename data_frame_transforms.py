@@ -347,6 +347,8 @@ def GSE_to_RTN_approx_plas(df):
         'tp': df['tp'],
     })
     return df_transformed
+############################################
+############################################
 
 
 
@@ -536,30 +538,80 @@ def HEE_to_GSE(df):
 ############################################
 
 
+
+############################################
+############################################
+def GSE_to_HAE_mag_components(bx, by, bz, times):
+    bx_hae, by_hae, bz_hae = perform_transform_mag_components(bx, by, bz, times, 'GSE', 'ECLIPJ2000')
+    return bx_hae, by_hae, bz_hae
+
+def GSE_to_HAE_plas_components(vx, vy, vz, times):
+    vx_hae, vy_hae, vz_hae = perform_transform_plas_components(vx, vy, vz, times, 'GSE', 'ECLIPJ2000')
+    return vx_hae, vy_hae, vz_hae
+
 def GSE_to_HAE(df):
     df_transformed = perform_transform(df, 'GSE', 'ECLIPJ2000')
     return df_transformed
+############################################
+############################################
 
+
+
+############################################
+############################################
+def HAE_to_GSE_mag_components(bx, by, bz, times):
+    bx_gse, by_gse, bz_gse = perform_transform_mag_components(bx, by, bz, times, 'ECLIPJ2000', 'GSE')
+    return bx_gse, by_gse, bz_gse
+
+def HAE_to_GSE_plas_components(vx, vy, vz, times):
+    vx_gse, vy_gse, vz_gse = perform_transform_plas_components(vx, vy, vz, times, 'ECLIPJ2000', 'GSE')
+    return vx_gse, vy_gse, vz_gse
 
 def HAE_to_GSE(df):
     df_transformed = perform_transform(df, 'ECLIPJ2000', 'GSE')
     return df_transformed
+############################################
+############################################
 
+
+
+############################################
+############################################
+def GSE_to_HEEQ_mag_components(bx, by, bz, times):
+    bx_heeq, by_heeq, bz_heeq = perform_transform_mag_components(bx, by, bz, times, 'GSE', 'HEEQ')
+    return bx_heeq, by_heeq, bz_heeq
+
+def GSE_to_HEEQ_plas_components(vx, vy, vz, times):
+    vx_heeq, vy_heeq, vz_heeq = perform_transform_plas_components(vx, vy, vz, times, 'GSE', 'HEEQ')
+    return vx_heeq, vy_heeq, vz_heeq
 
 def GSE_to_HEEQ(df):
     df_transformed = perform_transform(df, 'GSE', 'HEEQ')
     return df_transformed
+############################################
+############################################
 
+
+
+############################################
+############################################
+def HEEQ_to_GSE_mag_components(bx, by, bz, times):
+    bx_gse, by_gse, bz_gse = perform_transform_mag_components(bx, by, bz, times, 'HEEQ', 'GSE')
+    return bx_gse, by_gse, bz_gse
+
+def HEEQ_to_GSE_plas_components(vx, vy, vz, times):
+    vx_gse, vy_gse, vz_gse = perform_transform_plas_components(vx, vy, vz, times, 'HEEQ', 'GSE')
+    return vx_gse, vy_gse, vz_gse
 
 def HEEQ_to_GSE(df):
     df_transformed = perform_transform(df, 'HEEQ', 'GSE')
     return df_transformed
-
+############################################
+############################################
 
 """
 Heliocentric frame conversions
 """
-
 
 def HEE_to_HAE(df):
     df_transformed = perform_transform(df, 'HEE', 'ECLIPJ2000')
@@ -809,7 +861,7 @@ def HEEQ_to_RTN_alt(df):
     return df_transformed
 
 
-def HEEQ_to_RTN_(df):
+def HEEQ_to_RTN(df):
     # Stack position, magnetic field, and velocity vectors
     r_vec = np.stack([df.x, df.y, df.z], axis=-1)
     b_vec = np.stack([df.bx, df.by, df.bz], axis=-1)
