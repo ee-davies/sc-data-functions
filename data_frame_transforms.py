@@ -251,7 +251,6 @@ def GSM_to_GSE_plas_components(vx, vy, vz, times):
     return vx, vy, vz
 
 def GSM_to_GSE_plas(df):
-    # Get all transformation matrices at once
     times = df['time'].values
     vx, vy, vz = GSM_to_GSE_plas_components(df['vx'].values, df['vy'].values, df['vz'].values, times)
     # Create result DataFrame
@@ -273,7 +272,6 @@ def GSM_to_GSE_plas(df):
 ############################################
 ############################################
 def GSM_to_GSE(df):
-    # Get all transformation matrices at once
     times = df['time'].values
     bx, by, bz = GSM_to_GSE_mag_components(df['bx'].values, df['by'].values, df['bz'].values, times)
     vx, vy, vz = GSM_to_GSE_plas_components(df['vx'].values, df['vy'].values, df['vz'].values, times)
@@ -613,11 +611,26 @@ def HEEQ_to_GSE(df):
 Heliocentric frame conversions
 """
 
+############################################
+############################################
+def HEE_to_HAE_mag_components(bx, by, bz, times):
+    bx_hae, by_hae, bz_hae = perform_transform_mag_components(bx, by, bz, times, 'HEE', 'ECLIPJ2000')
+    return bx_hae, by_hae, bz_hae
+
+def HEE_to_HAE_plas_components(vx, vy, vz, times):
+    vx_hae, vy_hae, vz_hae = perform_transform_plas_components(vx, vy, vz, times, 'HEE', 'ECLIPJ2000')
+    return vx_hae, vy_hae, vz_hae
+
 def HEE_to_HAE(df):
     df_transformed = perform_transform(df, 'HEE', 'ECLIPJ2000')
     return df_transformed
+############################################
+############################################
 
 
+
+############################################
+############################################
 def HEE_to_HAE_alt(df):
     B_HAE = []
     for i in range(df.shape[0]):
@@ -645,13 +658,30 @@ def HEE_to_HAE_alt(df):
     df_transformed['lat'] = df['lat']
     df_transformed['lon'] = df['lon']
     return df_transformed
+############################################
+############################################
 
+
+############################################
+############################################
+def HAE_to_HEE_mag_components(bx, by, bz, times):
+    bx_hee, by_hee, bz_hee = perform_transform_mag_components(bx, by, bz, times, 'ECLIPJ2000', 'HEE')
+    return bx_hee, by_hee, bz_hee
+
+def HAE_to_HEE_plas_components(vx, vy, vz, times):
+    vx_hee, vy_hee, vz_hee = perform_transform_plas_components(vx, vy, vz, times, 'ECLIPJ2000', 'HEE')
+    return vx_hee, vy_hee, vz_hee
 
 def HAE_to_HEE(df):
     df_transformed = perform_transform(df, 'ECLIPJ2000', 'HEE')
     return df_transformed
+############################################
+############################################
 
 
+
+############################################
+############################################
 def HAE_to_HEE_alt(df):
     B_HEE = []
     for i in range(df.shape[0]):
@@ -678,13 +708,30 @@ def HAE_to_HEE_alt(df):
     df_transformed['lat'] = df['lat']
     df_transformed['lon'] = df['lon']
     return df_transformed
+############################################
+############################################
 
+
+
+############################################
+############################################
+def HAE_to_HEEQ_mag_components(bx, by, bz, times):
+    bx_heeq, by_heeq, bz_heeq = perform_transform_mag_components(bx, by, bz, times, 'ECLIPJ2000', 'HEEQ')
+    return bx_heeq, by_heeq, bz_heeq
+def HAE_to_HEEQ_plas_components(vx, vy, vz, times):
+    vx_heeq, vy_heeq, vz_heeq = perform_transform_plas_components(vx, vy, vz, times, 'ECLIPJ2000', 'HEEQ')
+    return vx_heeq, vy_heeq, vz_heeq
 
 def HAE_to_HEEQ(df):
     df_transformed = perform_transform(df, 'ECLIPJ2000', 'HEEQ')
     return df_transformed
+############################################
+############################################
 
 
+
+############################################
+############################################
 def HAE_to_HEEQ_alt(df):
     B_HEEQ = []
     for i in range(df.shape[0]):
@@ -711,13 +758,31 @@ def HAE_to_HEEQ_alt(df):
     df_transformed['lat'] = df['lat']
     df_transformed['lon'] = df['lon']
     return df_transformed
+############################################
+############################################
 
+
+
+############################################
+############################################
+def HEEQ_to_HAE_mag_components(bx, by, bz, times):
+    bx_hae, by_hae, bz_hae = perform_transform_mag_components(bx, by, bz, times, 'HEEQ', 'ECLIPJ2000')
+    return bx_hae, by_hae, bz_hae
+
+def HEEQ_to_HAE_plas_components(vx, vy, vz, times):
+    vx_hae, vy_hae, vz_hae = perform_transform_plas_components(vx, vy, vz, times, 'HEEQ', 'ECLIPJ2000')
+    return vx_hae, vy_hae, vz_hae
 
 def HEEQ_to_HAE(df):
     df_transformed = perform_transform(df, 'HEEQ', 'ECLIPJ2000')
     return df_transformed
+############################################
+############################################
 
 
+
+############################################
+############################################
 def HEEQ_to_HAE_alt(df):
     B_HAE = []
     for i in range(df.shape[0]):
@@ -745,28 +810,66 @@ def HEEQ_to_HAE_alt(df):
     df_transformed['lat'] = df['lat']
     df_transformed['lon'] = df['lon']
     return df_transformed
+############################################
+############################################
 
+
+
+############################################
+############################################
+def HEE_to_HEEQ_mag_components(bx, by, bz, times):
+    bx_heeq, by_heeq, bz_heeq = perform_transform_mag_components(bx, by, bz, times, 'HEE', 'HEEQ')
+    return bx_heeq, by_heeq, bz_heeq
+
+def HEE_to_HEEQ_plas_components(vx, vy, vz, times):
+    vx_heeq, vy_heeq, vz_heeq = perform_transform_plas_components(vx, vy, vz, times, 'HEE', 'HEEQ')
+    return vx_heeq, vy_heeq, vz_heeq
 
 def HEE_to_HEEQ(df):
     df_transformed = perform_transform(df, 'HEE', 'HEEQ')
     return df_transformed
+############################################
+############################################
 
 
+
+############################################
+############################################
 def HEE_to_HEEQ_alt(df):
     df_hae = HEE_to_HAE_alt(df)
     df_transformed = HAE_to_HEEQ_alt(df_hae)
     return df_transformed
+############################################
+############################################
 
+
+
+############################################
+############################################
+def HEEQ_to_HEE_mag_components(bx, by, bz, times):
+    bx_hee, by_hee, bz_hee = perform_transform_mag_components(bx, by, bz, times, 'HEEQ', 'HEE')
+    return bx_hee, by_hee, bz_hee
+
+def HEEQ_to_HEE_plas_components(vx, vy, vz, times):
+    vx_hee, vy_hee, vz_hee = perform_transform_plas_components(vx, vy, vz, times, 'HEEQ', 'HEE')
+    return vx_hee, vy_hee, vz_hee
 
 def HEEQ_to_HEE(df):
     df_transformed = perform_transform(df, 'HEEQ', 'HEE')
     return df_transformed
+############################################
+############################################
 
 
+
+############################################
+############################################
 def HEEQ_to_HEE_alt(df):
     df_hae = HEEQ_to_HAE_alt(df)
     df_transformed = HAE_to_HEE_alt(df_hae)
     return df_transformed
+############################################
+############################################
 
 
 """
