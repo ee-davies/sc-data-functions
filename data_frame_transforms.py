@@ -881,7 +881,8 @@ Heliocentric to RTN frame conversions
 # input DataFrames are required to be pre-combined with position xyz
 """
 
-
+############################################
+############################################
 def interp_to_newtimes(df1, df2):
     #set time as index of dataframe you want to interpolate
     df1.set_index(df1.time, inplace=True)
@@ -894,7 +895,6 @@ def interp_to_newtimes(df1, df2):
     df_new = out.reset_index(drop=False)
     return df_new
 
-
 def combine_dataframes(df1,df2):
         df1.set_index(df1.time, inplace=True)
         df1 = df1.drop(columns=['time'])
@@ -903,8 +903,13 @@ def combine_dataframes(df1,df2):
         combined_df = pd.concat([df1, df2], axis=1)
         combined_df = combined_df.reset_index(drop=False)
         return combined_df
+############################################
+############################################
 
 
+
+############################################
+############################################
 #function to transform mag data from HEEQ to RTN, using a DataFrame which has already combined mag, plas and position with same timestamps
 def HEEQ_to_RTN_alt(df):
     #unit vectors of HEEQ basis
@@ -962,8 +967,117 @@ def HEEQ_to_RTN_alt(df):
         'lon': df['lon'],
     })
     return df_transformed
+############################################
+############################################
 
 
+
+############################################
+############################################
+# HEEQ_to_RTN_mag for separate components, useful for transforming arrays without pandas overhead
+def HEEQ_to_RTN_mag_components(bx, by, bz, x, y, z):
+    # Stack position, magnetic field
+    r_vec = np.stack([x, y, z], axis=-1)
+    b_vec = np.stack([bx, by, bz], axis=-1)
+    # Normalize R (radial unit vector)
+    r_hat = r_vec / np.linalg.norm(r_vec, axis=1)[:, np.newaxis]
+    # Define constant z-axis of HEEQ
+    z_hat = np.array([0, 0, 1])
+    # Calculate T (tangential unit vector): T = Z × R
+    t_hat = np.cross(np.tile(z_hat, (len(r_hat), 1)), r_hat)
+    # Normalize T (to be safe)
+    t_hat /= np.linalg.norm(t_hat, axis=1)[:, np.newaxis]
+    # Calculate N (normal unit vector): N = R × T
+    n_hat = np.cross(r_hat, t_hat)
+    # Project B onto RTN basis
+    rtn_bx = np.einsum('ij,ij->i', b_vec, r_hat)
+    rtn_by = np.einsum('ij,ij->i', b_vec, t_hat)
+    rtn_bz = np.einsum('ij,ij->i', b_vec, n_hat)
+    return rtn_bx, rtn_by, rtn_bz
+
+def HEEQ_to_RTN_mag(df):
+    rtn_bx, rtn_by, rtn_bz = HEEQ_to_RTN_mag_components(df.bx, df.by, df.bz, df.x, df.y, df.z)
+    # Create result DataFrame
+    df_transformed = pd.DataFrame({
+        'time': df['time'].values,
+        'bt': df['bt'],
+        'bx': rtn_bx,
+        'by': rtn_by, 
+        'bz': rtn_bz,
+        'vt': df['vt'],
+        'vx': df['vx'],
+        'vy': df['vy'], 
+        'vz': df['vz'],
+        'np': df['np'],
+        'tp': df['tp'],
+        'x': df['x'],
+        'y': df['y'],
+        'z': df['z'],
+        'y': df['y'],
+        'r': df['r'],
+        'lat': df['lat'],
+        'lon': df['lon'],
+    })
+    return df_transformed
+############################################
+############################################
+
+
+
+############################################
+############################################
+# HEEQ_to_RTN_plas for separate components, useful for transforming arrays without pandas overhead
+def HEEQ_to_RTN_plas_components(vx, vy, vz, x, y, z):
+    # Stack position, magnetic field, and velocity vectors
+    r_vec = np.stack([x, y, z], axis=-1)
+    v_vec = np.stack([vx, vy, vz], axis=-1)
+    # Normalize R (radial unit vector)
+    r_hat = r_vec / np.linalg.norm(r_vec, axis=1)[:, np.newaxis]
+    # Define constant z-axis of HEEQ
+    z_hat = np.array([0, 0, 1])
+    # Calculate T (tangential unit vector): T = Z × R
+    t_hat = np.cross(np.tile(z_hat, (len(r_hat), 1)), r_hat)
+    # Normalize T (to be safe)
+    t_hat /= np.linalg.norm(t_hat, axis=1)[:, np.newaxis]
+    # Calculate N (normal unit vector): N = R × T
+    n_hat = np.cross(r_hat, t_hat)
+    # Project V onto RTN basis
+    rtn_vx = np.einsum('ij,ij->i', v_vec, r_hat)
+    rtn_vy = np.einsum('ij,ij->i', v_vec, t_hat)
+    rtn_vz = np.einsum('ij,ij->i', v_vec, n_hat)
+    return rtn_vx, rtn_vy, rtn_vz
+
+def HEEQ_to_RTN_plas(df):
+    rtn_vx, rtn_vy, rtn_vz = HEEQ_to_RTN_plas_components(df.vx, df.vy, df.vz, df.x, df.y, df.z)
+    # Create result DataFrame
+    df_transformed = pd.DataFrame({
+        'time': df['time'].values,
+        'bt': df['bt'],
+        'bx': df['bx'],
+        'by': df['by'], 
+        'bz': df['bz'],
+        'vt': df['vt'],
+        'vx': rtn_vx,
+        'vy': rtn_vy, 
+        'vz': rtn_vz,
+        'np': df['np'],
+        'tp': df['tp'],
+        'x': df['x'],
+        'y': df['y'],
+        'z': df['z'],
+        'y': df['y'],
+        'r': df['r'],
+        'lat': df['lat'],
+        'lon': df['lon'],
+    })
+    return df_transformed
+############################################
+############################################
+
+
+
+############################################
+############################################
 def HEEQ_to_RTN(df):
     # Stack position, magnetic field, and velocity vectors
     r_vec = np.stack([df.x, df.y, df.z], axis=-1)
@@ -1009,74 +1123,13 @@ def HEEQ_to_RTN(df):
         'lon': df['lon'],
     })
     return df_transformed
+############################################
+############################################
 
 
-def HEEQ_to_RTN_mag(df):
-    #unit vectors of HEEQ basis
-    heeq_x=[1,0,0]
-    heeq_y=[0,1,0]
-    heeq_z=[0,0,1]
-    B_RTN = []
-    for i in range(df.shape[0]):
-        #make unit vectors of RTN in basis of HEEQ
-        rtn_r = [df['x'].iloc[i],df['y'].iloc[i],df['z'].iloc[i]]/np.linalg.norm([df['x'].iloc[i],df['y'].iloc[i],df['z'].iloc[i]])
-        rtn_t=np.cross(heeq_z,rtn_r)/np.linalg.norm(np.cross(heeq_z,rtn_r))
-        rtn_n=np.cross(rtn_r,rtn_t)/np.linalg.norm(np.cross(rtn_r, rtn_t))
 
-        br_i=df['bx'].iloc[i]*np.dot(heeq_x,rtn_r)+df['by'].iloc[i]*np.dot(heeq_y,rtn_r)+df['bz'].iloc[i]*np.dot(heeq_z,rtn_r)
-        bt_i=df['bx'].iloc[i]*np.dot(heeq_x,rtn_t)+df['by'].iloc[i]*np.dot(heeq_y,rtn_t)+df['bz'].iloc[i]*np.dot(heeq_z,rtn_t)
-        bn_i=df['bx'].iloc[i]*np.dot(heeq_x,rtn_n)+df['by'].iloc[i]*np.dot(heeq_y,rtn_n)+df['bz'].iloc[i]*np.dot(heeq_z,rtn_n)
-        B_RTN_i = [br_i, bt_i, bn_i]
-        B_RTN.append(B_RTN_i)
-
-    B_RTN = np.array(B_RTN)
-    bx, by, bz = B_RTN[:, 0], B_RTN[:, 1], B_RTN[:, 2]
-    bt = np.linalg.norm([bx,by,bz], axis=0)
-    # Create result DataFrame
-    df_transformed = pd.DataFrame({
-        'time': df['time'].values,
-        'bt': bt,
-        'bx': bx,
-        'by': by, 
-        'bz': bz,
-    })
-    return df_transformed
-
-
-def HEEQ_to_RTN_plas(df):
-    #unit vectors of HEEQ basis
-    heeq_x=[1,0,0]
-    heeq_y=[0,1,0]
-    heeq_z=[0,0,1]
-    V_RTN = []
-    for i in range(df.shape[0]):
-        #make unit vectors of RTN in basis of HEEQ
-        rtn_r = [df['x'].iloc[i],df['y'].iloc[i],df['z'].iloc[i]]/np.linalg.norm([df['x'].iloc[i],df['y'].iloc[i],df['z'].iloc[i]])
-        rtn_t=np.cross(heeq_z,rtn_r)/np.linalg.norm(np.cross(heeq_z,rtn_r))
-        rtn_n=np.cross(rtn_r,rtn_t)/np.linalg.norm(np.cross(rtn_r, rtn_t))
-
-        vr_i=df['vx'].iloc[i]*np.dot(heeq_x,rtn_r)+df['vy'].iloc[i]*np.dot(heeq_y,rtn_r)+df['vz'].iloc[i]*np.dot(heeq_z,rtn_r)
-        vt_i=df['vx'].iloc[i]*np.dot(heeq_x,rtn_t)+df['vy'].iloc[i]*np.dot(heeq_y,rtn_t)+df['vz'].iloc[i]*np.dot(heeq_z,rtn_t)
-        vn_i=df['vx'].iloc[i]*np.dot(heeq_x,rtn_n)+df['vy'].iloc[i]*np.dot(heeq_y,rtn_n)+df['vz'].iloc[i]*np.dot(heeq_z,rtn_n)
-        V_RTN_i = [vr_i, vt_i, vn_i]
-        V_RTN.append(V_RTN_i)
-
-    V_RTN = np.array(V_RTN)
-    vx, vy, vz = V_RTN[:, 0], V_RTN[:, 1], V_RTN[:, 2]
-    vt = np.linalg.norm([vx,vy,vz], axis=0)
-    # Create result DataFrame
-    df_transformed = pd.DataFrame({
-        'time': df['time'].values,
-        'vt': vt,
-        'vx': vx,
-        'vy': vy, 
-        'vz': vz,
-        'np': df['np'],
-        'tp': df['tp'],
-    })
-    return df_transformed
-
-
+############################################
+############################################
 def RTN_to_HEEQ(df):
     # Stack position, magnetic field, and velocity vectors
     r_vec = np.stack([df.x, df.y, df.z], axis=-1)
