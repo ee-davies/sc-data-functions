@@ -623,7 +623,7 @@ def combine_dataframes(df1,df2):
 
 
 #function to transform mag data from HEEQ to RTN, using a DataFrame which has already combined mag, plas and position with same timestamps
-def HEEQ_to_RTN(df):
+def HEEQ_to_RTN_alt(df):
     #unit vectors of HEEQ basis
     heeq_x=[1,0,0]
     heeq_y=[0,1,0]
@@ -668,6 +668,53 @@ def HEEQ_to_RTN(df):
         'vx': vx,
         'vy': vy, 
         'vz': vz,
+        'np': df['np'],
+        'tp': df['tp'],
+        'x': df['x'],
+        'y': df['y'],
+        'z': df['z'],
+        'y': df['y'],
+        'r': df['r'],
+        'lat': df['lat'],
+        'lon': df['lon'],
+    })
+    return df_transformed
+
+
+def HEEQ_to_RTN_(df):
+    # Stack position, magnetic field, and velocity vectors
+    r_vec = np.stack([df.x, df.y, df.z], axis=-1)
+    b_vec = np.stack([df.bx, df.by, df.bz], axis=-1)
+    v_vec = np.stack([df.vx, df.vy, df.vz], axis=-1)
+    # Normalize R (radial unit vector)
+    r_hat = r_vec / np.linalg.norm(r_vec, axis=1)[:, np.newaxis]
+    # Define constant z-axis of HEEQ
+    z_hat = np.array([0, 0, 1])
+    # Calculate T (tangential unit vector): T = Z × R
+    t_hat = np.cross(np.tile(z_hat, (len(r_hat), 1)), r_hat)
+    # Normalize T (to be safe)
+    t_hat /= np.linalg.norm(t_hat, axis=1)[:, np.newaxis]
+    # Calculate N (normal unit vector): N = R × T
+    n_hat = np.cross(r_hat, t_hat)
+    # Project B onto RTN basis
+    rtn_bx = np.einsum('ij,ij->i', b_vec, r_hat)
+    rtn_by = np.einsum('ij,ij->i', b_vec, t_hat)
+    rtn_bz = np.einsum('ij,ij->i', b_vec, n_hat)
+    # Project V onto RTN basis
+    rtn_vx = np.einsum('ij,ij->i', v_vec, r_hat)
+    rtn_vy = np.einsum('ij,ij->i', v_vec, t_hat)
+    rtn_vz = np.einsum('ij,ij->i', v_vec, n_hat)
+    # Create result DataFrame
+    df_transformed = pd.DataFrame({
+        'time': df['time'].values,
+        'bt': df['bt'],
+        'bx': rtn_bx,
+        'by': rtn_by, 
+        'bz': rtn_bz,
+        'vt': df['vt'],
+        'vx': rtn_vx,
+        'vy': rtn_vy, 
+        'vz': rtn_vz,
         'np': df['np'],
         'tp': df['tp'],
         'x': df['x'],
