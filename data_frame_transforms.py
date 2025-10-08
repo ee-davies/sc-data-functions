@@ -352,9 +352,9 @@ def GSE_to_RTN_approx_plas(df):
 
 ############################################
 ############################################
-# GSE_to_RTN_approx_mag for separate components, useful for transforming arrays without pandas overhead
-def GSE_to_RTN_approx_mag_components(bx, by, bz):
-    bx_gse, by_gse, bz_gse = GSM_to_GSE_mag_components(bx, by, bz)
+# GSM_to_RTN_approx_mag for separate components, useful for transforming arrays without pandas overhead
+def GSM_to_RTN_approx_mag_components(bx, by, bz, times):
+    bx_gse, by_gse, bz_gse = GSM_to_GSE_mag_components(bx, by, bz, times)
     bx, by, bz = GSE_to_RTN_approx_mag_components(bx_gse, by_gse, bz_gse)
     return bx, by, bz
 
@@ -369,9 +369,9 @@ def GSM_to_RTN_approx_mag(df):
 
 ############################################
 ############################################
-# GSE_to_RTN_approx_plas for separate components, useful for transforming arrays without pandas overhead
-def GSE_to_RTN_approx_plas_components(vx, vy, vz):
-    vx_gse, vy_gse, vz_gse = GSM_to_GSE_plas_components(vx, vy, vz)
+# GSM_to_RTN_approx_plas for separate components, useful for transforming arrays without pandas overhead
+def GSM_to_RTN_approx_plas_components(vx, vy, vz, times):
+    vx_gse, vy_gse, vz_gse = GSM_to_GSE_plas_components(vx, vy, vz, times)
     vx, vy, vz = GSE_to_RTN_approx_plas_components(vx_gse, vy_gse, vz_gse)
     return vx, vy, vz
 
@@ -1130,6 +1130,115 @@ def HEEQ_to_RTN(df):
 
 ############################################
 ############################################
+def RTN_to_HEEQ_mag_components(bx, by, bz, x, y, z):
+    # Stack position and magnetic field
+    r_vec = np.stack([x, y, z], axis=-1)
+    b_vec = np.stack([bx, by, bz], axis=-1)
+    # Normalize R (radial unit vector)
+    r_hat = r_vec / np.linalg.norm(r_vec, axis=1)[:, np.newaxis]
+    # HEEQ z-axis
+    z_hat = np.array([0, 0, 1])
+    # T = Z × R
+    t_hat = np.cross(np.tile(z_hat, (len(r_hat), 1)), r_hat)
+    t_hat /= np.linalg.norm(t_hat, axis=1)[:, np.newaxis]
+    # N = R × T
+    n_hat = np.cross(r_hat, t_hat)
+    n_hat /= np.linalg.norm(n_hat, axis=1)[:, np.newaxis]
+    # Construct the RTN → HEEQ rotation matrix for each sample
+    # The RTN basis is [r_hat, t_hat, n_hat]
+    # So, the transformation is B_HEEQ = R.T @ B_RTN
+    # where R = [r_hat, t_hat, n_hat].T per sample
+    # Use einsum for efficient batched dot product
+    R = np.stack([r_hat, t_hat, n_hat], axis=-1)  # shape: (N, 3, 3)
+    b_heeq = np.einsum('nij,nj->ni', R, b_vec)
+    return b_heeq[:, 0], b_heeq[:, 1], b_heeq[:, 2]
+
+
+def RTN_to_HEEQ_mag(df):
+    bx, by, bz = RTN_to_HEEQ_mag_components(df.bx, df.by, df.bz, df.x, df.y, df.z)
+    # Create result DataFrame
+    df_transformed = pd.DataFrame({
+        'time': df['time'].values,
+        'bt': df['bt'],
+        'bx': bx,
+        'by': by,
+        'bz': bz,
+        'vt': df['vt'],
+        'vx': df['vx'],
+        'vy': df['vy'],
+        'vz': df['vz'],
+        'np': df['np'],
+        'tp': df['tp'],
+        'x': df['x'],
+        'y': df['y'],
+        'z': df['z'],
+        'y': df['y'],
+        'r': df['r'],
+        'lat': df['lat'],
+        'lon': df['lon'],
+    })
+    return df_transformed
+############################################
+############################################
+
+
+
+############################################
+############################################
+def RTN_to_HEEQ_plas_components(vx, vy, vz, x, y, z):
+    # Stack position and velocity vectors
+    r_vec = np.stack([x, y, z], axis=-1)
+    v_vec = np.stack([vx, vy, vz], axis=-1)
+    # Normalize R (radial unit vector)
+    r_hat = r_vec / np.linalg.norm(r_vec, axis=1)[:, np.newaxis]
+    # HEEQ z-axis
+    z_hat = np.array([0, 0, 1])
+    # T = Z × R
+    t_hat = np.cross(np.tile(z_hat, (len(r_hat), 1)), r_hat)
+    t_hat /= np.linalg.norm(t_hat, axis=1)[:, np.newaxis]
+    # N = R × T
+    n_hat = np.cross(r_hat, t_hat)
+    n_hat /= np.linalg.norm(n_hat, axis=1)[:, np.newaxis]
+    # Construct the RTN → HEEQ rotation matrix for each sample
+    # The RTN basis is [r_hat, t_hat, n_hat]
+    # So, the transformation is B_HEEQ = R.T @ B_RTN
+    # where R = [r_hat, t_hat, n_hat].T per sample
+    # Use einsum for efficient batched dot product
+    R = np.stack([r_hat, t_hat, n_hat], axis=-1)  # shape: (N, 3, 3)
+    v_heeq = np.einsum('nij,nj->ni', R, v_vec)
+    return v_heeq[:, 0], v_heeq[:, 1], v_heeq[:, 2]
+
+def RTN_to_HEEQ_plas(df):
+    vx, vy, vz = RTN_to_HEEQ_plas_components(df.vx, df.vy, df.vz, df.x, df.y, df.z)
+    # Create result DataFrame
+    df_transformed = pd.DataFrame({
+        'time': df['time'].values,
+        'bt': df['bt'],
+        'bx': df['bx'],
+        'by': df['by'],
+        'bz': df['bz'],
+        'vt': df['vt'],
+        'vx': vx,
+        'vy': vy,
+        'vz': vz,
+        'np': df['np'],
+        'tp': df['tp'],
+        'x': df['x'],
+        'y': df['y'],
+        'z': df['z'],
+        'y': df['y'],
+        'r': df['r'],
+        'lat': df['lat'],
+        'lon': df['lon'],
+    })
+    return df_transformed
+############################################
+############################################
+
+
+
+############################################
+############################################
 def RTN_to_HEEQ(df):
     # Stack position, magnetic field, and velocity vectors
     r_vec = np.stack([df.x, df.y, df.z], axis=-1)
@@ -1175,8 +1284,13 @@ def RTN_to_HEEQ(df):
         'lon': df['lon'],
     })
     return df_transformed
+############################################
+############################################
     
 
+
+############################################
+############################################
 def RTN_to_HEEQ_alt(df):
     #HEEQ unit vectors (same as spacecraft xyz position)
     heeq_x=[1,0,0]
@@ -1234,54 +1348,136 @@ def RTN_to_HEEQ_alt(df):
         'lon': df['lon'],
     })
     return df_transformed
+############################################
+############################################
 
+
+
+############################################
+############################################
+def RTN_to_HAE_components(bx, by, bz, x, y, z, times):
+    bx_heeq, by_heeq, bz_heeq = RTN_to_HEEQ_mag_components(bx, by, bz, x, y, z)
+    bx_hae, by_hae, bz_hae = HEEQ_to_HAE_mag_components(bx_heeq, by_heeq, bz_heeq, times)
+    return bx_hae, by_hae, bz_hae
 
 def RTN_to_HAE(df_rtn):
     df_heeq = RTN_to_HEEQ(df_rtn)
     df_hae = HEEQ_to_HAE(df_heeq)
-    return 
+    return df_hae
+############################################
+############################################
 
+
+
+############################################
+############################################
+def HAE_to_RTN_components(bx, by, bz, x, y, z, times):
+    bx_heeq, by_heeq, bz_heeq = HAE_to_HEEQ_mag_components(bx, by, bz, times)
+    bx_rtn, by_rtn, bz_rtn = HEEQ_to_RTN_mag_components(bx_heeq, by_heeq, bz_heeq, x, y, z)
+    return bx_rtn, by_rtn, bz_rtn
 
 def HAE_to_RTN(df_hae):
     df_heeq = HAE_to_HEEQ(df_hae)
     df_rtn = HEEQ_to_RTN(df_heeq)
     return df_rtn
+############################################
+############################################
 
+
+
+############################################
+############################################
+def RTN_to_HEE_components(bx, by, bz, x, y, z, times):
+    bx_heeq, by_heeq, bz_heeq = RTN_to_HEEQ_mag_components(bx, by, bz, x, y, z)
+    bx_hee, by_hee, bz_hee = HEEQ_to_HEE_mag_components(bx_heeq, by_heeq, bz_heeq, times)
+    return bx_hee, by_hee, bz_hee
 
 def RTN_to_HEE(df_rtn):
     df_heeq = RTN_to_HEEQ(df_rtn)
     df_hee = HEEQ_to_HEE(df_heeq)
     return df_hee
+############################################
+############################################
 
+
+
+############################################
+############################################
+def HEE_to_RTN_mag_components(bx, by, bz, x, y, z, times):
+    bx_heeq, by_heeq, bz_heeq = HEE_to_HEEQ_mag_components(bx, by, bz, times)
+    bx_rtn, by_rtn, bz_rtn = HEEQ_to_RTN_mag_components(bx_heeq, by_heeq, bz_heeq, x, y, z)
+    return bx_rtn, by_rtn, bz_rtn
 
 def HEE_to_RTN(df_hee):
     df_heeq = HEE_to_HEEQ(df_hee)
     df_rtn = HEEQ_to_RTN(df_heeq)
     return df_rtn
+############################################
+############################################
 
+
+
+############################################
+############################################
+def RTN_to_GSE_components(bx, by, bz, x, y, z, times):
+    bx_heeq, by_heeq, bz_heeq = RTN_to_HEEQ_mag_components(bx, by, bz, x, y, z)
+    bx_gse, by_gse, bz_gse = HEEQ_to_GSE_mag_components(bx_heeq, by_heeq, bz_heeq, times)
+    return bx_gse, by_gse, bz_gse
 
 def RTN_to_GSE(df_rtn):
     df_heeq = RTN_to_HEEQ(df_rtn)
     df_gse = HEEQ_to_GSE(df_heeq)
     return df_gse
+############################################
+############################################
 
+
+
+############################################
+############################################
+def GSE_to_RTN_components(bx, by, bz, x, y, z, times):
+    bx_heeq, by_heeq, bz_heeq = GSE_to_HEEQ_mag_components(bx, by, bz, times)
+    bx_rtn, by_rtn, bz_rtn = HEEQ_to_RTN_mag_components(bx_heeq, by_heeq, bz_heeq, x, y, z)
+    return bx_rtn, by_rtn, bz_rtn
 
 def GSE_to_RTN(df_gse):
     df_heeq = GSE_to_HEEQ(df_gse)
     df_rtn = HEEQ_to_RTN(df_heeq)
     return df_rtn
+############################################
+############################################
 
+
+
+############################################
+############################################
+def RTN_to_GSM_components(bx, by, bz, x, y, z, times):
+    bx_gse, by_gse, bz_gse = RTN_to_GSE_components(bx, by, bz, x, y, z, times)
+    bx_gsm, by_gsm, bz_gsm = GSE_to_GSM_mag_components(bx_gse, by_gse, bz_gse, times)
+    return bx_gsm, by_gsm, bz_gsm
 
 def RTN_to_GSM(df_rtn):
     df_gse = RTN_to_GSE(df_rtn)
     df_gsm = GSE_to_GSM(df_gse)
     return df_gsm
+############################################
+############################################
 
+
+
+############################################
+############################################
+def GSM_to_RTN_components(bx, by, bz, x, y, z, times):
+    bx_gse, by_gse, bz_gse = GSM_to_GSE_mag_components(bx, by, bz, times)
+    bx_rtn, by_rtn, bz_rtn = GSE_to_RTN_components(bx_gse, by_gse, bz_gse, x, y, z, times)
+    return bx_rtn, by_rtn, bz_rtn
 
 def GSM_to_RTN(df_gsm):
     df_gse = GSM_to_GSE(df_gsm)
     df_rtn = GSE_to_RTN(df_gse)
     return df_rtn
+############################################
+############################################
 
 """
 Transform matrices directly from spice kernels
