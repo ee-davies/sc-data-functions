@@ -589,7 +589,7 @@ def get_wind_positions(start_timestamp, end_timestamp, coord_sys='GSE', path=win
         year = start.year
         date_str = f'{year}{start.month:02}{start.day:02}'
         try:
-            fn = glob.glob(path+f'wi_or_pre_{date_str}_*')[0]
+            fn = glob.glob(str(path)+f'wi_or_pre_{date_str}_*')[0]
             _df = get_wind_pos(fn, coord_sys)
             if _df is not None:
                 if df is None:

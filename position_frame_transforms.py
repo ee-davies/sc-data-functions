@@ -4,6 +4,7 @@ from datetime import datetime
 import spiceypy
 import functions_planets as planets
 from pathlib import Path
+import os
 
 from functions_general import load_path
 
@@ -436,7 +437,7 @@ def generic_furnish():
     generic_path = Path(kernels_path) / "generic/"
     generic_kernels = os.listdir(generic_path)
     for kernel in generic_kernels:
-        spiceypy.furnsh(Path(generic_path/ kernel))
+        spiceypy.furnsh(str(Path(generic_path/ kernel)))
 
 
 def get_transform(epoch: datetime, base_frame: str, to_frame: str):
