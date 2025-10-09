@@ -4,6 +4,7 @@ from datetime import datetime
 import spiceypy
 import functions_planets as planets
 from pathlib import Path
+import os
 
 from functions_general import load_path
 
