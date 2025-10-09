@@ -1,20 +1,22 @@
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
-from spacepy import pycdf
+from datetime import timedelta
 import spiceypy
 import os.path
-import glob
-import pickle
-import scipy
+
+from functions_general import load_path
 
 
 """
 VENUS EXPRESS DATA PATH
 """
 
-vex_path='/Volumes/External/data/vex/'
-kernels_path='/Volumes/External/data/kernels/'
+vex_path=load_path(path_name='vex_path')
+print(f"VEX path loaded: {vex_path}")
+
+# Load path once globally
+kernels_path = load_path(path_name='kernels_path')
+print(f"Kernels path loaded: {kernels_path}")
 
 
 """

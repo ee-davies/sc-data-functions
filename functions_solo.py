@@ -5,18 +5,23 @@ from spacepy import pycdf
 import cdflib
 import spiceypy
 # import os
-import glob
 import urllib.request
 import os.path
 import pickle
+
+from functions_general import load_path
 
 
 """
 SOLAR ORBITER SERVER DATA PATH
 """
 
-solo_path='/Volumes/External/data/solo/'
-kernels_path='/Volumes/External/data/kernels/'
+solo_path=load_path(path_name='solo_path')
+print(f"Solo path loaded: {solo_path}")
+
+# Load path once globally
+kernels_path = load_path(path_name='kernels_path')
+print(f"Kernels path loaded: {kernels_path}")
 
 
 """

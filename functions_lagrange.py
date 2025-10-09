@@ -1,15 +1,12 @@
 import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta, timezone
-from spacepy import pycdf
-import cdflib
 import spiceypy
-import glob
-import urllib.request
 import os.path
 import pickle
 
 import functions_general as fgen
+from functions_general import load_path
 
 
 """
@@ -18,8 +15,9 @@ info: https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/lagrange_point/AARE
 L1: 391, L2: 392, L4: 394, L5: 395
 """
 
-
-kernels_path='/Volumes/External/data/kernels/'
+# Load path once globally
+kernels_path = load_path(path_name='kernels_path')
+print(f"Kernels path loaded: {kernels_path}")
 
 
 def cart2sphere(x,y,z):

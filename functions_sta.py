@@ -6,13 +6,12 @@ import os.path
 import glob
 import urllib.request
 from urllib.request import urlopen
-import json
-import astrospice
-from sunpy.coordinates import HeliocentricInertial, HeliographicStonyhurst
 from bs4 import BeautifulSoup
 import cdflib
 import pickle
 from spacepy import pycdf
+
+from functions_general import load_path
 
 
 """
@@ -20,8 +19,12 @@ STEREO-A DATA PATH
 """
 
 
-stereoa_path='/Volumes/External/data/stereoa/'
-kernels_path='/Volumes/External/data/kernels/'
+stereoa_path=load_path(path_name='stereoa_path')
+print(f"STEREO-A path loaded: {stereoa_path}")
+
+# Load path once globally
+kernels_path = load_path(path_name='kernels_path')
+print(f"Kernels path loaded: {kernels_path}")
 
 
 """

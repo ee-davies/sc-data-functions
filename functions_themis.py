@@ -1,24 +1,18 @@
 import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta, timezone
-import spiceypy
 import os.path
-import glob
 import urllib.request
-from urllib.request import urlopen
-import json
-import astrospice
-from sunpy.coordinates import HeliocentricInertial, HeliographicStonyhurst
-from bs4 import BeautifulSoup
-import cdflib
-import pickle
 from spacepy import pycdf
+
+from functions_general import load_path
 
 """
 THEMIS DATA PATH
 """
 
-themis_path='/Volumes/External/data/themis/'
+themis_path=load_path(path_name='themis_path')
+print(f"THEMIS path loaded: {themis_path}")
 
 
 """

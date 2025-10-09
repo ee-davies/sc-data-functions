@@ -1,10 +1,16 @@
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime
 import itertools
 import spiceypy
-import os.path
+from pathlib import Path
+import os
 
+from functions_general import load_path
+
+# Load path once globally
+kernels_path = load_path(path_name='kernels_path')
+print(f"Kernels path loaded: {kernels_path}")
 
 #input datetime to return T1, T2 and T3 based on Hapgood 1992
 #http://www.igpp.ucla.edu/public/vassilis/ESS261/Lecture03/Hapgood_sdarticle.pdf
@@ -1486,11 +1492,10 @@ Transform matrices directly from spice kernels
 
 def generic_furnish():
     """Main"""
-    kernels_path='/Volumes/External/data/kernels/'
-    generic_path = kernels_path+'generic/'
+    generic_path = Path(kernels_path) / "generic/"
     generic_kernels = os.listdir(generic_path)
     for kernel in generic_kernels:
-        spiceypy.furnsh(os.path.join(generic_path, kernel))
+        spiceypy.furnsh(Path(generic_path/ kernel))
 
 def get_transform(epoch: datetime, base_frame: str, to_frame: str):
     """Return transformation matrix at a given epoch."""

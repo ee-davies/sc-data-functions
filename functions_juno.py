@@ -1,12 +1,13 @@
 import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
-from spacepy import pycdf
 import spiceypy
 import os.path
-import glob
 import pickle
 import scipy
+
+from functions_general import load_path
+
 
 
 def format_path(fp):
@@ -28,8 +29,12 @@ def filter_bad_data(df, col, bad_val):
 JUNO DATA PATH
 """
 
-juno_path='/Volumes/External/data/juno/'
-kernels_path='/Volumes/External/data/kernels/'
+juno_path=load_path(path_name='juno_path')
+print(f"Juno path loaded: {juno_path}")
+
+# Load path once globally
+kernels_path = load_path(path_name='kernels_path')
+print(f"Kernels path loaded: {kernels_path}")
 
 
 """

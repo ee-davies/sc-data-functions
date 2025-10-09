@@ -2,20 +2,25 @@ import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta, timezone
 from spacepy import pycdf
-import cdflib
 import spiceypy
 import glob
 import urllib.request
 import os.path
 import pickle
 
+from functions_general import load_path
+
 
 """
 ULYSSES SERVER DATA PATH
 """
 
-ulysses_path='/Volumes/External/data/ulysses/'
-kernels_path='/Volumes/External/data/kernels/'
+ulysses_path=load_path(path_name='ulysses_path')
+print(f"Ulysses path loaded: {ulysses_path}")
+
+# Load path once globally
+kernels_path = load_path(path_name='kernels_path')
+print(f"Kernels path loaded: {kernels_path}")
 
 
 """

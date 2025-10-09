@@ -1,8 +1,6 @@
 import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta, timezone
-from spacepy import pycdf
-import spiceypy
 import os
 import urllib.request
 import os.path
@@ -20,14 +18,20 @@ import data_frame_transforms as data_transform
 import position_frame_transforms as pos_transform
 import functions_general as fgen
 
+from functions_general import load_path
+
 
 """
 NOAA/DSCOVR DATA PATH
 """
 
 
-dscovr_path='/Volumes/External/data/dscovr/'
-kernels_path='/Volumes/External/data/kernels/'
+dscovr_path=load_path(path_name='dscovr_path')
+print(f"DSCOVR path loaded: {dscovr_path}")
+
+# Load path once globally
+kernels_path = load_path(path_name='kernels_path')
+print(f"Kernels path loaded: {kernels_path}")
 
 
 """
