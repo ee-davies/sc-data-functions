@@ -6,7 +6,7 @@ import spiceypy
 from pathlib import Path
 import os
 
-from .functions_general import load_path
+from functions_general import load_path
 
 # Load path once globally
 kernels_path = load_path(path_name='kernels_path')
