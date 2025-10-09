@@ -6,7 +6,7 @@ import spiceypy
 import os.path
 import glob
 
-from .functions_general import load_path
+from functions_general import load_path
 
 """
 MESSENGER DATA PATH

@@ -17,17 +17,17 @@ import json
 import pickle
 
 
-from .functions_noaa import (
+from functions_noaa import (
     get_dscovrpositions
 )
 
-from .functions_ace import (
+from functions_ace import (
     get_acepos_frommag_range
 )
 
-from .functions_general import load_path
+from functions_general import load_path
 
-from .position_frame_transforms import (
+from position_frame_transforms import (
     GSE_to_HEE,
     HEE_to_HEEQ
 )

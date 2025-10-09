@@ -4,7 +4,7 @@ import spiceypy
 import os
 import pandas as pd
 
-from .functions_general import load_path
+from functions_general import load_path
 
 
 """

@@ -5,8 +5,8 @@ import spiceypy
 import os.path
 import pickle
 
-from . import functions_general as fgen
-from .functions_general import load_path
+import functions_general as fgen
+from functions_general import load_path
 
 
 """
