@@ -8,7 +8,7 @@ import urllib.request
 import os.path
 import pickle
 
-from functions_general import load_path
+from .functions_general import load_path
 
 
 """

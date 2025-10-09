@@ -9,11 +9,11 @@ import os.path
 import pickle
 from bs4 import BeautifulSoup
 
-import data_frame_transforms as data_transform
-import position_frame_transforms as pos_transform
-import functions_general as fgen
+from . import data_frame_transforms as data_transform
+from . import position_frame_transforms as pos_transform
+from . import functions_general as fgen
 
-from functions_general import load_path
+from .functions_general import load_path
 
 """
 ACE DATA PATH
