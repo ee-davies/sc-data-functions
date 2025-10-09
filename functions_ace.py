@@ -2,8 +2,6 @@ import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta, timezone
 from spacepy import pycdf
-# import spiceypy
-# import os
 import glob
 import urllib.request
 from urllib.request import urlopen
@@ -15,13 +13,14 @@ import data_frame_transforms as data_transform
 import position_frame_transforms as pos_transform
 import functions_general as fgen
 
+from functions_general import load_path
 
 """
 ACE DATA PATH
 """
 
-
-ace_path = "/Volumes/External/Data/ACE/"
+ace_path = load_path(path_name='ace_path')
+print(f"ACE data path loaded: {ace_path}")
 
 
 """

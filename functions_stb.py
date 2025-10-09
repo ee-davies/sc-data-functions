@@ -1,18 +1,11 @@
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import timedelta
 import spiceypy
 import os.path
-import glob
-import urllib.request
-from urllib.request import urlopen
-import json
-import astrospice
-from sunpy.coordinates import HeliocentricInertial, HeliographicStonyhurst
-from bs4 import BeautifulSoup
-import cdflib
-import pickle
 from spacepy import pycdf
+
+from functions_general import load_path
 
 
 """
@@ -20,8 +13,12 @@ STEREO-B DATA PATH
 """
 
 
-stereob_path='/Volumes/External/data/stereob/'
-kernels_path='/Volumes/External/data/kernels/'
+stereob_path=load_path(path_name='stereob_path')
+print(f"STEREO-B path loaded: {stereob_path}")
+
+# Load path once globally
+kernels_path = load_path(path_name='kernels_path')
+print(f"Kernels path loaded: {kernels_path}")
 
 
 """

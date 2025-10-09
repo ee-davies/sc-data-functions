@@ -3,7 +3,8 @@ import numpy as np
 import spiceypy
 import os
 import pandas as pd
-from spacepy import pycdf
+
+from functions_general import load_path
 
 
 """
@@ -11,8 +12,12 @@ BEPICOLOMBO DATA PATH
 """
 
 
-bepi_path='/Volumes/External/data/bepi/'
-kernels_path='/Volumes/External/data/kernels/'
+bepi_path=load_path(path_name='bepi_path')
+print(f"Bepi path loaded: {bepi_path}")
+
+# Load path once globally
+kernels_path = load_path(path_name='kernels_path')
+print(f"Kernels path loaded: {kernels_path}")
 
 
 def format_path(fp):

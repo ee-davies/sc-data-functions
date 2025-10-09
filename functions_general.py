@@ -1,7 +1,9 @@
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta, timezone
 from scipy import constants
+
+from pathlib import Path
+import json
 
 
 def resample_df(df, resample_min):
@@ -102,3 +104,10 @@ def make_combined_recarray(df):
     rarr.lat=df['lat']
     rarr.lon=df['lon']
     return rarr
+
+
+# === Load path from JSON config ===
+def load_path(config_file=Path(__file__).resolve().parents[0] /'config.json', path_name='kernels_path'):
+    with open(config_file, 'r') as f:
+        config = json.load(f)
+    return config[path_name]

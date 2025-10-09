@@ -1,29 +1,25 @@
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta, timezone
-from spacepy import pycdf
-import cdflib
+from datetime import timedelta
 import spiceypy
 # import os
 import glob
-import urllib.request
-from urllib.request import urlopen
 import os.path
-import pickle
 import netCDF4 as nc
 
-import data_frame_transforms as data_transform
-import position_frame_transforms as pos_transform
-import functions_general as fgen
+from functions_general import load_path
 
 
 """
 ADITYA L1 SERVER DATA PATH
 """
 
-aditya_path='/Volumes/External/data/aditya/'
-kernels_path='/Volumes/External/data/kernels/'
+aditya_path=load_path(path_name='aditya_path')
+print(f"Aditya path loaded: {aditya_path}")
 
+# Load path once globally
+kernels_path = load_path(path_name='kernels_path')
+print(f"Kernels path loaded: {kernels_path}")
 
 """
 ADITYA DOWNLOAD DATA

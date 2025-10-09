@@ -1,21 +1,19 @@
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta, timezone
-from spacepy import pycdf
-import cdflib
+from datetime import timedelta
 import spiceypy
-import glob
-import urllib.request
 import os.path
-import pickle
 
-
+from functions_general import load_path
 
 """
 PLANETS functions: positions of planets from generic spice kernels
 """
 
-kernels_path='/Volumes/External/data/kernels/'
+
+# Load path once globally
+kernels_path = load_path(path_name='kernels_path')
+print(f"Kernels path loaded: {kernels_path}")
 
 
 def cart2sphere(x,y,z):

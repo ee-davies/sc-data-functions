@@ -1,22 +1,22 @@
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
-from spacepy import pycdf
-import cdflib
+from datetime import timedelta
 import spiceypy
-# import os
-import glob
-import urllib.request
 import os.path
-import pickle
+
+from functions_general import load_path
 
 
 """
-SOLAR ORBITER SERVER DATA PATH
+JUICE SERVER DATA PATH
 """
 
-juice_path='/Volumes/External/data/juice/'
-kernels_path='/Volumes/External/data/kernels/'
+juice_path=load_path(path_name='juice_path')
+print(f"Juice path loaded: {juice_path}")
+
+# Load path once globally
+kernels_path = load_path(path_name='kernels_path')
+print(f"Kernels path loaded: {kernels_path}")
 
 
 """

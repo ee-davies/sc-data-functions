@@ -1,19 +1,24 @@
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import timedelta
 from spacepy import pycdf
 import spiceypy
 import os.path
 import glob
 
+from functions_general import load_path
 
 """
 MESSENGER DATA PATH
 """
 
 
-mes_path='/Volumes/External/data/mes/'
-kernels_path='/Volumes/External/data/kernels/'
+mes_path=load_path(path_name='mes_path')
+print(f"Mes path loaded: {mes_path}")
+
+# Load path once globally
+kernels_path = load_path(path_name='kernels_path')
+print(f"Kernels path loaded: {kernels_path}")
 
 
 def get_mesmag(fp):
