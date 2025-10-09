@@ -5,7 +5,7 @@ import spiceypy
 import os.path
 from spacepy import pycdf
 
-from functions_general import load_path
+from .functions_general import load_path
 
 
 """
