@@ -10,7 +10,7 @@ import pickle
 import astrospice
 from sunpy.coordinates import HeliocentricInertial, HeliographicStonyhurst
 
-from functions_general import load_path
+from .functions_general import load_path
 
 
 """

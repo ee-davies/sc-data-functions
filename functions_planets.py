@@ -4,7 +4,7 @@ from datetime import timedelta
 import spiceypy
 import os.path
 
-from functions_general import load_path
+from .functions_general import load_path
 
 """
 PLANETS functions: positions of planets from generic spice kernels

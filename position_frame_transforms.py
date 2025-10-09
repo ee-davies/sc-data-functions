@@ -2,10 +2,10 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 import spiceypy
-import functions_planets as planets
+from . import functions_planets as planets
 from pathlib import Path
 
-from functions_general import load_path
+from .functions_general import load_path
 
 # Load path once globally
 kernels_path = load_path(path_name='kernels_path')

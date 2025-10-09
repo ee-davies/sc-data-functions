@@ -7,7 +7,7 @@ import glob
 import os.path
 import netCDF4 as nc
 
-from functions_general import load_path
+from .functions_general import load_path
 
 
 """

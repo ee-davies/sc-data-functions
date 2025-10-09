@@ -6,7 +6,7 @@ import spiceypy
 from pathlib import Path
 import os
 
-from functions_general import load_path
+from .functions_general import load_path
 
 # Load path once globally
 kernels_path = load_path(path_name='kernels_path')
@@ -1502,7 +1502,7 @@ def generic_furnish():
     generic_path = Path(kernels_path) / "generic/"
     generic_kernels = os.listdir(generic_path)
     for kernel in generic_kernels:
-        spiceypy.furnsh(Path(generic_path/ kernel))
+        spiceypy.furnsh(str(Path(generic_path/ kernel)))
 
 def get_transform(epoch: datetime, base_frame: str, to_frame: str):
     """Return transformation matrix at a given epoch."""
