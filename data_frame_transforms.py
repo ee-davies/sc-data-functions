@@ -115,7 +115,10 @@ Geocentric frame conversions
 """
 
 ############################################
+" GSE to GSM, MAGNETIC FIELD "
 ############################################
+
+
 # GSE_to_GSM_mag for separate components, useful for transforming arrays without pandas overhead
 def GSE_to_GSM_mag_components(bx, by, bz, times):
     # Get all transformation matrices at once
@@ -127,6 +130,7 @@ def GSE_to_GSM_mag_components(bx, by, bz, times):
     GSM_coords = np.einsum('ijk,ik->ij', T3_matrices, coords)
     bx, by, bz = GSM_coords[:, 0], GSM_coords[:, 1], GSM_coords[:, 2]
     return bx, by, bz
+
 
 def GSE_to_GSM_mag(df):
     times = df['time'].values
@@ -140,13 +144,13 @@ def GSE_to_GSM_mag(df):
         'bz': bz,
     })
     return df_transformed
-############################################
-############################################
-
 
 
 ############################################
+" GSE to GSM, PLASMA (VELOCITY) "
 ############################################
+
+
 # GSE_to_GSM_plas for separate components, useful for transforming arrays without pandas overhead
 def GSE_to_GSM_plas_components(vx, vy, vz, times):
     T3_matrices = np.array([get_geocentric_transformation_matrices(t)[2] for t in times])
@@ -157,6 +161,7 @@ def GSE_to_GSM_plas_components(vx, vy, vz, times):
     GSM_coords = np.einsum('ijk,ik->ij', T3_matrices, coords)
     vx, vy, vz = GSM_coords[:, 0], GSM_coords[:, 1], GSM_coords[:, 2]
     return vx, vy, vz
+
 
 def GSE_to_GSM_plas(df):
     times = df['time'].values
@@ -172,13 +177,13 @@ def GSE_to_GSM_plas(df):
         'tp': df['tp'],
     })
     return df_transformed
-############################################
-############################################
-
 
 
 ############################################
+" GSE to GSM "
 ############################################
+
+
 def GSE_to_GSM(df):
     # Get all transformation matrices at once
     times = df['time'].values
@@ -204,12 +209,13 @@ def GSE_to_GSM(df):
         'lon': df['lon']
     })
     return df_transformed
-############################################
-############################################
 
 
 ############################################
+" GSM to GSE, MAGNETIC FIELD "
 ############################################
+
+
 # GSM_to_GSE_mag for separate components, useful for transforming arrays without pandas overhead
 def GSM_to_GSE_mag_components(bx, by, bz, times):
     T3_matrices = np.array([get_geocentric_transformation_matrices(t)[2] for t in times])
@@ -222,6 +228,7 @@ def GSM_to_GSE_mag_components(bx, by, bz, times):
     GSE_coords = np.einsum('ijk,ik->ij', T3_inv_matrices, coords)
     bx, by, bz = GSE_coords[:, 0], GSE_coords[:, 1], GSE_coords[:, 2]
     return bx, by, bz
+
 
 def GSM_to_GSE_mag(df):
     # Get all transformation matrices at once
@@ -236,13 +243,13 @@ def GSM_to_GSE_mag(df):
         'bz': bz,
     })
     return df_transformed
-############################################
-############################################
-
 
 
 ############################################
+" GSM to GSE, PLASMA (VELOCITY) "
 ############################################
+
+
 # GSM_to_GSE_plas for separate components, useful for transforming arrays without pandas overhead
 def GSM_to_GSE_plas_components(vx, vy, vz, times):
     T3_matrices = np.array([get_geocentric_transformation_matrices(t)[2] for t in times])
@@ -255,6 +262,7 @@ def GSM_to_GSE_plas_components(vx, vy, vz, times):
     GSE_coords = np.einsum('ijk,ik->ij', T3_inv_matrices, coords)
     vx, vy, vz = GSE_coords[:, 0], GSE_coords[:, 1], GSE_coords[:, 2]
     return vx, vy, vz
+
 
 def GSM_to_GSE_plas(df):
     times = df['time'].values
@@ -270,13 +278,13 @@ def GSM_to_GSE_plas(df):
         'tp': df['tp'],
     })
     return df_transformed
-############################################
-############################################
-
 
 
 ############################################
+" GSM to GSE "
 ############################################
+
+
 def GSM_to_GSE(df):
     times = df['time'].values
     bx, by, bz = GSM_to_GSE_mag_components(df['bx'].values, df['by'].values, df['bz'].values, times)
@@ -301,8 +309,7 @@ def GSM_to_GSE(df):
         'lon': df['lon']
     })
     return df_transformed
-############################################
-############################################
+
 
 """
 Geocentric to approximate RTN frame conversions
