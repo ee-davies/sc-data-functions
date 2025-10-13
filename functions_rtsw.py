@@ -391,8 +391,8 @@ def create_rtsw_realtime_archive(output_path = rtsw_path, start_date = None, end
     dscovr_positions =  dscovr_positions.set_index('time')
 
     full_dscovr_index = pd.date_range(
-        dscovr_positions.index.min(),
-        dscovr_positions.index.max(),
+        dscovr_positions.index.min().round("1min"),
+        dscovr_positions.index.max().round("1min"),
         freq='1min'
     )
 
@@ -415,8 +415,8 @@ def create_rtsw_realtime_archive(output_path = rtsw_path, start_date = None, end
     ace_positions = ace_positions.sort_values("time").set_index('time')
 
     full_ace_index = pd.date_range(
-        ace_positions.index.min(),
-        ace_positions.index.max(),
+        ace_positions.index.min().round("1min"),
+        ace_positions.index.max().round("1min"),
         freq='1min'
     )
 
@@ -452,11 +452,17 @@ def create_rtsw_realtime_archive(output_path = rtsw_path, start_date = None, end
         f" Made with script by H.T. Ruedisser (github @hruedisser). File creation date: {datetime.now(timezone.utc):%Y-%b-%d %H:%M} UTC"
     )
     
+    file_name = 'rtsw_realtime_archive_gsm'
+
+    if start_date is not None:
+        file_name += f"_from_{start_date.strftime('%Y%m%d')}"
+    if end_date is not None:
+        file_name += f"_to_{end_date.strftime('%Y%m%d')}"
+
     # dump to pkl
-    pickle.dump([rtsw, header], open(Path(output_path) / f'rtsw_realtime_archive_gsm.p', 'wb'))
+    pickle.dump([rtsw, header], open(Path(output_path) / f"{file_name}.p", 'wb'))
 
-    print(f"Saved rtsw_realtime_archive_gsm to {Path(output_path) / 'rtsw_realtime_archive_gsm.p'}")
-
+    print(f"Saved rtsw_realtime_archive_gsm to {Path(output_path) / (file_name + '.p')}")
 
 
 
