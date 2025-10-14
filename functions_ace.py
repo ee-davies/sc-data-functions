@@ -9,6 +9,8 @@ import os.path
 import pickle
 from bs4 import BeautifulSoup
 
+from tqdm import tqdm
+
 import data_frame_transforms as data_transform
 import position_frame_transforms as pos_transform
 import functions_general as fgen
@@ -427,14 +429,51 @@ def get_acepos(fp, coord_sys='GSE'): #GSE and GSM available
         df = None
     return df
 
-
 def get_acepos_frommag_range(start_timestamp, end_timestamp, coord_sys='GSE', path=ace_path+'mfi'):
+    """Efficiently get ACE position data from MAG CDF files in a date range."""
+    start = start_timestamp.date()
+    end = end_timestamp.date()
+
+    # List all files once
+    all_files = sorted(glob.glob(f'{path}/ac_h0_mfi_*.cdf'))
+
+    # Filter by date range
+    files_to_load = []
+    for f in all_files:
+        try:
+            date_str = f.split('_')[-2]
+            file_date = pd.to_datetime(date_str, format='%Y%m%d').date()
+            if start <= file_date <= end:
+                files_to_load.append(f)
+        except Exception:
+            continue
+
+    if not files_to_load:
+        print("No matching CDF files found.")
+        return None
+
+    # Read and combine
+    dfs = []
+    for f in tqdm(files_to_load):
+        _df = get_acepos(f, coord_sys)
+        if _df is not None:
+            dfs.append(_df)
+
+    if not dfs:
+        return None
+
+    # Concatenate once
+    df = pd.concat(dfs, ignore_index=True)
+    return df
+
+def get_acepos_frommag_range_alt(start_timestamp, end_timestamp, coord_sys='GSE', path=ace_path+'mfi'):
     """Pass two datetime objects and grab .cdf files between dates, from
     directory given."""
     df = None
     start = start_timestamp.date()
     end = end_timestamp.date()
     while start <= end:
+        print(f"Getting ACE position from MAG for {start}...")
         fn = f'ac_h0_mfi_{start.year}{start.month:02}{start.day:02}'
         try:
             path_fn = glob.glob(f'{path}/{fn}*.cdf')[0]
