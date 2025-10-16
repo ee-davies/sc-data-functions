@@ -11,7 +11,7 @@ import pickle
 import requests
 import gzip
 import shutil
-
+from netCDF4 import Dataset
 
 import data_frame_transforms as data_transform
 import position_frame_transforms as pos_transform
@@ -94,34 +94,49 @@ def extract_wget_links(start_datetime, end_datetime, datatype="f1m"): #"f1m", "m
     return file_urls
 
 
-def download_dscovr(start_datetime, end_datetime, datatype:str, path=dscovr_path):  #"f1m", "m1m", "pop"
+def download_dscovr(start_datetime, end_datetime, datatype:str, path=dscovr_path, force_download = True):  #"f1m", "m1m", "pop"
+    # Determine output directory based on datatype
     if datatype == "f1m":
-        output_path = path+'plas/'
+        output_path = os.path.join(path, "plas")
     elif datatype == "m1m":
-        output_path = path+'mag/'
+        output_path = os.path.join(path, "mag")
     elif datatype == "pop":
-        output_path = path+'orb/'
+        output_path = os.path.join(path, "orb")
+    else:
+        raise ValueError(f"Invalid datatype '{datatype}'. Expected 'f1m', 'm1m', or 'pop'.")
+
+    os.makedirs(output_path, exist_ok=True)
+
     file_urls = extract_wget_links(start_datetime, end_datetime, datatype)
+
     for file_url in file_urls:
         filename = os.path.basename(file_url)
         file_path = os.path.join(output_path, filename)
+        extracted_path = file_path[:-3] if filename.endswith(".gz") else file_path
+
+        # Skip if already downloaded (and not forcing re-download)
+        if not force_download and (os.path.exists(file_path) or os.path.exists(extracted_path)):
+            print(f"Skipping {filename} — already downloaded.")
+            continue
+
         print(f"Downloading {file_url} to {file_path}")
         response = requests.get(file_url, stream=True)
+
         if response.status_code == 200:
             with open(file_path, "wb") as f:
                 for chunk in response.iter_content(chunk_size=8192):
                     f.write(chunk)
-                    print(f"Downloaded {filename}")
+            print(f"Downloaded {filename}")
         else:
             print(f"Failed to download {filename}. Status code: {response.status_code}")
             continue
-        #extract zips
+
+        # Extract .gz files
         if filename.endswith(".gz"):
-            with open(file_path[:-3], "wb") as f_out:
-                with gzip.open(file_path, "rb") as f_in:
-                    shutil.copyfileobj(f_in, f_out)
+            with gzip.open(file_path, "rb") as f_in, open(extracted_path, "wb") as f_out:
+                shutil.copyfileobj(f_in, f_out)
             os.remove(file_path)
-            print(f"Extracted {filename[:-3]} from {filename}")
+            print(f"Extracted {os.path.basename(extracted_path)} from {filename}")
 
 
 """
@@ -444,24 +459,42 @@ def cart2sphere(x,y,z):
 
 
 def get_dscovrpos(fp, coord_sys='GSE'):
-    """raw = gse or gsm"""
-    if coord_sys == 'GSE':
-        coord_sys = 'gse'
-    elif coord_sys == 'GSM':
-        coord_sys = 'gsm'
+    """Reads DSCOVR position data from NetCDF file and returns DataFrame in chosen coordinate system (GSE or GSM)."""
+    coord_sys = coord_sys.lower()
+
+
     try:
         ncdf = netcdf.NetCDFFile(fp,'r')
-        #print(file2read.variables.keys()) to read variable names
         data = {df_col: ncdf.variables[cdf_col][:] for cdf_col, df_col in zip(['time', f'sat_x_{coord_sys}', f'sat_y_{coord_sys}', f'sat_z_{coord_sys}'], ['time', 'x', 'y', 'z'])}
-        df = pd.DataFrame.from_dict(data)
-        df['time'] = pd.to_datetime(df['time'], unit='ms')
-        r, lat, lon = cart2sphere(data['x'].astype('int64'),data['y'].astype('int64'),data['z'].astype('int64'))
-        df['r'] = r
-        df['lat'] = lat
-        df['lon'] = lon
     except Exception as e:
-        print('ERROR:', e, fp)
-        df = None
+        # print(f'netcdf.NetCDF ERROR reading {fp}:', e)
+
+        try:
+            with Dataset(fp, 'r') as ncdf:
+                # Extract variables
+                time = ncdf.variables['time'][:]
+                x = ncdf.variables[f'sat_x_{coord_sys}'][:]
+                y = ncdf.variables[f'sat_y_{coord_sys}'][:]
+                z = ncdf.variables[f'sat_z_{coord_sys}'][:]
+
+        except Exception as e:
+            #print(f'netCDF4.Dataset ERROR reading {fp}:', e)
+            return None
+        
+    # Build DataFrame
+    df = pd.DataFrame({
+        'time': pd.to_datetime(time, unit='ms'),
+        'x': x,
+        'y': y,
+        'z': z
+    })
+    
+    # Convert to spherical coordinates
+    r, lat, lon = cart2sphere(x, y, z)
+    df['r'] = r
+    df['lat'] = lat
+    df['lon'] = lon
+        
     return df
 
 

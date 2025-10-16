@@ -1,3 +1,4 @@
+
 import numpy as np
 import pandas as pd
 from datetime import datetime
@@ -256,7 +257,7 @@ def GSM_to_GSE_plas_components(vx, vy, vz, times):
     # Compute inverse matrices for all T3 matrices at once
     T3_inv_matrices = np.linalg.inv(T3_matrices)
     # Create coordinate matrix (N x 3) where N is number of rows
-    coords = np.column_stack([df['vx'].values, df['vy'].values, df['vz'].values])
+    coords = np.column_stack([vx, vy, vz])
     # Vectorized matrix multiplication using einsum
     # 'ijk,ik->ij' means: for each i, multiply matrix T3_inv_matrices[i] with vector coords[i,:]
     GSE_coords = np.einsum('ijk,ik->ij', T3_inv_matrices, coords)
