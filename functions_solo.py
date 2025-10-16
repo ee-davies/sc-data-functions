@@ -8,6 +8,7 @@ import spiceypy
 import urllib.request
 import os.path
 import pickle
+import glob
 
 from functions_general import load_path
 
@@ -392,12 +393,15 @@ def get_soloplas_range_ll(start_timestamp, end_timestamp, path=f'{solo_path}'+'s
     while start < end:
         date_str = f'{start.year}{start.month:02}{start.day:02}'
         fn = glob.glob(f'{path}/solo_LL02_swa-pas-mom_{date_str}*.cdf')
-        _df = get_soloplas_ll(fn[0])
-        if _df is not None:
-            if df is None:
-                df = _df.copy(deep=True)
-            else:
-                df = pd.concat([df, _df])
+        try:
+            _df = get_soloplas_ll(fn[0])
+            if _df is not None:
+                if df is None:
+                    df = _df.copy(deep=True)
+                else:
+                    df = pd.concat([df, _df])
+        except Exception as e:
+            print('ERROR', e, "DataFrame is empty") 
         start += timedelta(days=1)
     return df
 
