@@ -164,7 +164,7 @@ ASPEX-SWIS: Data available from 20240507, but solidly from 20240801
 """
 
 def get_adityaplas(fp):
-    """raw = ?"""
+    """raw = likely GSE"""
     try:
         cdf = pycdf.CDF(fp)
         data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['epoch_for_cdf_mod', 'proton_density', 'proton_thermal', 'proton_bulk_speed', 'proton_xvelocity', 'proton_yvelocity', 'proton_zvelocity'], ['time', 'np', 'tp', 'vt', 'vx', 'vy', 'vz'])}
@@ -179,6 +179,28 @@ def get_adityaplas(fp):
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
+    return df
+
+
+def get_adityaplas_range(start_timestamp, end_timestamp, path=aditya_path+'plas'):
+    """Pass two datetime objects and grab .cdf files between dates, from
+    directory given."""
+    df = None
+    start = start_timestamp.date()
+    end = end_timestamp.date()
+    while start <= end:
+        fn = f'AL1_ASW91_L2_BLK_{start.year}{start.month:02}{start.day:02}'
+        try:
+            path_fn = glob.glob(f'{path}/{fn}*.cdf')[0]
+        except Exception as e:
+            path_fn = None
+        _df = get_adityaplas(f'{path_fn}')
+        if _df is not None:
+            if df is None:
+                df = _df.copy(deep=True)
+            else:
+                df = pd.concat([df, _df])
+        start += timedelta(days=1)
     return df
 
 
