@@ -21,6 +21,21 @@ print(f"Aditya path loaded: {aditya_path}")
 kernels_path = load_path(path_name='kernels_path')
 print(f"Kernels path loaded: {kernels_path}")
 
+
+"""
+FILTER BAD DATA
+"""
+
+
+def filter_bad_col(df, col, bad_val): #filter by individual columns
+    if bad_val < 0:
+        mask_vals = df[col] < bad_val  # boolean mask for all bad values
+    else:
+        mask_vals = df[col] > bad_val  # boolean mask for all bad values
+    df[col].mask(mask_vals, inplace=True)
+    return df
+
+
 """
 ADITYA DOWNLOAD DATA
 #Can't currently download automatically as requires log in
@@ -64,6 +79,9 @@ def get_adityamag_gse(fp):
         data = {df_col: ncdf.variables[cdf_col][:] for cdf_col, df_col in zip(['time', 'Bx_gse', 'By_gse', 'Bz_gse'], ['time', 'bx', 'by', 'bz'])}
         df = pd.DataFrame.from_dict(data)
         df['time'] = pd.to_datetime(df['time']*1E9)
+        df = filter_bad_col(df, 'bx', -9000)
+        df = filter_bad_col(df, 'by', -9000)
+        df = filter_bad_col(df, 'bz', -9000)
         bt = np.linalg.norm([df.bx,df.by,df.bz], axis=0)
         df['bt'] = bt
     except Exception as e:
@@ -186,3 +204,11 @@ def get_aditya_pos(t, coord_sys='ECLIPJ2000'):
             print(e)
             return [t, None, None, None, None, None, None]
         
+
+def get_aditya_positions(time_series, coord_sys):
+    positions = []
+    for t in time_series:
+        position = get_aditya_pos(t, coord_sys)
+        positions.append(position)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    return df_positions
