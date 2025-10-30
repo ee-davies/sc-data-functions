@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from datetime import timedelta
 import spiceypy
+from spacepy import pycdf
 # import os
 import glob
 import os.path
@@ -154,6 +155,30 @@ def get_adityamag_range(start_timestamp, end_timestamp, coord_sys:str):
         df = get_adityamag_gse_range(start_timestamp, end_timestamp)
     elif coord_sys == 'GSM':
         df = get_adityamag_gsm_range(start_timestamp, end_timestamp)
+    return df
+
+
+"""
+ADITYA PLAS DATA
+ASPEX-SWIS: Data available from 20240507, but solidly from 20240801
+"""
+
+def get_adityaplas(fp):
+    """raw = ?"""
+    try:
+        cdf = pycdf.CDF(fp)
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['epoch_for_cdf_mod', 'proton_density', 'proton_thermal', 'proton_bulk_speed', 'proton_xvelocity', 'proton_yvelocity', 'proton_zvelocity'], ['time', 'np', 'tp', 'vt', 'vx', 'vy', 'vz'])}
+        df = pd.DataFrame.from_dict(data)
+        df['time'] = pd.to_datetime(df['time'])
+        df = filter_bad_col(df, 'np', -1E30)
+        df = filter_bad_col(df, 'tp', -1E30)
+        df = filter_bad_col(df, 'vt', -1E30)
+        df = filter_bad_col(df, 'vx', -1E30)
+        df = filter_bad_col(df, 'vy', -1E30)
+        df = filter_bad_col(df, 'vz', -1E30)
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
     return df
 
 
