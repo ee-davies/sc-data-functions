@@ -559,7 +559,7 @@ def create_dscovr_plas_pkl(start_timestamp, end_timestamp, coord_sys:str, output
     datestr_end = f'{end.year}{end.month:02}{end.day:02}'
     #create header
     header='Science level plasma (F1M) data from DSCOVR, called from https://www.ngdc.noaa.gov/dscovr-data-access/ or https://www.ngdc.noaa.gov/dscovr/portal/index.html#/download.'+\
-    ' Timerange: '+rarr.time[0].strftime("%Y-%b-%d %H:%M")+' to '+rarr.time[-1].strftime("%Y-%b-%d %H:%M")+'.'+\
+    ' Timerange: '+rarr.time[0].strftime("%Y-%b-%d %H:%M")+' to '+end_timestamp.strftime("%Y-%b-%d %H:%M")+'.'+\
     ' Plasma data available in original cadence of 1 minute.'+\
     ' Units: proton velocity [km/s], proton temperature [K], proton number density [n/cc].'+\
     ' Available coordinate systems include GSE, GSM, and RTN. GSE and GSM data are taken directly from oe_f1m_dscovr files, RTN data is converted using data_transforms (Hapgood 1992 and spice kernels).'+\
