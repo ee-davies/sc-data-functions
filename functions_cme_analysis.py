@@ -35,3 +35,7 @@ def get_DiP(df, mo_start, mo_end):
     DiP = times[i]/times[-1]
     return DiP
 
+
+def get_gexp_power(r1,r2,b1,b2):
+    power = (np.log(b2)-np.log(b1))/(np.log(r2)-np.log(r1))
+    return power
