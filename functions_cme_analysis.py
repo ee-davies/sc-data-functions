@@ -3,6 +3,10 @@ import pandas as pd
 from datetime import datetime, timedelta
 from scipy import integrate
 
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
+import plotly.io as pio
+
 """
 FUNCTIONS TO ANALYSE DIFFERENT PARTS OF ICMES
 """
@@ -10,6 +14,25 @@ FUNCTIONS TO ANALYSE DIFFERENT PARTS OF ICMES
 """
 GENERAL
 """
+
+def plotly_mag(df, save_fig=False):
+    pio.renderers.default = 'browser'
+    fig = make_subplots(rows=1, cols=1, shared_xaxes=True)
+    for column, color in zip(['bt', 'bx', 'by', 'bz'], ['black', 'red', 'green', 'blue']):
+        fig.add_trace(
+            go.Scatter(
+                x=df['time'],
+                y=df[column],
+                name=column.upper(),
+                line_color=color
+            ),
+            row=1, col=1
+        )
+    fig.show()
+    if save_fig == True:
+        now = datetime.now().strftime('%Y%m%d%H%M')
+        fig.write_html(f'plotly_mag_{now}.html') 
+
 
 """
 SHOCK
