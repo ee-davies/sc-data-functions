@@ -259,3 +259,22 @@ def get_aditya_positions(time_series, coord_sys):
         positions.append(position)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
     return df_positions
+
+
+def get_aditya_pos_from_mag(fp, coord_sys='GSE'): #GSE and GSM available
+    if coord_sys == 'GSE':
+        coord_sys = 'gse'
+    elif coord_sys == 'GSM':
+        coord_sys = 'gsm'
+    try:
+        cdf = pycdf.CDF(fp)
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', f'x_{coord_sys}', f'y_{coord_sys}', f'z_{coord_sys}'], ['time', 'x', 'y', 'z'])}
+        df = pd.DataFrame.from_dict(data)
+        r, lat, lon = cart2sphere(df.x,df.y,df.z)
+        df['r'] = r
+        df['lat'] = lat
+        df['lon'] = lon
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
+    return df
