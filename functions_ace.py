@@ -547,6 +547,161 @@ def get_acepos_fromswe_range(start_timestamp, end_timestamp, coord_sys='GSE', pa
 
 
 """
+ACE SWEPAM PAD FUNCTIONS:
+"""
+#OLD FUNCTIONS DIRECTLY COPIED, DO NOT USE, NEED UPDATING!
+
+
+def get_aceswepam_pad_range(start, end, input_dir='/Volumes/External/Data/ACE/swepam/'):
+
+    # function loading ACE SWEPAM electron pitch angle data
+    # from https://izw1.caltech.edu/ACE/ASC/DATA/level3/swepam/
+    # column format: 0 year, 1 DOY, 2 hour, 3 min, 4 sec
+    #				 5 distribution function by pitch angle [20]
+    # Pitch angle bins are 9 degrees wide, covering 0 to 180 degrees.
+    # Energy channels [eV]: 272 eV
+
+    data = {key: [] for key in ['Timestamp', '2d_data']}
+    
+    while start <= end:
+        #try:
+        fp = input_dir + 'ace_swepam_pa272ev_'+start.strftime("%Y")+"-"+start.strftime("%j")+'_v1.dat'
+        data_tmp = np.loadtxt(fp, skiprows=12, dtype='str')
+        df_tmp = pd.DataFrame({'year': data_tmp[:, 0],
+                            'doy': data_tmp[:, 1], 
+                           'hour': data_tmp[:, 2],
+                            'min': data_tmp[:, 3],
+                            'sec': data_tmp[:, 4]})
+        df_tmp['Timestamp'] = df_tmp['year']+'-'+df_tmp['doy']+' '+df_tmp['hour']+':'+df_tmp['min']+':'+df_tmp['sec']  
+        data['Timestamp'].append(pd.to_datetime(df_tmp['Timestamp'], format="%Y-%j %H:%M:%S"))
+        data['2d_data'].append(data_tmp[:, 6:])
+        print(start, len(data['Timestamp']), len(data['2d_data']))
+        #except Exception as e:
+        #    print('ERROR:', e, fp)
+        #    df = None
+        start+=timedelta(days=1)
+
+    data['Timestamp'] = [item for subl in data['Timestamp'] for item in subl] # flattens list of timestamps
+    data['2d_data'] = [item for subl in data['2d_data'] for item in subl] # flattens list of timestamps
+    
+    data['2d_data'] = np.asarray(data['2d_data'], dtype=float)   # convert from list to numpy array
+    data['2d_data'][data['2d_data'] == -1e+31] = np.nan				# clean up bad flags
+    data['2d_data'][data['2d_data'] == np.inf] = np.nan				# clean up bad flags
+    data['2d_data'][data['2d_data'] == -np.inf] = np.nan			# clean up bad flags
+    data['2d_data'][data['2d_data'] == 0.0] = np.nan				# clean up bad flags
+    data['2d_data'] = data['2d_data'].reshape(-1, data['2d_data'].shape[-1]) # flattens array (across days)
+
+    return data
+
+
+def ace_pad_xyz(icme_start, mo_end):
+    swepam_data = get_data.get_aceswepam_pad_range(icme_start, mo_end)
+    x_swepam = swepam_data['Timestamp']
+    y_swepam = np.linspace(4.5, 175.5, 20)
+    z_swepam = np.reshape(swepam_data['2d_data'], (len(x_swepam), len(y_swepam)))
+    return x_swepam, y_swepam, z_swepam
+
+
+def reshape_acepad_array(z_swepam):
+    z_new = z_swepam.tolist()
+    z0 = []
+    z1 = []
+    z2 = []
+    z3 = []
+    z4 = []
+    z5 = []
+    z6 = []
+    z7 = []
+    z8 = []
+    z9 = []
+    z10 = []
+    z11 = []
+    z12 = []
+    z13 = []
+    z14 = []
+    z15 = []
+    z16 = []
+    z17 = []
+    z18 = []
+    z19 = []
+    for i in range(len(z_new)):
+        z0_ = z_new[i][0]
+        z0 = np.append(z0, z0_)
+        z1_ = z_new[i][1]
+        z1 = np.append(z1, z1_)
+        z2_ = z_new[i][2]
+        z2 = np.append(z2, z2_)
+        z3_ = z_new[i][3]
+        z3 = np.append(z3, z3_)
+        z4_ = z_new[i][4]
+        z4 = np.append(z4, z4_)
+        z5_ = z_new[i][5]
+        z5 = np.append(z5, z5_)
+        z6_ = z_new[i][6]
+        z6 = np.append(z6, z6_)
+        z7_ = z_new[i][7]
+        z7 = np.append(z7, z7_)
+        z8_ = z_new[i][8]
+        z8 = np.append(z8, z8_)
+        z9_ = z_new[i][9]
+        z9 = np.append(z9, z9_)
+        z10_ = z_new[i][10]
+        z10 = np.append(z10, z10_)
+        z11_ = z_new[i][11]
+        z11 = np.append(z11, z11_)
+        z12_ = z_new[i][12]
+        z12 = np.append(z12, z12_)
+        z13_ = z_new[i][13]
+        z13 = np.append(z13, z13_)
+        z14_ = z_new[i][14]
+        z14 = np.append(z14, z14_)
+        z15_ = z_new[i][15]
+        z15 = np.append(z15, z15_)
+        z16_ = z_new[i][16]
+        z16 = np.append(z16, z16_)
+        z17_ = z_new[i][17]
+        z17 = np.append(z17, z17_)
+        z18_ = z_new[i][18]
+        z18 = np.append(z18, z18_)
+        z19_ = z_new[i][19]
+        z19 = np.append(z19, z19_)
+    return z0, z1, z2, z3, z4, z5, z6, z7, z8, z9, z10, z11, z12, z13, z14, z15, z16, z17, z18, z19
+
+
+def ace_pad_z_df(x_swepam, z0, z1, z2, z3, z4, z5, z6, z7, z8, z9, z10, z11, z12, z13, z14, z15, z16, z17, z18, z19):
+    df = pd.DataFrame(x_swepam, columns=['Timestamp'])
+#     z_new = z.tolist()
+    df['z0'] = z0
+    df['z1'] = z1
+    df['z2'] = z2
+    df['z3'] = z3
+    df['z4'] = z4
+    df['z5'] = z5
+    df['z6'] = z6
+    df['z7'] = z7
+    df['z8'] = z8
+    df['z9'] = z9
+    df['z10'] = z10
+    df['z11'] = z11
+    df['z12'] = z12
+    df['z13'] = z13
+    df['z14'] = z14
+    df['z15'] = z15
+    df['z16'] = z16
+    df['z17'] = z17
+    df['z18'] = z18
+    df['z19'] = z19
+    return df
+
+
+def make_final_acepad_array(final_df, y_swepam):
+    z_arr = final_df[['z0', 'z1', 'z2', 'z3', 'z4', 'z5', 'z6', 'z7', 'z8', 'z9', 'z10', 'z11', 'z12', 'z13', 'z14', 'z15', 'z16', 'z17', 'z18', 'z19']].to_numpy()
+    x_arr = final_df['New_Timestamp'].to_numpy()
+    y_arr = y_swepam
+    return x_arr, y_arr, z_arr
+
+
+"""
 ACE DATA SAVING FUNCTIONS:
 """
 
