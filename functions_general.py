@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from scipy import constants
-
+import scipy.io
 from pathlib import Path
 import json
 
@@ -118,4 +118,14 @@ def normalise_time(df, min_time, max_time):
     ## Normalise by max boundary time 
     max_epoch_time = (max_time-min_time).total_seconds()
     df['time_norm'] = df['epoch']/max_epoch_time
+    return df
+
+
+def mat_to_df(fp):
+    mat = scipy.io.loadmat(fp)
+    mat = {k:v for k, v in mat.items() if k[0] != '_'}
+    data = {}
+    df = pd.DataFrame(data)
+    for k,v in mat.items():
+        df[k] = pd.DataFrame(v)
     return df
