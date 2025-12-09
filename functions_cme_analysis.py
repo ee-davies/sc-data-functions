@@ -2,10 +2,14 @@ import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
 from scipy import integrate
+from scipy.stats import linregress
+from scipy import stats
 
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import plotly.io as pio
+
+
 
 """
 FUNCTIONS TO ANALYSE DIFFERENT PARTS OF ICMES
@@ -62,3 +66,16 @@ def get_DiP(df, mo_start, mo_end):
 def get_gexp_power(r1,r2,b1,b2):
     power = (np.log(b2)-np.log(b1))/(np.log(r2)-np.log(r1))
     return power
+
+
+def slope_fitting(df, start_time, end_time):
+    time_mask = (df['time'] >= start_time) & (df['time'] <= end_time)
+    slope_df = df[time_mask]
+    times = slope_df['time']
+    X = (slope_df.loc[:, ('time')]-start_time).dt.total_seconds()
+    x = np.array(X).reshape(1, -1)
+    y = np.array(slope_df['vt']).reshape(1, -1) #rolling: rolling12_trip_filt2 or raw: trip_filt2_alt_masked
+    mask = ~np.isnan(x) & ~np.isnan(y)
+    slope, intercept, r_value, p_value, std_err = stats.linregress(x[mask], y[mask])
+    line = np.transpose(slope*x+intercept)
+    return times, line, slope, intercept, r_value, p_value, std_err
