@@ -111,3 +111,11 @@ def load_path(config_file=Path(__file__).resolve().parents[0] /'config.json', pa
     with open(config_file, 'r') as f:
         config = json.load(f)
     return config[path_name]
+
+
+def normalise_time(df, min_time, max_time):
+    df['epoch'] = df['time'].apply(lambda x: float((x-min_time).total_seconds()))
+    ## Normalise by max boundary time 
+    max_epoch_time = (max_time-min_time).total_seconds()
+    df['time_norm'] = df['epoch']/max_epoch_time
+    return df
