@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from datetime import timedelta
+from datetime import datetime, timedelta
 from spacepy import pycdf
 import spiceypy
 import os.path
@@ -177,3 +177,37 @@ def get_mes_positions(start, end):
 
 def transform_data():
     pass
+
+
+"""
+MESSENGER GCR FUNCTIONS:
+"""
+
+def get_mesgcr(fp, altitude=3000):
+    """Get data and return pd.DataFrame."""
+    cols = ['DoY', 'Month', 'Day', 'Year', 'Hour', 'Minute', 'Second', 'Sun_Distance', 'Altitude', 
+            'Latitude', 'Longitude', 'LG1_RAW', 'LG2_RAW', 'BP_RAW', 'LG1_BPP_COIN', 'LG2_BPP_COIN', 
+            'TRIPLE_COIN', 'FAST', 'DT_FRAC']
+
+    try:
+        df = pd.read_csv(fp, skiprows=9, sep=r'\s+', names=cols)
+
+        df['Year'] = df['Year'].astype('int32')
+        df['DoY'] = df['DoY'].astype('int32')
+        df['Month'] = df['Month'].astype('int32')
+        df['Day'] = df['Day'].astype('int32')
+        df['Hour'] = df['Hour'].astype('int32')
+        df['Minute'] = df['Minute'].astype('int32')
+        df['Second'] = df['Second'].astype('int32')
+
+        df['Timestamp'] = df[['Year', 'DoY', 'Hour', 'Minute', 'Second']]\
+            .apply(lambda x: datetime.strptime(' '.join(str(y) for y in x),
+                                               r'%Y %j %H %M %S'), axis=1)
+        #filter for altitude = 3000
+        df['DOUBLE_COIN'] = df['LG2_BPP_COIN'].where(df['Altitude']>altitude)
+        df['TRIPLE_COIN'] = df['TRIPLE_COIN'].where(df['Altitude']>altitude)
+
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
+    return df
