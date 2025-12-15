@@ -81,7 +81,39 @@ def slope_fitting(df, start_time, end_time):
     return times, line, slope, intercept, r_value, p_value, std_err
 
 
+def get_cruise_velocity(df_input):
+    df = df_input.reset_index(drop=True)
+    try:
+        data = df[df['vt'].notnull()]
+        min_time = df['time'].min()
+        data['epoch'] = df['time'].apply(lambda x: float((x-min_time).total_seconds()))
+        fit = linregress(data['epoch'], data['vt'])
+        m = fit.slope
+        c = fit.intercept
+        v_c = m*data['epoch'].max()/2 + c
+        v_te = m*data['epoch'].max() + c
+        v_le = c
+        delta_t = data['epoch'].max()
+    except Exception as e:
+        print(e)
+        m = c = v_c = v_te = v_le = delta_t = pd.NA
+    return pd.Series([v_c, m, v_le, v_te, delta_t])
+
+
+def get_dep(v_c, v_le, v_te, delta_t, r):
+    try:
+        delta_v = v_le-v_te
+        d = r*1.495978707E8
+        v_c_squared = v_c**2
+        dep = delta_v/delta_t * d/v_c_squared
+    except Exception as e:
+        print(e)
+        dep = None
+    return pd.Series([dep])
+
+
 ## OLD FUNCTIONS, NEED UPDATING
+
 
 def make_icme_v_profile(icme_start, mo_start, mo_end, resampled_df):
     #fit velocity profile within mo 
