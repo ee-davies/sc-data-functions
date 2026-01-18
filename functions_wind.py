@@ -573,7 +573,7 @@ def get_wind3dp_ehpd(start, end, input_dir='/Volumes/External/Data/WIND/3dp/ehpd
 def wind_pad_array(epoch_arr, pangle_arr, flux_arr):
     x_arr = epoch_arr.to_numpy()
     y_arr = np.nanmean(pangle_arr, axis=0) 
-    z = np.sum(flux_arr, axis=2)
+    z = np.sum(flux_arr, axis=2) #z = np.sum(flux_arr[:, :, i:j], axis=2) if want to select specific channel range
     z_arr = z.T
     return x_arr, y_arr, z_arr
 
