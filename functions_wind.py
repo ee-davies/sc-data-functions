@@ -544,7 +544,6 @@ def get_windswe_range(start_timestamp, end_timestamp, coord_sys:str):
 WIND PAD FUNCTIONS:
 EHPD data from 3DP instrument
 """
-#ALL OLD FUNCTIONS IN THIS SECTION, NEEDS UPDATING
 
 
 def get_wind3dp_ehpd(start, end, input_dir='/Volumes/External/Data/WIND/3dp/ehpd/'):
@@ -557,8 +556,8 @@ def get_wind3dp_ehpd(start, end, input_dir='/Volumes/External/Data/WIND/3dp/ehpd
     while start <= end:
         fp = input_dir+'wi_ehpd_3dp_'+start.strftime("%Y")+start.strftime("%m")+start.strftime("%d")+'_v02.cdf'
         cdf = pycdf.CDF(fp)
-        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'ENERGY', 'PANGLE', 'FLUX'], ['Timestamp', 'energy', 'pangle', 'flux'])}
-        epoch  = pd.to_datetime(data['Timestamp'])  # array of dim X  (time entries)
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['Epoch', 'ENERGY', 'PANGLE', 'FLUX'], ['time', 'energy', 'pangle', 'flux'])}
+        epoch  = pd.to_datetime(data['time'])  # array of dim X  (time entries)
         energy = data['energy']  # array of dim [X,Y] (time entries and 15 energy channels) 
         pangle = data['pangle']  # array of dim [X,Z] (time entries and 8 angles) 
         flux   = data['flux']    # array of dim [X,Z,Y] (time entries, 8 angles, 15 energy channels) 
@@ -568,72 +567,14 @@ def get_wind3dp_ehpd(start, end, input_dir='/Volumes/External/Data/WIND/3dp/ehpd
         flux_arr   = np.concatenate((flux_arr, flux))
         start+=timedelta(days=1)
     epoch_arr = pd.to_datetime(epoch_arr)
-    
     return epoch_arr, energy_arr, pangle_arr, flux_arr
 
 
-def wind_pad_xyz(icme_start, mo_end):
-
-    epoch_arr, energy_arr, pangle_arr, flux_arr = get_data.get_wind3dp_ehpd(icme_start, mo_end)
-    x = epoch_arr
-    y_arr  = np.empty((0,)) 
-    for j in range (0, len(pangle_arr[1])):
-        y = [np.nanmean(pangle_arr[:,j])]
-        y_arr = np.concatenate((y_arr, y))   
-    #energy_channels = [12, 13, 14]
-    energy_channels = np.arange(0,14)
-    z = np.sum(flux_arr[:,:,energy_channels[0]:energy_channels[-1]+1], axis=2)
-    return x, y_arr, z
-
-
-def reshape_windpad_array(z):
-    z_new = z.tolist()
-    z0 = []
-    z1 = []
-    z2 = []
-    z3 = []
-    z4 = []
-    z5 = []
-    z6 = []
-    z7 = []
-    for i in range(len(z_new)):
-        z0_ = z_new[i][0]
-        z0 = np.append(z0, z0_)
-        z1_ = z_new[i][1]
-        z1 = np.append(z1, z1_)
-        z2_ = z_new[i][2]
-        z2 = np.append(z2, z2_)
-        z3_ = z_new[i][3]
-        z3 = np.append(z3, z3_)
-        z4_ = z_new[i][4]
-        z4 = np.append(z4, z4_)
-        z5_ = z_new[i][5]
-        z5 = np.append(z5, z5_)
-        z6_ = z_new[i][6]
-        z6 = np.append(z6, z6_)
-        z7_ = z_new[i][7]
-        z7 = np.append(z7, z7_)
-    return z0, z1, z2, z3, z4, z5, z6, z7
-
-
-def wind_pad_z_df(x, z0, z1, z2, z3, z4, z5, z6, z7):
-    df = pd.DataFrame(x, columns=['Timestamp'])
-#     z_new = z.tolist()
-    df['z0'] = z0
-    df['z1'] = z1
-    df['z2'] = z2
-    df['z3'] = z3
-    df['z4'] = z4
-    df['z5'] = z5
-    df['z6'] = z6
-    df['z7'] = z7
-    return df
-
-
-def make_final_windpad_array(final_df, y_arr):
-    z_arr = final_df[['z0', 'z1', 'z2', 'z3', 'z4', 'z5', 'z6', 'z7']].to_numpy()
-    x_arr = final_df['New_Timestamp'].to_numpy()
-    y_arr = y_arr
+def wind_pad_array(epoch_arr, pangle_arr, flux_arr):
+    x_arr = epoch_arr.to_numpy()
+    y_arr = np.nanmean(pangle_arr, axis=0) 
+    z = np.sum(flux_arr, axis=2)
+    z_arr = z.T
     return x_arr, y_arr, z_arr
 
 
