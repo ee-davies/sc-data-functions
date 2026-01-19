@@ -10,6 +10,12 @@ import os.path
 import pickle
 import glob
 
+import matplotlib
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+import matplotlib.colors as colors
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+
 from functions_general import load_path
 
 
@@ -413,6 +419,72 @@ def get_soloplas_range(start_timestamp, end_timestamp, level="l2", res="full"): 
     elif level == "ll":
         df = get_soloplas_range_ll(start_timestamp, end_timestamp)
     return df 
+
+
+"""""
+SOLO PAD FUNCTIONS:
+PAD data from PAS EAS, L3
+"""""
+
+
+def get_solopad_range(start_timestamp, end_timestamp, path=f'{solo_path}'+'swa/eas/l3'):
+
+    epoch_arr  = np.empty((0,), dtype='datetime64[ns]') 
+    energy_arr = np.empty((64)) 
+    pangle_arr = np.empty((36))
+    psd_arr   = np.empty((0,36,64))
+
+    start = start_timestamp.date()
+    end = end_timestamp.date()
+
+    while start <= end:
+        fp = path+'/solo_L3_swa-eas-nmpad-psd_'+start.strftime("%Y")+start.strftime("%m")+start.strftime("%d")+'_V01.cdf'
+        cdf = pycdf.CDF(fp)
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['EPOCH', 'SWA_EAS_ENERGY', 'SWA_EAS_NMPAD_PSD_DATA', 'SWA_EAS_PA'], ['time', 'energy', 'psd_data', 'pangle'])}
+        epoch  = pd.to_datetime(data['time'])  # array of dim X  (time entries)
+        energy = data['energy']  # array of dim [X,Y] (time entries and 15 energy channels) 
+        pangle = data['pangle']  # array of dim [X,Z] (time entries and 8 angles) 
+        psd_data   = data['psd_data']    # array of dim [X,Z,Y] (time entries, 8 angles, 15 energy channels) 
+        epoch_arr  = np.concatenate((epoch_arr, epoch))
+        energy_arr = energy #np.concatenate((energy_arr, energy))
+        pangle_arr = pangle #np.concatenate((pangle_arr, pangle))
+        psd_arr   = np.concatenate((psd_arr, psd_data))
+        start+=timedelta(days=1)
+    epoch_arr = pd.to_datetime(epoch_arr)
+    return epoch_arr, energy_arr, pangle_arr, psd_arr
+
+
+def get_solopad_array(epoch_arr, pangle_arr, psd_arr, energy_arr, min_energy=70, max_energy=5300):
+    x_arr = epoch_arr.to_numpy()
+    y_arr = pangle_arr
+    i = len(energy_arr)-np.sum(energy_arr<=max_energy)
+    j = np.sum(energy_arr>min_energy)-1
+    z = np.sum(psd_arr[:, :, i:j], axis=2)
+    z_arr_unfiltered = z.T
+    z_arr = z_arr_unfiltered.copy()
+    mask = (np.abs(z_arr_unfiltered) >= 1e30) | (z_arr_unfiltered == 0) #bad value given as >1e30/<-1e30, and remove 0 for log scale plotting
+    z_arr[mask] = np.nan
+    return x_arr, y_arr, z_arr
+
+
+def plot_solopad_array(x_arr, y_arr, z_arr):
+    xsize = 12
+    ysize = 1
+    pad   = 0.04
+    labelpad = 12
+    fig, axes  =  plt.subplots(nrows=1, ncols=1, figsize=(xsize,ysize))
+
+    im = axes.pcolormesh(x_arr,y_arr,z_arr, 
+                    norm=colors.LogNorm(vmin=np.nanmin(z_arr), vmax=np.nanmax(z_arr)),
+                    cmap=plt.get_cmap('jet'))
+    axes.set_ylim(0, 180)
+    axes.set_yticks([0, 90, 180])
+    # colorbar
+    divider = make_axes_locatable(axes)
+    cax = divider.append_axes('right', size='5%', pad=pad)
+    cbar = fig.colorbar(im, cax=cax, orientation='vertical')
+    cbar.ax.set_ylabel('PSD', rotation=90, labelpad=labelpad)
+    plt.show()
 
 
 """
