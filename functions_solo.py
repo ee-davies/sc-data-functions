@@ -487,6 +487,60 @@ def plot_solopad_array(x_arr, y_arr, z_arr):
     plt.show()
 
 
+"""""
+SOLO EPD FUNCTIONS:
+EPT and HET functions
+"""""
+
+
+def get_soloept_l2(fp):
+    """raw = rtn"""
+    try:
+        cdf = pycdf.CDF(fp)
+        e_data = cdf["Electron_Flux"][:]
+        e_df = pd.DataFrame.from_dict(e_data)
+        e_df.mask((e_df < -9.99e+30), inplace=True)
+        e_flux = e_df.to_numpy() 
+        e_bins = cdf["Electron_Bins_Text"][:]
+        
+        i_data = cdf["Ion_Flux"][:]
+        i_df = pd.DataFrame.from_dict(i_data)
+        i_df.mask((i_df < -9.99e+30), inplace=True)
+        i_flux = i_df.to_numpy() 
+        i_bins = cdf["Ion_Bins_Text"][:]
+        
+        time = cdf["EPOCH"][:]
+        
+    except Exception as e:
+        print('ERROR:', e, fp)
+        time, e_flux, e_bins, i_flux, i_bins = None
+    return time, e_flux, e_bins, i_flux, i_bins
+
+
+def get_soloept_range_l2(start_timestamp, end_timestamp, direction:str, path=f'{solo_path}'+'epd/ept/l2'):
+    """Pass two datetime objects and grab .cdf files between dates, from
+    directory given. Possible directions = asun, sun, north, south"""
+    time_arr  = np.empty((0,), dtype='datetime64[ns]') 
+    e_flux_arr = np.empty((0,34), dtype='float32')
+    e_bins_arr = np.empty((0,), dtype='<U25')
+    i_flux_arr = np.empty((0,64), dtype='float32')
+    i_bins_arr = np.empty((0,), dtype='<U25')
+    
+    start = start_timestamp.date()
+    end = end_timestamp.date() + timedelta(days=1)
+    while start < end:
+        date_str = f'{start.year}{start.month:02}{start.day:02}'
+        fn = f'{path}/solo_L2_epd-ept-{direction}-rates_{date_str}_V01.cdf'
+        time, e_flux, e_bins, i_flux, i_bins = get_soloept_l2(fn)
+        time_arr  = np.concatenate((time_arr, time))
+        e_flux_arr = np.concatenate((e_flux_arr, e_flux))
+        e_bins_arr = np.concatenate((e_bins_arr, e_bins))
+        i_flux_arr = np.concatenate((i_flux_arr, i_flux))
+        i_bins_arr = np.concatenate((i_bins_arr, i_bins))
+        start += timedelta(days=1)
+    return time_arr, e_flux_arr, e_bins_arr, i_flux_arr, i_bins_arr
+
+
 """
 SOLO POSITION FUNCTIONS: coord maths, furnish kernels, and call position for each timestamp
 Currently set to HEEQ, but will implement options to change
