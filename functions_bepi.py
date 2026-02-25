@@ -205,10 +205,6 @@ def get_bepi_positions_minute(start, end, cadence, dist_unit='au', ang_unit='deg
 #     return positions
 
 
-
-
-
-
 def get_bepi_transform(epoch: datetime, base_frame: str, to_frame: str):
     """Return transformation matrix at a given epoch."""
     if spiceypy.ktotal('ALL') < 1:
@@ -250,3 +246,24 @@ def transform_data(df, to_frame="RTN"):
 """
 COMBINED BEPI MAG AND PLAS
 """
+
+def get_bepimagplas(start_timestamp, end_timestamp, coord_sys='RTN'):
+    df_mag = get_bepimag_range(start_timestamp, end_timestamp, coord_sys)
+    if df_mag is None:
+        print(f'Bepi MAG data is empty for this timerange')
+        df_mag = pd.DataFrame({'time':[], 'bt':[], 'bx':[], 'by':[], 'bz':[]})
+        mag_rdf = df_mag.drop(columns=['time'])
+    else:
+        mag_rdf = df_mag.set_index('time').resample('1min').mean().reset_index(drop=False)
+        mag_rdf.set_index(pd.to_datetime(mag_rdf['time']), inplace=True)
+        
+    print(f'Bepi PLAS data is empty for this timerange')
+    df_plas = pd.DataFrame({'time':[], 'vt':[], 'vx':[], 'vy':[], 'vz':[], 'np':[], 'tp':[]})
+    plas_rdf = df_plas
+
+    magplas_rdf = pd.concat([mag_rdf, plas_rdf], axis=1)
+    magplas_rdf = magplas_rdf.drop(columns=['time'])
+    magplas_rdf['time'] = magplas_rdf.index
+    magplas_rdf = magplas_rdf.reset_index(drop=True)
+
+    return magplas_rdf
