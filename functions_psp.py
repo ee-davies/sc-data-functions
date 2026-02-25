@@ -585,6 +585,41 @@ def get_psp_positions_minute(start, end, cadence, dist_unit='au', ang_unit='deg'
 
 
 """
+COMBINED PSP MAG AND PLAS
+"""
+
+def get_pspmagplas(start_timestamp, end_timestamp):
+    df_mag = get_pspmag_range_1min(start_timestamp, end_timestamp)
+    if df_mag is None:
+        print(f'PSP FIELDS data is empty for this timerange')
+        df_mag = pd.DataFrame({'time':[], 'bt':[], 'bx':[], 'by':[], 'bz':[]})
+        mag_rdf = df_mag.drop(columns=['time'])
+    else:
+        mag_rdf = df_mag.set_index('time').resample('1min').mean().reset_index(drop=False)
+        mag_rdf.set_index(pd.to_datetime(mag_rdf['time']), inplace=True)
+
+    #load in plasma data to DataFrame and resample, create empty plasma and resampled DataFrame if no data
+    #only drop time column if MAG DataFrame is not empty
+    df_plas = get_pspspi_range_mom(start_timestamp, end_timestamp)
+    if df_plas is None:
+        print(f'PSP SPI/MOM data is empty for this timerange')
+        df_plas = pd.DataFrame({'time':[], 'vt':[], 'vx':[], 'vy':[], 'vz':[], 'np':[], 'tp':[]})
+        plas_rdf = df_plas
+    else:
+        plas_rdf = df_plas.set_index('time').resample('1min').mean().reset_index(drop=False)
+        plas_rdf.set_index(pd.to_datetime(plas_rdf['time']), inplace=True)
+        if mag_rdf.shape[0] != 0:
+            plas_rdf = plas_rdf.drop(columns=['time'])
+
+    magplas_rdf = pd.concat([mag_rdf, plas_rdf], axis=1)
+    magplas_rdf = magplas_rdf.drop(columns=['time'])
+    magplas_rdf['time'] = magplas_rdf.index
+    magplas_rdf = magplas_rdf.reset_index(drop=True)
+
+    return magplas_rdf
+
+
+"""
 OUTPUT COMBINED PICKLE FILE
 including MAG, PLAS, and POSITION data
 """
