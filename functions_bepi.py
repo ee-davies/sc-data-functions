@@ -45,14 +45,14 @@ def get_bepimag(fp):
     cols = ['date_time', '?', 'pos_x', 'pos_y', 'pos_z',
             'b_x', 'b_y', 'b_z', '?_x','?_y', '?_z',]
     df = pd.read_csv(fp, names=cols)
-    df['timestamp'] = pd.to_datetime(df['date_time'], format=r'%Y-%m-%dT%H:%M:%S.%fZ')
+    df['time'] = pd.to_datetime(df['date_time'], format=r'%Y-%m-%dT%H:%M:%S.%fZ')
     df['b_tot'] = df[['b_x', 'b_y', 'b_z']].apply(lambda x: np.linalg.norm(x), axis=1)
     df['pos_AU'] = df[['pos_x', 'pos_y', 'pos_z']].apply(lambda x: np.linalg.norm(x), axis=1)*6.6846E-9
     # return filter_bad_data(df, 'B_TOT', 9.99e+04)
     return df
 
 
-def get_bepimag_range(start_timestamp, end_timestamp, path):
+def get_bepimag_range_e2k(start_timestamp, end_timestamp, path=f'{bepi_path}'):
     """Pass two datetime objects and grab .tab files between dates, from
     directory given."""
     df = None
@@ -67,9 +67,15 @@ def get_bepimag_range(start_timestamp, end_timestamp, path):
             if df is None:
                 df = _df.copy(deep=True)
             else:
-                df = df.append(_df.copy(deep=True))
+                df = pd.concat([df, _df])
         start += timedelta(days=1)
-    return df
+    mag_df = pd.DataFrame()
+    mag_df['time'] = df['time']
+    mag_df['bt'] = df['b_tot']
+    mag_df['bx'] = df['b_x']
+    mag_df['by'] = df['b_y']
+    mag_df['bz'] = df['b_z']
+    return mag_df
 
 
 """
@@ -197,19 +203,35 @@ def get_bepi_transform(epoch: datetime, base_frame: str, to_frame: str):
     return transform
 
 
-def transform_data(df, to_frame="rtn"):
+def transform_data(df, to_frame="RTN"):
     frame_id_map = {
-        "rtn": "BC_MPO_RTN",
+        "RTN": "BC_MPO_RTN",
+        "GSE": "BC_GSE",
+        "GSM": "BC_GSM",
+        "E2K": "ECLIPJ2000",
+        "VSO": "BC_VSO",
+        "MSO": "BC_MSO"
         # etc
     }
-    b_out = []
+    mag_vectors = df[['b_x', 'b_y', 'b_z']].to_numpy() # Extract magnetic field vectors as a (N, 3) array upfront
+    b_out = np.empty_like(mag_vectors) # Preallocate output array
+    # Vectorized transformation loop
     for i, t in enumerate(df['timestamp']):
         transform = get_bepi_transform(t, "ECLIPJ2000", frame_id_map[to_frame])
-        mag_vector = np.array([[df['b_x'].iloc[i]], [df['b_y'].iloc[i]], [df['b_z'].iloc[i]]])
-        transformation = np.matmul(transform, mag_vector)
-        b_out.append(np.transpose(transformation)[0].tolist())
-    b_out_df = pd.DataFrame(b_out, columns = ['b_x', 'b_y', 'b_z'])
-    time_df = df['timestamp'].reset_index(drop=True)
-    transformed_df = pd.concat([time_df, b_out_df], axis=1)
-    transformed_df['b_tot'] = transformed_df[['b_x', 'b_y', 'b_z']].apply(lambda x: np.linalg.norm(x), axis=1)
+        # Direct matrix-vector multiplication (transform is 3x3, mag_vector is 3x1)
+        b_out[i] = transform @ mag_vectors[i]
+    # Build output dataframe efficiently
+    transformed_df = pd.DataFrame({
+        'timestamp': df['timestamp'].values,
+        'b_x': b_out[:, 0],
+        'b_y': b_out[:, 1],
+        'b_z': b_out[:, 2]
+    })
+    # Vectorized norm calculation
+    transformed_df['b_tot'] = np.linalg.norm(b_out, axis=1)
     return transformed_df
+
+
+"""
+COMBINED BEPI MAG AND PLAS
+"""
