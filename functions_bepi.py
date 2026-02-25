@@ -213,22 +213,23 @@ def transform_data(df, to_frame="RTN"):
         "MSO": "BC_MSO"
         # etc
     }
-    mag_vectors = df[['b_x', 'b_y', 'b_z']].to_numpy() # Extract magnetic field vectors as a (N, 3) array upfront
+    bepi_furnish()
+    mag_vectors = df[['bx', 'by', 'bz']].to_numpy() # Extract magnetic field vectors as a (N, 3) array upfront
     b_out = np.empty_like(mag_vectors) # Preallocate output array
     # Vectorized transformation loop
-    for i, t in enumerate(df['timestamp']):
+    for i, t in enumerate(df['time']):
         transform = get_bepi_transform(t, "ECLIPJ2000", frame_id_map[to_frame])
         # Direct matrix-vector multiplication (transform is 3x3, mag_vector is 3x1)
         b_out[i] = transform @ mag_vectors[i]
     # Build output dataframe efficiently
     transformed_df = pd.DataFrame({
-        'timestamp': df['timestamp'].values,
-        'b_x': b_out[:, 0],
-        'b_y': b_out[:, 1],
-        'b_z': b_out[:, 2]
+        'time': df['time'].values,
+        'bx': b_out[:, 0],
+        'by': b_out[:, 1],
+        'bz': b_out[:, 2]
     })
     # Vectorized norm calculation
-    transformed_df['b_tot'] = np.linalg.norm(b_out, axis=1)
+    transformed_df['bt'] = np.linalg.norm(b_out, axis=1)
     return transformed_df
 
 
