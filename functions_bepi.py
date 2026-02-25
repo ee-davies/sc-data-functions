@@ -78,6 +78,20 @@ def get_bepimag_range_e2k(start_timestamp, end_timestamp, path=f'{bepi_path}'):
     return mag_df
 
 
+def get_bepimag_range_rtn(start_timestamp, end_timestamp):
+    df = get_bepimag_range_e2k(start_timestamp, end_timestamp)
+    df_rtn = transform_data(df, to_frame="RTN")
+    return df_rtn
+
+
+def get_bepimag_range(start_timestamp, end_timestamp, coord_sys:str):
+    if coord_sys == 'RTN':
+        df = get_bepimag_range_rtn(start_timestamp, end_timestamp)
+    elif coord_sys == 'E2K':
+        df = get_bepimag_range_e2k(start_timestamp, end_timestamp)
+    return df
+
+
 """
 BEPI POSITION FUNCTIONS: coord maths, furnish kernels, and call position for each timestamp
 Currently set to HEEQ, but will implement options to change
