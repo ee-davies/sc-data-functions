@@ -485,17 +485,27 @@ def stereoa_furnish():
         spiceypy.furnsh(os.path.join(generic_path, kernel))
 
 
-def get_sta_pos(t):
+def get_sta_pos(t, coord_sys:str):
     if spiceypy.ktotal('ALL') < 1:
         stereoa_furnish()
-    try:
-        pos = spiceypy.spkpos("STEREO AHEAD", spiceypy.datetime2et(t), "GSE", "NONE", "EARTH")[0] #HEEQ, HEE, ECLIPJ2000 wrt SUN, GSE wrt EARTH
-        r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
-        position = t, pos[0], pos[1], pos[2], r, lat, lon
-        return position
-    except Exception as e:
-        print(e)
-        return [t, None, None, None, None, None, None]
+    if coord_sys == 'GSE':
+        try:
+            pos = spiceypy.spkpos("STEREO AHEAD", spiceypy.datetime2et(t), f"{coord_sys}", "NONE", "EARTH")[0] 
+            r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
+            position = t, pos[0], pos[1], pos[2], r, lat, lon
+            return position
+        except Exception as e:
+            print(e)
+            return [t, None, None, None, None, None, None]
+    else:
+        try:
+            pos = spiceypy.spkpos("STEREO AHEAD", spiceypy.datetime2et(t), f"{coord_sys}", "NONE", "SUN")[0] 
+            r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
+            position = t, pos[0], pos[1], pos[2], r, lat, lon
+            return position
+        except Exception as e:
+            print(e)
+            return [t, None, None, None, None, None, None]
 
 
 def get_sta_positions(time_series):
