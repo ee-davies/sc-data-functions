@@ -103,6 +103,40 @@ def get_imapplas_range(start_timestamp, end_timestamp, path=f'{imap_path}'):
 
 
 """
+COMBINED IMAP MAG AND PLAS
+"""
+
+
+def get_imapmagplas_range(start_timestamp, end_timestamp, coord_sys:str):
+    df_mag = get_imapmag_range(start_timestamp, end_timestamp, coord_sys)
+    if df_mag is None:
+        print(f'IMAP MAG data is empty for this timerange')
+        df_mag = pd.DataFrame({'time':[], 'bt':[], 'bx':[], 'by':[], 'bz':[]})
+        mag_rdf = df_mag.drop(columns=['time'])
+    else:
+        mag_rdf = df_mag.set_index('time').resample('1min').mean().reset_index(drop=False)
+        mag_rdf.set_index(pd.to_datetime(mag_rdf['time']), inplace=True)
+        
+    df_plas = get_imapplas_range(start_timestamp, end_timestamp)
+    if df_plas is None:
+        print(f'IMAP SWAPI data is empty for this timerange')
+        df_plas = pd.DataFrame({'time':[], 'vt':[], 'np':[], 'tp':[]})
+        plas_rdf = df_plas
+    else:
+        plas_rdf = df_plas.set_index('time').resample('1min').mean().reset_index(drop=False)
+        plas_rdf.set_index(pd.to_datetime(plas_rdf['time']), inplace=True)
+        if mag_rdf.shape[0] != 0:
+            plas_rdf = plas_rdf.drop(columns=['time'])
+
+    magplas_rdf = pd.concat([mag_rdf, plas_rdf], axis=1)
+    magplas_rdf = magplas_rdf.drop(columns=['time'])
+    magplas_rdf['time'] = magplas_rdf.index
+    magplas_rdf = magplas_rdf.reset_index(drop=True)
+
+    return magplas_rdf
+
+
+"""
 IMAP POSITION FUNCTIONS: coord maths, furnish kernels, and call position for each timestamp
 Coord_systems available: ECLIPJ2000, HEEQ, HEE, GSE
 """
