@@ -58,6 +58,28 @@ def get_imapplas(fp):
     return df
 
 
+def get_imapmag_range(start_timestamp, end_timestamp, coord_sys:str, path=f'{imap_path}'):
+    """Pass two datetime objects and grab .cdf files between dates, from
+    directory given."""
+    df = None
+    start = start_timestamp.date()
+    end = end_timestamp.date() + timedelta(days=1)
+    while start < end:
+        date_str = f'{start.year}{start.month:02}{start.day:02}'
+        try:
+            fn = glob.glob(f'{path}ialirt/archive/imap_ialirt_l1_realtime_{date_str}*.cdf')[0]
+            _df = get_imapmag(fn, coord_sys)
+            if _df is not None:
+                if df is None:
+                    df = _df.copy(deep=True)
+                else:
+                    df = pd.concat([df, _df])
+        except Exception as e:
+                print('ERROR', e, f'{date_str} does not exist')
+        start += timedelta(days=1)
+    return df
+
+
 """
 IMAP POSITION FUNCTIONS: coord maths, furnish kernels, and call position for each timestamp
 Coord_systems available: ECLIPJ2000, HEEQ, HEE, GSE
