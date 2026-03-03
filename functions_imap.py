@@ -176,6 +176,17 @@ def get_imapmag_realtime_range(start_timestamp, end_timestamp, coord_sys:str):
     return df
 
 
+def get_imapmag_realtime_day(start_timestamp, coord_sys:str, save_file:bool, path=f'{imap_path}'):
+    end_timestamp = start_timestamp+timedelta(days=1)
+    df = get_imapmag_realtime_range(start_timestamp, end_timestamp, coord_sys)
+    mag_rdf = df.set_index('time').resample('1min').mean().reset_index(drop=False)
+    if save_file is True:
+        savedate = f'{start_timestamp.year}{start_timestamp.month:02}{start_timestamp.day:02}'
+        mag_rdf.to_pickle(f"{path}ialirt/realtime/imap_realtime_mag_{coord_sys}_{savedate}.pkl")
+        print(f"Saved {coord_sys} mag data for {savedate}")
+    return mag_rdf
+
+
 def read_json_to_dataframe(filepath, instrument=None, coord_sys=None):
     """
     Read IMAP JSON file into a pandas DataFrame.
