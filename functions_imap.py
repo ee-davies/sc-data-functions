@@ -26,6 +26,27 @@ print(f"Kernels path loaded: {kernels_path}")
 
 
 """
+IMAP MAG DATA: FROM ARCHIVE
+"""
+
+#Available coord_sys: RTN, GSE, GSM
+def get_imapmag(fp, coord_sys:str):
+    """raw = rtn"""
+    try:
+        cdf = pycdf.CDF(fp)
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['mag_epoch', 'mag_B_magnitude'], ['time', 'bt'])}
+        df = pd.DataFrame.from_dict(data)
+        bx, by, bz = cdf[f'mag_B_{coord_sys}'][:].T
+        df['bx'] = bx
+        df['by'] = by
+        df['bz'] = bz
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
+    return df
+
+
+"""
 IMAP POSITION FUNCTIONS: coord maths, furnish kernels, and call position for each timestamp
 Coord_systems available: ECLIPJ2000, HEEQ, HEE, GSE
 """
