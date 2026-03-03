@@ -187,6 +187,15 @@ def get_imapmag_realtime_day(start_timestamp, coord_sys:str, save_file:bool, pat
     return mag_rdf
 
 
+def save_imapmag_realtime_daily_1min(start_timestamp, end_timestamp, coord_sys:str):
+    start = start_timestamp
+    end = end_timestamp+timedelta(days=1)
+    while start < end:
+        df = get_imapmag_realtime_day(start, coord_sys, save_file=True)
+        start += timedelta(days=1)
+    return print('Finished saving files.')
+
+
 def read_json_to_dataframe(filepath, instrument=None, coord_sys=None):
     """
     Read IMAP JSON file into a pandas DataFrame.
