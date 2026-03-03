@@ -72,3 +72,11 @@ def get_imap_pos(t, coord_sys='ECLIPJ2000'):
             print(e)
             return [t, None, None, None, None, None, None]
         
+
+def get_imap_positions(time_series, coord_sys):
+    positions = []
+    for t in time_series:
+        position = get_imap_pos(t, coord_sys)
+        positions.append(position)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    return df_positions
