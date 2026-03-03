@@ -10,6 +10,8 @@ import os.path
 import pickle
 import glob
 import json
+
+import ialirt_data_access
 from functions_general import load_path
 
 
@@ -139,6 +141,19 @@ def get_imapmagplas_range(start_timestamp, end_timestamp, coord_sys:str):
 """
 IMAP DATA: REAL-TIME DATA 
 """
+
+
+def get_imapmag_realtime_hourly(start_timestamp, coord_sys:str):
+    time_utc_start = start_timestamp.strftime("%Y-%m-%dT%H:%M:%S")
+    end_timestamp = start_timestamp+timedelta(hours=1)
+    time_utc_end = end_timestamp.strftime("%Y-%m-%dT%H:%M:%S")
+    json_data = ialirt_data_access.data_product_query(instrument="mag", time_utc_start=time_utc_start, time_utc_end=time_utc_end)
+    df = pd.DataFrame(json_data['data'])
+    data = {df_new_col: df[df_col][:] for df_col, df_new_col in zip(['time_utc', 'mag_B_magnitude'], ['time', 'bt'])}
+    new_df = pd.DataFrame.from_dict(data)
+    new_df.time = pd.to_datetime(new_df.time)
+    new_df[['bx', 'by', 'bz']] = pd.DataFrame(df[f'mag_B_{coord_sys}'].tolist())
+    return new_df
 
 
 def read_json_to_dataframe(filepath, instrument=None, coord_sys=None):
