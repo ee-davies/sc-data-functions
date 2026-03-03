@@ -15,5 +15,6 @@
     "ulysses_path": "/Volumes/External/data/ulysses/",
     "vex_path": "/Volumes/External/data/vex/",
     "wind_path": "/Volumes/External/data/wind/",
-    "rtsw_path": "/Volumes/External/data/rtsw/"
+    "rtsw_path": "/Volumes/External/data/rtsw/",
+    "imap_path": "/Volumes/External/data/imap/"
 }
