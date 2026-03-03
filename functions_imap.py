@@ -26,12 +26,12 @@ print(f"Kernels path loaded: {kernels_path}")
 
 
 """
-IMAP MAG DATA: FROM ARCHIVE
+IMAP DATA: FROM ARCHIVE
 """
 
-#Available coord_sys: RTN, GSE, GSM
+
 def get_imapmag(fp, coord_sys:str):
-    """raw = rtn"""
+    """raw = gse,gsm,rtn"""
     try:
         cdf = pycdf.CDF(fp)
         data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['mag_epoch', 'mag_B_magnitude'], ['time', 'bt'])}
@@ -40,6 +40,18 @@ def get_imapmag(fp, coord_sys:str):
         df['bx'] = bx
         df['by'] = by
         df['bz'] = bz
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
+    return df
+
+
+def get_imapplas(fp):
+    """raw = magnitudes"""
+    try:
+        cdf = pycdf.CDF(fp)
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['swapi_epoch', 'swapi_pseudo_proton_speed', 'swapi_pseudo_proton_density', 'swapi_pseudo_proton_temperature'], ['time', 'vt', 'np', 'tp'])}
+        df = pd.DataFrame.from_dict(data)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
