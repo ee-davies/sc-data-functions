@@ -158,7 +158,7 @@ def get_imapmag_realtime_hourly(start_timestamp, coord_sys:str):
 
 
 #Only use for short durations
-def get_imapmag_realtime_range(start_timestamp, end_timestamp, coord_sys:str):
+def get_imapmag_realtime_shortrange(start_timestamp, end_timestamp, coord_sys:str):
     df = None
     start = start_timestamp
     end = end_timestamp
@@ -178,7 +178,7 @@ def get_imapmag_realtime_range(start_timestamp, end_timestamp, coord_sys:str):
 
 def get_imapmag_realtime_day(start_timestamp, coord_sys:str, save_file:bool, path=f'{imap_path}'):
     end_timestamp = start_timestamp+timedelta(days=1)
-    df = get_imapmag_realtime_range(start_timestamp, end_timestamp, coord_sys)
+    df = get_imapmag_realtime_shortrange(start_timestamp, end_timestamp, coord_sys)
     mag_rdf = df.set_index('time').resample('1min').mean().reset_index(drop=False)
     if save_file is True:
         savedate = f'{start_timestamp.year}{start_timestamp.month:02}{start_timestamp.day:02}'
@@ -194,6 +194,25 @@ def save_imapmag_realtime_daily_1min(start_timestamp, end_timestamp, coord_sys:s
         df = get_imapmag_realtime_day(start, coord_sys, save_file=True)
         start += timedelta(days=1)
     return print('Finished saving files.')
+
+
+def get_imapmag_realtime_range(start_timestamp, end_timestamp, coord_sys:str, path=f'{imap_path}'):
+    df = None
+    start = start_timestamp
+    end = end_timestamp
+    while start < end:
+        savedate = f'{start.year}{start.month:02}{start.day:02}'
+        try:
+            _df = pd.read_pickle(f"{path}ialirt/realtime/imap_realtime_mag_{coord_sys}_{savedate}.pkl")
+            if _df is not None:
+                if df is None:
+                    df = _df.copy(deep=True)
+                else:
+                    df = pd.concat([df, _df])
+        except Exception as e:
+            print('ERROR', e, "DataFrame is empty") 
+        start += timedelta(days=1)
+    return df
 
 
 def read_json_to_dataframe(filepath, instrument=None, coord_sys=None):
