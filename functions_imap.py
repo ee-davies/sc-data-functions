@@ -27,6 +27,7 @@ print(f"Kernels path loaded: {kernels_path}")
 
 """
 IMAP POSITION FUNCTIONS: coord maths, furnish kernels, and call position for each timestamp
+Coord_systems available: ECLIPJ2000, HEEQ, HEE, GSE
 """
 
 
@@ -48,3 +49,26 @@ def imap_furnish():
     for kernel in generic_kernels:
         spiceypy.furnsh(os.path.join(generic_path, kernel))
 
+
+def get_imap_pos(t, coord_sys='ECLIPJ2000'): 
+    if spiceypy.ktotal('ALL') < 1:
+        imap_furnish()
+    if coord_sys == 'GSE':
+        try:
+            pos = spiceypy.spkpos("IMAP", spiceypy.datetime2et(t), f"{coord_sys}", "NONE", "EARTH")[0] 
+            r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
+            position = t, pos[0], pos[1], pos[2], r, lat, lon
+            return position
+        except Exception as e:
+            print(e)
+            return [t, None, None, None, None, None, None]
+    else:
+        try:
+            pos = spiceypy.spkpos("IMAP", spiceypy.datetime2et(t), f"{coord_sys}", "NONE", "SUN")[0] 
+            r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
+            position = t, pos[0], pos[1], pos[2], r, lat, lon
+            return position
+        except Exception as e:
+            print(e)
+            return [t, None, None, None, None, None, None]
+        
