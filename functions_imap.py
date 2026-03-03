@@ -140,6 +140,7 @@ def get_imapmagplas_range(start_timestamp, end_timestamp, coord_sys:str):
 
 """
 IMAP DATA: REAL-TIME DATA 
+#4 hours is largest data service can call 
 """
 
 
@@ -154,6 +155,25 @@ def get_imapmag_realtime_hourly(start_timestamp, coord_sys:str):
     new_df.time = pd.to_datetime(new_df.time)
     new_df[['bx', 'by', 'bz']] = pd.DataFrame(df[f'mag_B_{coord_sys}'].tolist())
     return new_df
+
+
+#Only use for short durations
+def get_imapmag_realtime_range(start_timestamp, end_timestamp, coord_sys:str):
+    df = None
+    start = start_timestamp
+    end = end_timestamp
+    while start < end:
+        try:
+            _df = get_imapmag_realtime_hourly(start, coord_sys)
+            if _df is not None:
+                if df is None:
+                    df = _df.copy(deep=True)
+                else:
+                    df = pd.concat([df, _df])
+        except Exception as e:
+            print('ERROR', e, "DataFrame is empty") 
+        start += timedelta(hours=1)
+    return df
 
 
 def read_json_to_dataframe(filepath, instrument=None, coord_sys=None):
