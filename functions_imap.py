@@ -196,7 +196,7 @@ def save_imapmag_realtime_daily_1min(start_timestamp, end_timestamp, coord_sys:s
     return print('Finished saving files.')
 
 
-def get_imapmag_realtime_range(start_timestamp, end_timestamp, coord_sys:str, path=f'{imap_path}'):
+def get_imapmag_realtime_range_1min(start_timestamp, end_timestamp, coord_sys:str, path=f'{imap_path}'):
     df = None
     start = start_timestamp
     end = end_timestamp
