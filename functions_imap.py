@@ -9,7 +9,7 @@ import urllib.request
 import os.path
 import pickle
 import glob
-
+import json
 from functions_general import load_path
 
 
@@ -134,6 +134,124 @@ def get_imapmagplas_range(start_timestamp, end_timestamp, coord_sys:str):
     magplas_rdf = magplas_rdf.reset_index(drop=True)
 
     return magplas_rdf
+
+
+"""
+IMAP DATA: REAL-TIME DATA 
+"""
+
+
+def read_json_to_dataframe(filepath, instrument=None, coord_sys=None):
+    """
+    Read IMAP JSON file into a pandas DataFrame.
+    
+    Parameters:
+    -----------
+    filepath : str
+        Path to the JSON file
+    instrument : str, optional
+        Filter data by instrument (e.g., 'mag', 'hit'). 
+        If None, returns all data.
+    coord_sys : str, optional
+        Coordinate system for mag data ('RTN', 'GSE', or 'GSM').
+        Only applicable when instrument='mag'.
+        Returns 'time', 'bt', and unpacked bx, by, bz columns for the specified coordinate system.
+    
+    Returns:
+    --------
+    pandas.DataFrame
+        DataFrame containing the data from the JSON file's 'data' field,
+        optionally filtered by instrument and coordinate system.
+        For mag data, mag_epoch is converted to datetime and renamed to 'time'.
+        For mag data, mag_B_magnitude is renamed to 'bt'.
+        For mag data with coord_sys specified, the mag_B_* arrays are unpacked into bx, by, bz columns.
+        For mag data without coord_sys, all coordinate systems are unpacked with prefixes (RTN_bx, GSE_bx, etc.).
+    """
+    with open(filepath, 'r') as f:
+        json_data = json.load(f)
+    
+    # Extract the 'data' array from the JSON structure
+    df = pd.DataFrame(json_data['data'])
+    
+    # Filter by instrument if specified
+    if instrument is not None:
+        df = df[df['instrument'] == instrument]
+        
+        # If mag instrument, return specific columns and unpack arrays
+        if instrument == 'mag':
+            if coord_sys is not None:
+                # Return mag_epoch, mag_B_magnitude, and the specified coordinate system column
+                mag_columns = ['mag_epoch', 'mag_B_magnitude', f'mag_B_{coord_sys}']
+                # Only select columns that exist in the dataframe
+                available_columns = [col for col in mag_columns if col in df.columns]
+                df = df[available_columns].copy()
+                
+                # Convert mag_epoch to datetime (nanoseconds since J2000: 2000-01-01 12:00:00)
+                if 'mag_epoch' in df.columns:
+                    j2000 = datetime(2000, 1, 1, 12, 0, 0)
+                    df['time'] = df['mag_epoch'].apply(
+                        lambda x: j2000 + timedelta(microseconds=x/1000) if pd.notna(x) else pd.NaT
+                    )
+                    df = df.drop(columns=['mag_epoch'])
+                
+                # Rename mag_B_magnitude to bt
+                if 'mag_B_magnitude' in df.columns:
+                    df = df.rename(columns={'mag_B_magnitude': 'bt'})
+                
+                # Unpack the mag_B array into bx, by, bz columns (no prefix when single coord_sys)
+                b_col = f'mag_B_{coord_sys}'
+                if b_col in df.columns:
+                    df['bx'] = df[b_col].apply(lambda x: x[0] if isinstance(x, list) and len(x) >= 3 else None)
+                    df['by'] = df[b_col].apply(lambda x: x[1] if isinstance(x, list) and len(x) >= 3 else None)
+                    df['bz'] = df[b_col].apply(lambda x: x[2] if isinstance(x, list) and len(x) >= 3 else None)
+                    # Drop the original array column
+                    df = df.drop(columns=[b_col])
+                
+                # Reorder columns to have time first, then bt, then bx, by, bz
+                if 'time' in df.columns:
+                    cols = ['time']
+                    if 'bt' in df.columns:
+                        cols.append('bt')
+                    cols.extend([col for col in df.columns if col not in cols])
+                    df = df[cols]
+            else:
+                # Return all mag columns if no coord_sys specified
+                mag_columns = ['mag_epoch', 'mag_B_magnitude', 'mag_B_RTN', 'mag_B_GSE', 'mag_B_GSM']
+                # Only select columns that exist in the dataframe
+                available_columns = [col for col in mag_columns if col in df.columns]
+                df = df[available_columns].copy()
+                
+                # Convert mag_epoch to datetime (nanoseconds since J2000: 2000-01-01 12:00:00)
+                if 'mag_epoch' in df.columns:
+                    j2000 = datetime(2000, 1, 1, 12, 0, 0)
+                    df['time'] = df['mag_epoch'].apply(
+                        lambda x: j2000 + timedelta(microseconds=x/1000) if pd.notna(x) else pd.NaT
+                    )
+                    df = df.drop(columns=['mag_epoch'])
+                
+                # Rename mag_B_magnitude to bt
+                if 'mag_B_magnitude' in df.columns:
+                    df = df.rename(columns={'mag_B_magnitude': 'bt'})
+                
+                # Unpack all coordinate system arrays (with prefixes since multiple coord systems)
+                for coord in ['RTN', 'GSE', 'GSM']:
+                    b_col = f'mag_B_{coord}'
+                    if b_col in df.columns:
+                        df[f'{coord}_bx'] = df[b_col].apply(lambda x: x[0] if isinstance(x, list) and len(x) >= 3 else None)
+                        df[f'{coord}_by'] = df[b_col].apply(lambda x: x[1] if isinstance(x, list) and len(x) >= 3 else None)
+                        df[f'{coord}_bz'] = df[b_col].apply(lambda x: x[2] if isinstance(x, list) and len(x) >= 3 else None)
+                        # Drop the original array column
+                        df = df.drop(columns=[b_col])
+                
+                # Reorder columns to have time first, then bt
+                if 'time' in df.columns:
+                    cols = ['time']
+                    if 'bt' in df.columns:
+                        cols.append('bt')
+                    cols.extend([col for col in df.columns if col not in cols])
+                    df = df[cols]
+    
+    return df
 
 
 """
