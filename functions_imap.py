@@ -170,13 +170,16 @@ def get_imapplas_realtime_hourly(start_timestamp):
 
 
 #Only use for short durations
-def get_imapmag_realtime_shortrange(start_timestamp, end_timestamp, coord_sys:str):
+def get_imap_realtime_shortrange(start_timestamp, end_timestamp, instrument:str, coord_sys='RTN'):
     df = None
     start = start_timestamp
     end = end_timestamp
     while start < end:
         try:
-            _df = get_imapmag_realtime_hourly(start, coord_sys)
+            if instrument == 'mag':
+                _df = get_imapmag_realtime_hourly(start, coord_sys)
+            elif instrument == 'plas':
+                _df = get_imapplas_realtime_hourly(start)
             if _df is not None:
                 if df is None:
                     df = _df.copy(deep=True)
