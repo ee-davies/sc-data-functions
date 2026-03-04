@@ -224,7 +224,7 @@ def get_imap_realtime_shortrange(start_timestamp, end_timestamp, instrument:str,
     return df
 
 
-def get_imap_realtime_day(start_timestamp, instrument:str, coord_sys='RTN', save_file='True', path=f'{imap_path}'):
+def get_imap_realtime_day(start_timestamp, instrument:str, coord_sys='RTN', save_file=True, path=f'{imap_path}'):
     end_timestamp = start_timestamp+timedelta(days=1)
     df = get_imap_realtime_shortrange(start_timestamp, end_timestamp, instrument, coord_sys)
     rdf = df.set_index('time').resample('1min').mean(numeric_only=True).reset_index(drop=False)
@@ -239,11 +239,11 @@ def get_imap_realtime_day(start_timestamp, instrument:str, coord_sys='RTN', save
     return rdf
 
 
-def save_imapmag_realtime_daily_1min(start_timestamp, end_timestamp, coord_sys:str):
+def save_imap_realtime_daily_1min(start_timestamp, end_timestamp, instrument:str, coord_sys='RTN'):
     start = start_timestamp
     end = end_timestamp+timedelta(days=1)
     while start < end:
-        df = get_imapmag_realtime_day(start, coord_sys, save_file=True)
+        df = get_imap_realtime_day(start, instrument, coord_sys, save_file=True)
         start += timedelta(days=1)
     return print('Finished saving files.')
 
