@@ -38,6 +38,42 @@ def plotly_mag(df, save_fig=False):
         fig.write_html(f'plotly_mag_{now}.html') 
 
 
+def plotly_plas(df, save_fig=False):
+    pio.renderers.default = 'browser'
+    fig = make_subplots(rows=3, cols=1, shared_xaxes=True)
+    fig.add_trace(
+        go.Scatter(
+            x=df['time'],
+            y=df['vt'],
+            name='vt',
+            line_color='black'
+        ),
+        row=1, col=1
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=df['time'],
+            y=df['np'],
+            name='np',
+            line_color='black'
+        ),
+        row=2, col=1
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=df['time'],
+            y=df['tp'],
+            name='tp',
+            line_color='black'
+        ),
+        row=3, col=1
+    )
+    fig.show()
+    if save_fig == True:
+        now = datetime.now().strftime('%Y%m%d%H%M')
+        fig.write_html(f'plotly_plas_{now}.html') 
+
+
 """
 SHOCK
 """
