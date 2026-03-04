@@ -191,15 +191,19 @@ def get_imap_realtime_shortrange(start_timestamp, end_timestamp, instrument:str,
     return df
 
 
-def get_imapmag_realtime_day(start_timestamp, coord_sys:str, save_file:bool, path=f'{imap_path}'):
+def get_imap_realtime_day(start_timestamp, instrument:str, coord_sys='RTN', save_file='True', path=f'{imap_path}'):
     end_timestamp = start_timestamp+timedelta(days=1)
-    df = get_imapmag_realtime_shortrange(start_timestamp, end_timestamp, coord_sys)
-    mag_rdf = df.set_index('time').resample('1min').mean().reset_index(drop=False)
+    df =get_imap_realtime_shortrange(start_timestamp, end_timestamp, instrument, coord_sys)
+    rdf = df.set_index('time').resample('1min').mean().reset_index(drop=False)
     if save_file is True:
         savedate = f'{start_timestamp.year}{start_timestamp.month:02}{start_timestamp.day:02}'
-        mag_rdf.to_pickle(f"{path}ialirt/realtime/mag/imap_realtime_mag_{coord_sys}_{savedate}.pkl")
-        print(f"Saved {coord_sys} mag data for {savedate}")
-    return mag_rdf
+        if instrument == 'mag':
+            rdf.to_pickle(f"{path}ialirt/realtime/mag/imap_realtime_mag_{coord_sys}_{savedate}.pkl")
+            print(f"Saved {coord_sys} mag data for {savedate}")
+        elif instrument == 'plas':
+            rdf.to_pickle(f"{path}ialirt/realtime/plas/imap_realtime_plas_{savedate}.pkl")
+            print(f"Saved plasma data for {savedate}")
+    return rdf
 
 
 def save_imapmag_realtime_daily_1min(start_timestamp, end_timestamp, coord_sys:str):
