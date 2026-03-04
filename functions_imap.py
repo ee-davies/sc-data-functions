@@ -248,14 +248,17 @@ def save_imap_realtime_daily_1min(start_timestamp, end_timestamp, instrument:str
     return print('Finished saving files.')
 
 
-def get_imapmag_realtime_range_1min(start_timestamp, end_timestamp, coord_sys:str, path=f'{imap_path}'):
+def get_imap_realtime_range_1min(start_timestamp, end_timestamp, instrument:str, coord_sys='RTN', path=f'{imap_path}'):
     df = None
     start = start_timestamp
     end = end_timestamp
     while start < end:
         savedate = f'{start.year}{start.month:02}{start.day:02}'
         try:
-            _df = pd.read_pickle(f"{path}ialirt/realtime/mag/imap_realtime_mag_{coord_sys}_{savedate}.pkl")
+            if instrument == 'mag':
+                _df = pd.read_pickle(f"{path}ialirt/realtime/mag/imap_realtime_mag_{coord_sys}_{savedate}.pkl")
+            elif instrument == 'plas':
+                _df = pd.read_pickle(f"{path}ialirt/realtime/plas/imap_realtime_plas_{savedate}.pkl")
             if _df is not None:
                 if df is None:
                     df = _df.copy(deep=True)
