@@ -78,6 +78,9 @@ def get_imapplas(fp):
         cdf = pycdf.CDF(fp)
         data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['swapi_epoch', 'swapi_pseudo_proton_speed', 'swapi_pseudo_proton_density', 'swapi_pseudo_proton_temperature'], ['time', 'vt', 'np', 'tp'])}
         df = pd.DataFrame.from_dict(data)
+        df = filter_bad_col(df, 'np', -99999)
+        df = filter_bad_col(df, 'vt', -99999)
+        df = filter_bad_col(df, 'tp', -99999)
     except Exception as e:
         print('ERROR:', e, fp)
         df = None
@@ -190,6 +193,9 @@ def get_imapplas_realtime_hourly(start_timestamp):
     data = {df_new_col: df[df_col][:] for df_col, df_new_col in zip(['time_utc', 'swapi_pseudo_proton_speed', 'swapi_pseudo_proton_density', 'swapi_pseudo_proton_temperature'], ['time', 'vt', 'np', 'tp'])}
     new_df = pd.DataFrame.from_dict(data)
     new_df.time = pd.to_datetime(new_df.time)
+    new_df = filter_bad_col(new_df, 'np', -99999)
+    new_df = filter_bad_col(new_df, 'vt', -99999)
+    new_df = filter_bad_col(new_df, 'tp', -99999)
     return new_df
 
 
