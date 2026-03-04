@@ -182,7 +182,7 @@ def get_imapmag_realtime_day(start_timestamp, coord_sys:str, save_file:bool, pat
     mag_rdf = df.set_index('time').resample('1min').mean().reset_index(drop=False)
     if save_file is True:
         savedate = f'{start_timestamp.year}{start_timestamp.month:02}{start_timestamp.day:02}'
-        mag_rdf.to_pickle(f"{path}ialirt/realtime/imap_realtime_mag_{coord_sys}_{savedate}.pkl")
+        mag_rdf.to_pickle(f"{path}ialirt/realtime/mag/imap_realtime_mag_{coord_sys}_{savedate}.pkl")
         print(f"Saved {coord_sys} mag data for {savedate}")
     return mag_rdf
 
@@ -203,7 +203,7 @@ def get_imapmag_realtime_range_1min(start_timestamp, end_timestamp, coord_sys:st
     while start < end:
         savedate = f'{start.year}{start.month:02}{start.day:02}'
         try:
-            _df = pd.read_pickle(f"{path}ialirt/realtime/imap_realtime_mag_{coord_sys}_{savedate}.pkl")
+            _df = pd.read_pickle(f"{path}ialirt/realtime/mag/imap_realtime_mag_{coord_sys}_{savedate}.pkl")
             if _df is not None:
                 if df is None:
                     df = _df.copy(deep=True)
