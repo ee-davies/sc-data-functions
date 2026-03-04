@@ -157,6 +157,18 @@ def get_imapmag_realtime_hourly(start_timestamp, coord_sys:str):
     return new_df
 
 
+def get_imapplas_realtime_hourly(start_timestamp):
+    time_utc_start = start_timestamp.strftime("%Y-%m-%dT%H:%M:%S")
+    end_timestamp = start_timestamp+timedelta(hours=1)
+    time_utc_end = end_timestamp.strftime("%Y-%m-%dT%H:%M:%S")
+    json_data = ialirt_data_access.data_product_query(instrument="swapi", time_utc_start=time_utc_start, time_utc_end=time_utc_end)
+    df = pd.DataFrame(json_data['data'])
+    data = {df_new_col: df[df_col][:] for df_col, df_new_col in zip(['time_utc', 'swapi_pseudo_proton_speed', 'swapi_pseudo_proton_density', 'swapi_pseudo_proton_temperature'], ['time', 'vt', 'np', 'tp'])}
+    new_df = pd.DataFrame.from_dict(data)
+    new_df.time = pd.to_datetime(new_df.time)
+    return new_df
+
+
 #Only use for short durations
 def get_imapmag_realtime_shortrange(start_timestamp, end_timestamp, coord_sys:str):
     df = None
