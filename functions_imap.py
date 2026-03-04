@@ -42,12 +42,12 @@ def filter_bad_data(df, col, bad_val): #filter across whole df
     return df
 
 
-def filter_bad_col(df, col, bad_val): #filter by individual columns
+def filter_bad_col(df, col, bad_val):
     if bad_val < 0:
-        mask_vals = df[col] < bad_val  # boolean mask for all bad values
+        mask = df[col] < bad_val  # boolean mask for all bad values
     else:
-        mask_vals = df[col] > bad_val  # boolean mask for all bad values
-    df[col].mask(mask_vals)
+        mask = df[col] > bad_val  # boolean mask for all bad values
+    df[col][mask] = np.nan
     return df
 
 
@@ -193,8 +193,11 @@ def get_imapplas_realtime_hourly(start_timestamp):
     data = {df_new_col: df[df_col][:] for df_col, df_new_col in zip(['time_utc', 'swapi_pseudo_proton_speed', 'swapi_pseudo_proton_density', 'swapi_pseudo_proton_temperature'], ['time', 'vt', 'np', 'tp'])}
     new_df = pd.DataFrame.from_dict(data)
     new_df.time = pd.to_datetime(new_df.time)
-    new_df = filter_bad_col(new_df, 'np', -99999)
+    new_df['vt'] = new_df['vt'].astype('float64')
+    new_df['np'] = new_df['np'].astype('float64')
+    new_df['tp'] = new_df['tp'].astype('float64')
     new_df = filter_bad_col(new_df, 'vt', -99999)
+    new_df = filter_bad_col(new_df, 'np', -99999)
     new_df = filter_bad_col(new_df, 'tp', -99999)
     return new_df
 
@@ -223,8 +226,8 @@ def get_imap_realtime_shortrange(start_timestamp, end_timestamp, instrument:str,
 
 def get_imap_realtime_day(start_timestamp, instrument:str, coord_sys='RTN', save_file='True', path=f'{imap_path}'):
     end_timestamp = start_timestamp+timedelta(days=1)
-    df =get_imap_realtime_shortrange(start_timestamp, end_timestamp, instrument, coord_sys)
-    rdf = df.set_index('time').resample('1min').mean().reset_index(drop=False)
+    df = get_imap_realtime_shortrange(start_timestamp, end_timestamp, instrument, coord_sys)
+    rdf = df.set_index('time').resample('1min').mean(numeric_only=True).reset_index(drop=False)
     if save_file is True:
         savedate = f'{start_timestamp.year}{start_timestamp.month:02}{start_timestamp.day:02}'
         if instrument == 'mag':
