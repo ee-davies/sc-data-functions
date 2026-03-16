@@ -62,7 +62,7 @@ def get_bepimag_range_e2k(start_timestamp, end_timestamp, path=f'{bepi_path}'):
         # C:\Users\emmad\Documents\Bepi-Colombo\202203\data\mag_der_sc_ob_a001_e2k_00000_20220308.tab
         date_str = f'{start.year}{start.month:02}{start.day:02}'
         fn = f'mag_der_sc_ob_a001_e2k_00000_{date_str}.tab'
-        _df = get_bepimag(f'{path}{fn}')
+        _df = get_bepimag(f'{path}cruise_ob/{fn}')
         if _df is not None:
             if df is None:
                 df = _df.copy(deep=True)
