@@ -462,10 +462,12 @@ def get_dscovrpos(fp, coord_sys='GSE'):
     """Reads DSCOVR position data from NetCDF file and returns DataFrame in chosen coordinate system (GSE or GSM)."""
     coord_sys = coord_sys.lower()
 
-
     try:
         ncdf = netcdf.NetCDFFile(fp,'r')
-        data = {df_col: ncdf.variables[cdf_col][:] for cdf_col, df_col in zip(['time', f'sat_x_{coord_sys}', f'sat_y_{coord_sys}', f'sat_z_{coord_sys}'], ['time', 'x', 'y', 'z'])}
+        time = ncdf.variables['time'][:]
+        x = ncdf.variables[f'sat_x_{coord_sys}'][:]
+        y = ncdf.variables[f'sat_y_{coord_sys}'][:]
+        z = ncdf.variables[f'sat_z_{coord_sys}'][:]
     except Exception as e:
         # print(f'netcdf.NetCDF ERROR reading {fp}:', e)
 
