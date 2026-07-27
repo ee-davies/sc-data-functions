@@ -74,6 +74,52 @@ def plotly_plas(df, save_fig=False):
         fig.write_html(f'plotly_plas_{now}.html') 
 
 
+def plotly_magplas(df, save_fig=False):
+    pio.renderers.default = 'browser'
+    fig = make_subplots(rows=4, cols=1, shared_xaxes=True)
+    for column, color in zip(['bt', 'bx', 'by', 'bz'], ['black', 'red', 'green', 'blue']):
+        fig.add_trace(
+            go.Scatter(
+                x=df['time'],
+                y=df[column],
+                name=column.upper(),
+                line_color=color
+            ),
+            row=1, col=1
+        )
+    fig.add_trace(
+        go.Scatter(
+            x=df['time'],
+            y=df['vt'],
+            name='vt',
+            line_color='black'
+        ),
+        row=2, col=1
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=df['time'],
+            y=df['np'],
+            name='np',
+            line_color='black'
+        ),
+        row=3, col=1
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=df['time'],
+            y=df['tp'],
+            name='tp',
+            line_color='black'
+        ),
+        row=4, col=1
+    )
+    fig.show()
+    if save_fig == True:
+        now = datetime.now().strftime('%Y%m%d%H%M')
+        fig.write_html(f'plotly_magplas_{now}.html') 
+
+
 """
 SHOCK
 """
