@@ -508,10 +508,10 @@ def get_sta_pos(t, coord_sys:str):
             return [t, None, None, None, None, None, None]
 
 
-def get_sta_positions(time_series):
+def get_sta_positions(time_series, coord_sys:str):
     positions = []
     for t in time_series:
-        position = get_sta_pos(t)
+        position = get_sta_pos(t, coord_sys)
         positions.append(position)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
     return df_positions
@@ -529,11 +529,11 @@ def get_sta_pos_range(start, end, cadence=1):
     return df_positions
 
 
-def get_sta_positions_daily(start, end, cadence, dist_unit='au', ang_unit='deg'):
+def get_sta_positions_daily(start, end, coord_sys, cadence, dist_unit='au', ang_unit='deg'):
     t = start
     positions = []
     while t < end:
-        position = get_sta_pos(t)
+        position = get_sta_pos(t, coord_sys)
         positions.append(position)
         t += timedelta(days=cadence)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
@@ -548,11 +548,11 @@ def get_sta_positions_daily(start, end, cadence, dist_unit='au', ang_unit='deg')
     return df_positions
 
 
-def get_sta_positions_hourly(start, end, cadence, dist_unit='au', ang_unit='deg'):
+def get_sta_positions_hourly(start, end, coord_sys, cadence, dist_unit='au', ang_unit='deg'):
     t = start
     positions = []
     while t < end:
-        position = get_sta_pos(t)
+        position = get_sta_pos(t, coord_sys)
         positions.append(position)
         t += timedelta(hours=cadence)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
@@ -567,11 +567,11 @@ def get_sta_positions_hourly(start, end, cadence, dist_unit='au', ang_unit='deg'
     return df_positions
 
 
-def get_sta_positions_minute(start, end, cadence, dist_unit='au', ang_unit='deg'):
+def get_sta_positions_minute(start, end, coord_sys, cadence, dist_unit='au', ang_unit='deg'):
     t = start
     positions = []
     while t < end:
-        position = get_sta_pos(t)
+        position = get_sta_pos(t, coord_sys)
         positions.append(position)
         t += timedelta(minutes=cadence)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
@@ -687,7 +687,7 @@ def create_sta_beacon_pkl(start_timestamp, end_timestamp, output_path='/Users/em
     pickle.dump([stereoa,header], open(output_path+f'stereoa_beacon_rtn_{t_now_date_hour}.p', "wb"))
 
 
-def create_sta_pkl(start_timestamp, end_timestamp):
+def create_sta_pkl(start_timestamp, end_timestamp, pos_coord_sys:str):
 
     #load in mag data to DataFrame and resample, create empty mag and resampled DataFrame if no data
     # if empty, drop time column ready for concat
@@ -702,7 +702,7 @@ def create_sta_pkl(start_timestamp, end_timestamp):
 
     #get sta positions for corresponding timestamps
     stereoa_furnish()
-    sta_pos = get_sta_positions(rdf['time'])
+    sta_pos = get_sta_positions(rdf['time'], pos_coord_sys)
     sta_pos.set_index(pd.to_datetime(sta_pos['time']), inplace=True)
     sta_pos = sta_pos.drop(columns=['time'])
 
