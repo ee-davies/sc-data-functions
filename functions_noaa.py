@@ -167,27 +167,35 @@ def get_noaa_mag_realtime_7days():
     return noaa_mag_gsm
 
 
-def get_noaa_mag_realtime_1day(coord_sys:str):
+def get_noaa_mag_realtime_1day(coord_sys:str, source=str):
     #mag data request produces file in GSE or GSM coords
     request_mag=urllib.request.urlopen('https://services.swpc.noaa.gov/json/rtsw/rtsw_mag_1m.json')
     file_mag = request_mag.read()
     data_mag = json.loads(file_mag)
     df = pd.DataFrame()
     if coord_sys == 'GSE':
-        noaa_mag= pd.DataFrame(data_mag[1:], columns=['time_tag', 'bx_gse', 'by_gse', 'bz_gse', 'phi_gse', 'theta_gse', 'bt'])
+        noaa_mag= pd.DataFrame(data_mag[1:], columns=['time_tag', 'bx_gse', 'by_gse', 'bz_gse', 'phi_gse', 'theta_gse', 'bt', 'source'])
         df['time'] = pd.to_datetime(noaa_mag['time_tag'])
         df['bx'] = noaa_mag['bx_gse'].astype('float')
         df['by'] = noaa_mag['by_gse'].astype('float')
         df['bz'] = noaa_mag['bz_gse'].astype('float')
         df['bt'] = noaa_mag['bt'].astype('float')
+        df['source'] = noaa_mag['source']
     elif coord_sys == 'GSM':
-        noaa_mag= pd.DataFrame(data_mag[1:], columns=['time_tag', 'bx_gsm', 'by_gsm', 'bz_gsm', 'phi_gsm', 'theta_gsm', 'bt'])
+        noaa_mag= pd.DataFrame(data_mag[1:], columns=['time_tag', 'bx_gsm', 'by_gsm', 'bz_gsm', 'phi_gsm', 'theta_gsm', 'bt', 'source'])
         df['time'] = pd.to_datetime(noaa_mag['time_tag'])
         df['bx'] = noaa_mag['bx_gsm'].astype('float')
         df['by'] = noaa_mag['by_gsm'].astype('float')
         df['bz'] = noaa_mag['bz_gsm'].astype('float')
         df['bt'] = noaa_mag['bt'].astype('float')
-    return df
+        df['source'] = noaa_mag['source']
+    if source == "SOLAR1":
+        mask = df['source'] == "SOLAR1"
+    elif source == "ACE":
+        mask = df['source'] == "ACE"
+    df_source = df[mask].reset_index(drop=True)
+    df_source.drop(columns = ['source'], inplace=True)
+    return df_source
 
 
 #now outdated - use 1 day files
@@ -205,14 +213,14 @@ def get_noaa_plas_realtime_7days():
     return noaa_plas
 
 
-def get_noaa_plas_realtime_1day(coord_sys:str):
+def get_noaa_plas_realtime_1day(coord_sys:str, source=str):
     #plasma data request returns: v_bulk, v_components, density, and temperature. GSE or GSM. 
     request_plas=urllib.request.urlopen('https://services.swpc.noaa.gov/json/rtsw/rtsw_wind_1m.json')
     file_plas = request_plas.read()
     data_plas = json.loads(file_plas)
     df = pd.DataFrame()
     if coord_sys == 'GSE':
-        noaa_plas= pd.DataFrame(data_plas[1:], columns=['time_tag', 'proton_speed', 'proton_vx_gse', 'proton_vy_gse', 'proton_vz_gse', 'proton_density', 'proton_temperature'])
+        noaa_plas= pd.DataFrame(data_plas[1:], columns=['time_tag', 'proton_speed', 'proton_vx_gse', 'proton_vy_gse', 'proton_vz_gse', 'proton_density', 'proton_temperature', 'source'])
         df['time'] = pd.to_datetime(noaa_plas['time_tag'])
         df['vt'] = noaa_plas['proton_speed'].astype('float')
         df['vx'] = noaa_plas['proton_vx_gse'].astype('float')
@@ -220,8 +228,9 @@ def get_noaa_plas_realtime_1day(coord_sys:str):
         df['vz'] = noaa_plas['proton_vz_gse'].astype('float')
         df['tp'] = noaa_plas['proton_temperature'].astype('float')
         df['np'] = noaa_plas['proton_density'].astype('float')
+        df['source'] = noaa_plas['source']
     elif coord_sys == 'GSM':
-        noaa_plas= pd.DataFrame(data_plas[1:], columns=['time_tag', 'proton_speed', 'proton_vx_gsm', 'proton_vy_gsm', 'proton_vz_gsm', 'proton_density', 'proton_temperature'])
+        noaa_plas= pd.DataFrame(data_plas[1:], columns=['time_tag', 'proton_speed', 'proton_vx_gsm', 'proton_vy_gsm', 'proton_vz_gsm', 'proton_density', 'proton_temperature', 'source'])
         df['time'] = pd.to_datetime(noaa_plas['time_tag'])
         df['vt'] = noaa_plas['proton_speed'].astype('float')
         df['vx'] = noaa_plas['proton_vx_gsm'].astype('float')
@@ -229,7 +238,14 @@ def get_noaa_plas_realtime_1day(coord_sys:str):
         df['vz'] = noaa_plas['proton_vz_gsm'].astype('float')
         df['tp'] = noaa_plas['proton_temperature'].astype('float')
         df['np'] = noaa_plas['proton_density'].astype('float')
-    return df
+        df['source'] = noaa_plas['source']
+    if source == "SOLAR1":
+        mask = df['source'] == "SOLAR1"
+    elif source == "ACE":
+        mask = df['source'] == "ACE"
+    df_source = df[mask].reset_index(drop=True)
+    df_source.drop(columns = ['source'], inplace=True)
+    return df_source
 
 
 #Calling directly from json file: if json files are not working/ producing same data as seen on the realtime plots at https://www.swpc.noaa.gov/products/real-time-solar-wind:
