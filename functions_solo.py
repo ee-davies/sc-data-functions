@@ -138,6 +138,23 @@ def get_solomag(fp):
         df = None
     return df
 
+
+def get_solomag_gse(fp):
+    """raw = rtn"""
+    try:
+        cdf = pycdf.CDF(fp)
+        data = {df_col: cdf[cdf_col][:] for cdf_col, df_col in zip(['EPOCH'], ['time'])}
+        df = pd.DataFrame.from_dict(data)
+        bx, by, bz = cdf['B_GSE'][:].T
+        df['bx'] = bx
+        df['by'] = by
+        df['bz'] = bz
+        df['bt'] = np.linalg.norm(df[['bx', 'by', 'bz']], axis=1)
+    except Exception as e:
+        print('ERROR:', e, fp)
+        df = None
+    return df
+
 # #Load single file from specific path using cdflib
 # def get_solomag(fp):
 #     """raw = rtn"""
@@ -171,6 +188,26 @@ def get_solomag_range_formagonly_internal(start_timestamp, end_timestamp, path=f
         date_str = f'{year}{start.month:02}{start.day:02}'
         fn = f'{path}/solo_L2_mag-rtn-ll-internal_{date_str}_V00.cdf'
         _df = get_solomag(fn)
+        if _df is not None:
+            if df is None:
+                df = _df.copy(deep=True)
+            else:
+                df = pd.concat([df, _df])
+        start += timedelta(days=1)
+    return df
+
+
+def get_solomag_range_formagonly_internal_gse(start_timestamp, end_timestamp, path=f'{solo_path}'+'mag/ll/gse'):
+    """Pass two datetime objects and grab .cdf files between dates, from
+    directory given."""
+    df = None
+    start = start_timestamp.date()
+    end = end_timestamp.date() + timedelta(days=1)
+    while start < end:
+        year = start.year
+        date_str = f'{year}{start.month:02}{start.day:02}'
+        fn = f'{path}/solo_L2_mag-gse-ll-internal_{date_str}_V00.cdf'
+        _df = get_solomag_gse(fn)
         if _df is not None:
             if df is None:
                 df = _df.copy(deep=True)
