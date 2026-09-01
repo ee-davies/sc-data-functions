@@ -195,6 +195,8 @@ def get_noaa_mag_realtime_1day(coord_sys:str, source=str):
         mask = df['source'] == "ACE"
     df_source = df[mask].reset_index(drop=True)
     df_source.drop(columns = ['source'], inplace=True)
+    df_source.sort_values(by="time", ascending=True, inplace=True)
+    df_source = df_source.reset_index(drop=True)
     return df_source
 
 
@@ -245,6 +247,8 @@ def get_noaa_plas_realtime_1day(coord_sys:str, source=str):
         mask = df['source'] == "ACE"
     df_source = df[mask].reset_index(drop=True)
     df_source.drop(columns = ['source'], inplace=True)
+    df_source.sort_values(by="time", ascending=True, inplace=True)
+    df_source = df_source.reset_index(drop=True)
     return df_source
 
 
