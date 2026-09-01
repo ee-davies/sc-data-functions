@@ -148,6 +148,7 @@ DSCOVR REALTIME MAG and PLAS DATA
 
 ## REALTIME
 
+#now outdated - use 1 day files
 def get_noaa_mag_realtime_7days():
     #mag data request produces file in GSM coords
     request_mag=urllib.request.urlopen('https://services.swpc.noaa.gov/products/solar-wind/mag-7-day.json')
@@ -164,6 +165,29 @@ def get_noaa_mag_realtime_7days():
     noaa_mag_gsm.drop(columns = ['lon_gsm', 'lat_gsm'], inplace=True)
 
     return noaa_mag_gsm
+
+
+def get_noaa_mag_realtime_1day(coord_sys:str):
+    #mag data request produces file in GSM coords
+    request_mag=urllib.request.urlopen('https://services.swpc.noaa.gov/json/rtsw/rtsw_mag_1m.json')
+    file_mag = request_mag.read()
+    data_mag = json.loads(file_mag)
+    df = pd.DataFrame()
+    if coord_sys == 'GSE':
+        noaa_mag= pd.DataFrame(data_mag[1:], columns=['time_tag', 'bx_gse', 'by_gse', 'bz_gse', 'phi_gse', 'theta_gse', 'bt'])
+        df['time'] = pd.to_datetime(noaa_mag['time_tag'])
+        df['bx'] = noaa_mag['bx_gse'].astype('float')
+        df['by'] = noaa_mag['by_gse'].astype('float')
+        df['bz'] = noaa_mag['bz_gse'].astype('float')
+        df['bt'] = noaa_mag['bt'].astype('float')
+    elif coord_sys == 'GSM':
+        noaa_mag= pd.DataFrame(data_mag[1:], columns=['time_tag', 'bx_gsm', 'by_gsm', 'bz_gsm', 'phi_gsm', 'theta_gsm', 'bt'])
+        df['time'] = pd.to_datetime(noaa_mag['time_tag'])
+        df['bx'] = noaa_mag['bx_gsm'].astype('float')
+        df['by'] = noaa_mag['by_gsm'].astype('float')
+        df['bz'] = noaa_mag['bz_gsm'].astype('float')
+        df['bt'] = noaa_mag['bt'].astype('float')
+    return df
 
 
 def get_noaa_plas_realtime_7days():
