@@ -52,7 +52,7 @@ def filter_bad_col(df, col, bad_val):
 
 
 """
-IMAP DATA: FROM ARCHIVE
+IMAP IALIRT DATA: FROM ARCHIVE
 """
 
 
