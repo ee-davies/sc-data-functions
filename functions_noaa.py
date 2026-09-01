@@ -168,7 +168,7 @@ def get_noaa_mag_realtime_7days():
 
 
 def get_noaa_mag_realtime_1day(coord_sys:str):
-    #mag data request produces file in GSM coords
+    #mag data request produces file in GSE or GSM coords
     request_mag=urllib.request.urlopen('https://services.swpc.noaa.gov/json/rtsw/rtsw_mag_1m.json')
     file_mag = request_mag.read()
     data_mag = json.loads(file_mag)
@@ -190,6 +190,7 @@ def get_noaa_mag_realtime_1day(coord_sys:str):
     return df
 
 
+#now outdated - use 1 day files
 def get_noaa_plas_realtime_7days():
     #plasma data request returns bulk parameters: density, v_bulk, temperature
     request_plas=urllib.request.urlopen('https://services.swpc.noaa.gov/products/solar-wind/plasma-7-day.json')
@@ -202,6 +203,33 @@ def get_noaa_plas_realtime_7days():
     noaa_plas['vt'] = noaa_plas['vt'].astype('float')
     noaa_plas['tp'] = noaa_plas['tp'].astype('float')
     return noaa_plas
+
+
+def get_noaa_plas_realtime_1day(coord_sys:str):
+    #plasma data request returns: v_bulk, v_components, density, and temperature. GSE or GSM. 
+    request_plas=urllib.request.urlopen('https://services.swpc.noaa.gov/json/rtsw/rtsw_wind_1m.json')
+    file_plas = request_plas.read()
+    data_plas = json.loads(file_plas)
+    df = pd.DataFrame()
+    if coord_sys == 'GSE':
+        noaa_plas= pd.DataFrame(data_plas[1:], columns=['time_tag', 'proton_speed', 'proton_vx_gse', 'proton_vy_gse', 'proton_vz_gse', 'proton_density', 'proton_temperature'])
+        df['time'] = pd.to_datetime(noaa_plas['time_tag'])
+        df['vt'] = noaa_plas['proton_speed'].astype('float')
+        df['vx'] = noaa_plas['proton_vx_gse'].astype('float')
+        df['vy'] = noaa_plas['proton_vy_gse'].astype('float')
+        df['vz'] = noaa_plas['proton_vz_gse'].astype('float')
+        df['tp'] = noaa_plas['proton_temperature'].astype('float')
+        df['np'] = noaa_plas['proton_density'].astype('float')
+    elif coord_sys == 'GSM':
+        noaa_plas= pd.DataFrame(data_plas[1:], columns=['time_tag', 'proton_speed', 'proton_vx_gsm', 'proton_vy_gsm', 'proton_vz_gsm', 'proton_density', 'proton_temperature'])
+        df['time'] = pd.to_datetime(noaa_plas['time_tag'])
+        df['vt'] = noaa_plas['proton_speed'].astype('float')
+        df['vx'] = noaa_plas['proton_vx_gsm'].astype('float')
+        df['vy'] = noaa_plas['proton_vy_gsm'].astype('float')
+        df['vz'] = noaa_plas['proton_vz_gsm'].astype('float')
+        df['tp'] = noaa_plas['proton_temperature'].astype('float')
+        df['np'] = noaa_plas['proton_density'].astype('float')
+    return df
 
 
 #Calling directly from json file: if json files are not working/ producing same data as seen on the realtime plots at https://www.swpc.noaa.gov/products/real-time-solar-wind:
