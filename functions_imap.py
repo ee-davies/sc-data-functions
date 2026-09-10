@@ -408,7 +408,7 @@ def imap_furnish():
         spiceypy.furnsh(os.path.join(generic_path, kernel))
 
 
-def get_imap_pos(t, coord_sys='ECLIPJ2000'): 
+def get_imap_pos(t, coord_sys:str): 
     if spiceypy.ktotal('ALL') < 1:
         imap_furnish()
     if coord_sys == 'GSE':
