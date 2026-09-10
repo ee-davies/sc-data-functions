@@ -87,12 +87,12 @@ def mes_furnish():
 #         spiceypy.furnsh(kernel)
 
 
-def get_mes_pos(t, prefurnished=False):
+def get_mes_pos(t, coord_sys:str, prefurnished=False):
     if not prefurnished: 
         if spiceypy.ktotal('ALL') < 1:
             mes_furnish()
     try:
-        pos = spiceypy.spkpos("MESSENGER", spiceypy.datetime2et(t), "HEEQ", "NONE", "SUN")[0]
+        pos = spiceypy.spkpos("MESSENGER", spiceypy.datetime2et(t), f"{coord_sys}", "NONE", "SUN")[0]
         r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
         position = t, pos[0], pos[1], pos[2], r, lat, lon
         return position
@@ -101,11 +101,20 @@ def get_mes_pos(t, prefurnished=False):
         return [t, None, None, None, None, None, None]
 
 
-def get_mes_positions_daily(start, end, cadence, dist_unit='au', ang_unit='deg'):
+def get_mes_positions(time_series, coord_sys:str):
+    positions = []
+    for t in time_series:
+        position = get_mes_pos(t, coord_sys)
+        positions.append(position)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    return df_positions
+
+
+def get_mes_positions_daily(start, end, coord_sys:str, cadence, dist_unit='au', ang_unit='deg'):
     t = start
     positions = []
     while t < end:
-        position = get_mes_pos(t)
+        position = get_mes_pos(t, coord_sys)
         positions.append(position)
         t += timedelta(days=cadence)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
@@ -120,11 +129,11 @@ def get_mes_positions_daily(start, end, cadence, dist_unit='au', ang_unit='deg')
     return df_positions
 
 
-def get_mes_positions_hourly(start, end, cadence, dist_unit='au', ang_unit='deg'):
+def get_mes_positions_hourly(start, end, coord_sys:str, cadence, dist_unit='au', ang_unit='deg'):
     t = start
     positions = []
     while t < end:
-        position = get_mes_pos(t)
+        position = get_mes_pos(t, coord_sys)
         positions.append(position)
         t += timedelta(hours=cadence)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
@@ -139,11 +148,11 @@ def get_mes_positions_hourly(start, end, cadence, dist_unit='au', ang_unit='deg'
     return df_positions
 
 
-def get_mes_positions_minute(start, end, cadence, dist_unit='au', ang_unit='deg'):
+def get_mes_positions_minute(start, end, coord_sys:str, cadence, dist_unit='au', ang_unit='deg'):
     t = start
     positions = []
     while t < end:
-        position = get_mes_pos(t)
+        position = get_mes_pos(t, coord_sys)
         positions.append(position)
         t += timedelta(minutes=cadence)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
@@ -159,20 +168,20 @@ def get_mes_positions_minute(start, end, cadence, dist_unit='au', ang_unit='deg'
 
 
 
-def get_mes_positions(start, end):
-    if spiceypy.ktotal('ALL') < 1:
-        mes_furnish()
-    t = start
-    positions = []
-    while t < end:
-        mes_pos = spiceypy.spkpos("MESSENGER", spiceypy.datetime2et(t), "HEEQ", "NONE", "SUN")[0]
-        r = np.linalg.norm(mes_pos)
-        r_au = r/1.495978707E8
-        lat = np.arcsin(mes_pos[2]/ r) * 360 / 2 / np.pi
-        lon = np.arctan2(mes_pos[1], mes_pos[0]) * 360 / 2 / np.pi
-        positions.append([t, mes_pos, r_au, lat, lon])
-        t += timedelta(days=1)
-    return positions
+# def get_mes_positions(start, end):
+#     if spiceypy.ktotal('ALL') < 1:
+#         mes_furnish()
+#     t = start
+#     positions = []
+#     while t < end:
+#         mes_pos = spiceypy.spkpos("MESSENGER", spiceypy.datetime2et(t), "HEEQ", "NONE", "SUN")[0]
+#         r = np.linalg.norm(mes_pos)
+#         r_au = r/1.495978707E8
+#         lat = np.arcsin(mes_pos[2]/ r) * 360 / 2 / np.pi
+#         lon = np.arctan2(mes_pos[1], mes_pos[0]) * 360 / 2 / np.pi
+#         positions.append([t, mes_pos, r_au, lat, lon])
+#         t += timedelta(days=1)
+#     return positions
 
 
 def transform_data():
