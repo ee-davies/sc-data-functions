@@ -173,33 +173,43 @@ def stereob_furnish():
         spiceypy.furnsh(os.path.join(generic_path, kernel))
 
 
-def get_stb_pos(t):
+def get_stb_pos(t, coord_sys:str):
     if spiceypy.ktotal('ALL') < 1:
         stereob_furnish()
-    try:
-        pos = spiceypy.spkpos("STEREO BEHIND", spiceypy.datetime2et(t), "HEEQ", "NONE", "SUN")[0]
-        r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
-        position = t, pos[0], pos[1], pos[2], r, lat, lon
-        return position
-    except Exception as e:
-        print(e)
-        return [t, None, None, None, None, None, None]
+    if coord_sys == 'GSE':
+        try:
+            pos = spiceypy.spkpos("SSTEREO BEHIND", spiceypy.datetime2et(t), f"{coord_sys}", "NONE", "EARTH")[0] 
+            r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
+            position = t, pos[0], pos[1], pos[2], r, lat, lon
+            return position
+        except Exception as e:
+            print(e)
+            return [t, None, None, None, None, None, None]
+    else:
+        try:
+            pos = spiceypy.spkpos("STEREO BEHIND", spiceypy.datetime2et(t), f"{coord_sys}", "NONE", "SUN")[0] 
+            r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
+            position = t, pos[0], pos[1], pos[2], r, lat, lon
+            return position
+        except Exception as e:
+            print(e)
+            return [t, None, None, None, None, None, None]
     
 
-def get_stb_positions(time_series):
+def get_stb_positions(time_series, coord_sys:str):
     positions = []
     for t in time_series:
-        position = stereob_furnish(t)
+        position = get_stb_pos(t, coord_sys)
         positions.append(position)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
     return df_positions
 
 
-def get_stb_positions_daily(start, end, cadence, dist_unit='au', ang_unit='deg'):
+def get_stb_positions_daily(start, end, coord_sys:str, cadence, dist_unit='au', ang_unit='deg'):
     t = start
     positions = []
     while t < end:
-        position = get_stb_pos(t)
+        position = get_stb_pos(t, coord_sys)
         positions.append(position)
         t += timedelta(days=cadence)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
@@ -214,11 +224,11 @@ def get_stb_positions_daily(start, end, cadence, dist_unit='au', ang_unit='deg')
     return df_positions
 
 
-def get_stb_positions_hourly(start, end, cadence, dist_unit='au', ang_unit='deg'):
+def get_stb_positions_hourly(start, end, coord_sys:str, cadence, dist_unit='au', ang_unit='deg'):
     t = start
     positions = []
     while t < end:
-        position = get_stb_pos(t)
+        position = get_stb_pos(t, coord_sys)
         positions.append(position)
         t += timedelta(hours=cadence)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
@@ -233,11 +243,11 @@ def get_stb_positions_hourly(start, end, cadence, dist_unit='au', ang_unit='deg'
     return df_positions
 
 
-def get_stb_positions_minute(start, end, cadence, dist_unit='au', ang_unit='deg'):
+def get_stb_positions_minute(start, end, coord_sys:str, cadence, dist_unit='au', ang_unit='deg'):
     t = start
     positions = []
     while t < end:
-        position = get_stb_pos(t)
+        position = get_stb_pos(t, coord_sys)
         positions.append(position)
         t += timedelta(minutes=cadence)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
