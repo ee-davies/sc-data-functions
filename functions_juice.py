@@ -44,11 +44,11 @@ def juice_furnish():
         spiceypy.furnsh(os.path.join(generic_path, kernel))
 
 
-def get_juice_pos(t):
+def get_juice_pos(t, coord_sys:str):
     if spiceypy.ktotal('ALL') < 1:
         juice_furnish()
     try:
-        pos = spiceypy.spkpos("JUICE", spiceypy.datetime2et(t), "HEEQ", "NONE", "SUN")[0] #calls positions in HEEQ; can be changed
+        pos = spiceypy.spkpos("JUICE", spiceypy.datetime2et(t), f"{coord_sys}", "NONE", "SUN")[0] #calls positions in HEEQ; can be changed
         r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
         position = t, pos[0], pos[1], pos[2], r, lat, lon
         return position
@@ -57,14 +57,13 @@ def get_juice_pos(t):
         return [t, None, None, None, None, None, None]
 
 
-def get_juice_positions(time_series):
+def get_juice_positions(time_series, coord_sys:str):
     positions = []
     for t in time_series:
-        position = get_juice_pos(t)
+        position = get_juice_pos(t, coord_sys)
         positions.append(position)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
     return df_positions
-
 
 
 def get_juice_positions_daily(start, end, cadence=1, dist_unit='au', ang_unit='deg'):
