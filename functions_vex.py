@@ -57,6 +57,15 @@ def get_vex_pos(t, coord_sys:str):
         return [t, None, None, None, None, None, None]
 
 
+def get_vex_positions(time_series, coord_sys:str):
+    positions = []
+    for t in time_series:
+        position = get_vex_pos(t, coord_sys)
+        positions.append(position)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    return df_positions
+
+
 def get_vex_positions_daily(start, end, coord_sys:str, cadence, dist_unit='au', ang_unit='deg'):
     t = start
     positions = []
