@@ -517,12 +517,12 @@ def get_sta_positions(time_series, coord_sys:str):
     return df_positions
 
 
-def get_sta_pos_range(start, end, cadence=1):
+def get_sta_pos_range(start, end, coord_sys:str, cadence=1):
     """Cadence in minutes"""
     t = start
     positions = []
     while t < end:
-        position = get_sta_pos(t)
+        position = get_sta_pos(t, coord_sys)
         positions.append(position)  
         t += timedelta(minutes=cadence)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
