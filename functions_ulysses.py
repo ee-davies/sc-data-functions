@@ -227,11 +227,11 @@ def ulysses_furnish():
         spiceypy.furnsh(os.path.join(generic_path, kernel))
 
 
-def get_ulysses_pos(t): #doesn't automatically furnish, fix
+def get_ulysses_pos(t, coord_sys:str): #doesn't automatically furnish, fix
     if spiceypy.ktotal('ALL') < 1:
         ulysses_furnish()
     try:
-        pos = spiceypy.spkpos("ULYSSES", spiceypy.datetime2et(t), "HEEQ", "NONE", "SUN")[0] #calls positions in HEEQ; can be changed
+        pos = spiceypy.spkpos("ULYSSES", spiceypy.datetime2et(t), f"{coord_sys}", "NONE", "SUN")[0] #calls positions in HEEQ; can be changed
         r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
         position = t, pos[0], pos[1], pos[2], r, lat, lon
         return position
@@ -240,20 +240,20 @@ def get_ulysses_pos(t): #doesn't automatically furnish, fix
         return [t, None, None, None, None, None, None]
 
 
-def get_ulysses_positions(time_series):
+def get_ulysses_positions(time_series, coord_sys:str):
     positions = []
     for t in time_series:
-        position = get_ulysses_pos(t)
+        position = get_ulysses_pos(t, coord_sys)
         positions.append(position)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
     return df_positions
 
 
-def get_ulysses_positions_daily(start, end, cadence, dist_unit='au', ang_unit='deg'):
+def get_ulysses_positions_daily(start, end, coord_sys:str, cadence, dist_unit='au', ang_unit='deg'):
     t = start
     positions = []
     while t < end:
-        position = get_ulysses_pos(t)
+        position = get_ulysses_pos(t, coord_sys)
         positions.append(position)
         t += timedelta(days=cadence)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
@@ -268,11 +268,11 @@ def get_ulysses_positions_daily(start, end, cadence, dist_unit='au', ang_unit='d
     return df_positions
 
 
-def get_ulysses_positions_hourly(start, end, cadence, dist_unit='au', ang_unit='deg'):
+def get_ulysses_positions_hourly(start, end, coord_sys:str, cadence, dist_unit='au', ang_unit='deg'):
     t = start
     positions = []
     while t < end:
-        position = get_ulysses_pos(t)
+        position = get_ulysses_pos(t, coord_sys)
         positions.append(position)
         t += timedelta(hours=cadence)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
@@ -287,11 +287,11 @@ def get_ulysses_positions_hourly(start, end, cadence, dist_unit='au', ang_unit='
     return df_positions
 
 
-def get_ulysses_positions_minute(start, end, cadence, dist_unit='au', ang_unit='deg'):
+def get_ulysses_positions_minute(start, end, coord_sys:str, cadence, dist_unit='au', ang_unit='deg'):
     t = start
     positions = []
     while t < end:
-        position = get_ulysses_pos(t)
+        position = get_ulysses_pos(t, coord_sys)
         positions.append(position)
         t += timedelta(minutes=cadence)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
