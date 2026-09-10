@@ -117,19 +117,28 @@ def bepi_furnish():
         spiceypy.furnsh(os.path.join(generic_path, kernel))
 
 
-def get_bepi_pos(t, prefurnished=False):
+def get_bepi_pos(t, coord_sys:str, prefurnished=False):
     """Return timestamp, position array (in km), r_au, lat, lon."""
     if not prefurnished: 
         if spiceypy.ktotal('ALL') < 1:
             bepi_furnish()
     try:
-        pos = spiceypy.spkpos("BEPICOLOMBO MPO", spiceypy.datetime2et(t), "HEEQ", "NONE", "SUN")[0]
+        pos = spiceypy.spkpos("BEPICOLOMBO MPO", spiceypy.datetime2et(t), f"{coord_sys}", "NONE", "SUN")[0]
         r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
         position = t, pos[0], pos[1], pos[2], r, lat, lon
         return position
     except Exception as e:
         print(e)
         return [t, None, None, None, None, None, None]
+
+
+def get_bepi_positions(time_series, coord_sys):
+    positions = []
+    for t in time_series:
+        position = get_bepi_pos(t, coord_sys)
+        positions.append(position)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    return df_positions
 
 
 def get_bepi_positions_daily(start, end, cadence, dist_unit='au', ang_unit='deg'):
