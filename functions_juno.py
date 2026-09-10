@@ -142,33 +142,23 @@ def juno_furnish():
         spiceypy.furnsh(os.path.join(generic_path, kernel))
     
 
-def get_juno_pos(t, frame="HEEQ"):
+def get_juno_pos(t, coord_sys:str):
     if spiceypy.ktotal('ALL') < 1:
         juno_furnish()
-    if frame == "HEEQ":
-        try:
-            pos = spiceypy.spkpos("JUNO", spiceypy.datetime2et(t), "HEEQ", "NONE", "SUN")[0] #calls positions in HEEQ
-            r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
-            position = t, pos[0], pos[1], pos[2], r, lat, lon
-            return position
-        except Exception as e:
-            print(e)
-            return [t, None, None, None, None, None, None]
-    elif frame == "HAE":
-        try:
-            pos = spiceypy.spkpos("JUNO", spiceypy.datetime2et(t), "ECLIPJ2000", "NONE", "SUN")[0] #calls positions in HAE or ECLIPJ2000
-            r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
-            position = t, pos[0], pos[1], pos[2], r, lat, lon
-            return position
-        except Exception as e:
-            print(e)
-            return [t, None, None, None, None, None, None]
+    try:
+        pos = spiceypy.spkpos("JUNO", spiceypy.datetime2et(t), f"{coord_sys}", "NONE", "SUN")[0] #calls heliospheric positions
+        r, lat, lon = cart2sphere(pos[0],pos[1],pos[2])
+        position = t, pos[0], pos[1], pos[2], r, lat, lon
+        return position
+    except Exception as e:
+        print(e)
+        return [t, None, None, None, None, None, None]
 
 
-def get_juno_positions(time_series, frame="HEEQ"):
+def get_juno_positions(time_series, coord_sys:str):
     positions = []
     for t in time_series:
-        position = get_juno_pos(t, frame)
+        position = get_juno_pos(t, coord_sys)
         positions.append(position)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
     return df_positions
