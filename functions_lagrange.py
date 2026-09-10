@@ -44,7 +44,7 @@ def lagrange_furnish():
         spiceypy.furnsh(os.path.join(generic_path, kernel))
 
 
-def get_lagrange_pos(t, lagrange_point, coord_sys='GSE'): #doesn't automatically furnish, furnish first
+def get_lagrange_pos(t, lagrange_point, coord_sys=str): #doesn't automatically furnish, furnish first
     if lagrange_point == "L1":
         lagrange_code = "391"
     elif lagrange_point == "L2":
@@ -74,6 +74,15 @@ def get_lagrange_pos(t, lagrange_point, coord_sys='GSE'): #doesn't automatically
         except Exception as e:
             print(e)
             return [t, None, None, None, None, None, None]
+
+
+def get_lagrange_positions(time_series, lagrange_point, coord_sys:str):
+    positions = []
+    for t in time_series:
+        position = get_lagrange_pos(t, lagrange_point, coord_sys)
+        positions.append(position)
+    df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
+    return df_positions
 
 
 def get_lagrange_positions_daily(start, end, lagrange_point, coord_sys, cadence, dist_unit='au', ang_unit='deg'):
