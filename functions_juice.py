@@ -66,11 +66,11 @@ def get_juice_positions(time_series, coord_sys:str):
     return df_positions
 
 
-def get_juice_positions_daily(start, end, cadence=1, dist_unit='au', ang_unit='deg'):
+def get_juice_positions_daily(start, end, coord_sys:str, cadence=1, dist_unit='au', ang_unit='deg'):
     t = start
     positions = []
     while t < end:
-        position = get_juice_pos(t)
+        position = get_juice_pos(t, coord_sys)
         positions.append(position)
         t += timedelta(days=cadence)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
@@ -85,11 +85,11 @@ def get_juice_positions_daily(start, end, cadence=1, dist_unit='au', ang_unit='d
     return df_positions
 
 
-def get_juice_positions_hourly(start, end, cadence=1, dist_unit='au', ang_unit='deg'):
+def get_juice_positions_hourly(start, end, coord_sys:str, cadence=1, dist_unit='au', ang_unit='deg'):
     t = start
     positions = []
     while t < end:
-        position = get_juice_pos(t)
+        position = get_juice_pos(t, coord_sys)
         positions.append(position)
         t += timedelta(hours=cadence)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
@@ -104,11 +104,11 @@ def get_juice_positions_hourly(start, end, cadence=1, dist_unit='au', ang_unit='
     return df_positions
 
 
-def get_juice_positions_minute(start, end, cadence=1, dist_unit='au', ang_unit='deg'):
+def get_juice_positions_minute(start, end, coord_sys:str, cadence=1, dist_unit='au', ang_unit='deg'):
     t = start
     positions = []
     while t < end:
-        position = get_juice_pos(t)
+        position = get_juice_pos(t, coord_sys)
         positions.append(position)
         t += timedelta(minutes=cadence)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
