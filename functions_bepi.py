@@ -141,11 +141,11 @@ def get_bepi_positions(time_series, coord_sys):
     return df_positions
 
 
-def get_bepi_positions_daily(start, end, cadence, dist_unit='au', ang_unit='deg'):
+def get_bepi_positions_daily(start, end, coord_sys:str, cadence, dist_unit='au', ang_unit='deg'):
     t = start
     positions = []
     while t < end:
-        position = get_bepi_pos(t)
+        position = get_bepi_pos(t, coord_sys)
         positions.append(position)
         t += timedelta(days=cadence)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
@@ -160,11 +160,11 @@ def get_bepi_positions_daily(start, end, cadence, dist_unit='au', ang_unit='deg'
     return df_positions
 
 
-def get_bepi_positions_hourly(start, end, cadence, dist_unit='au', ang_unit='deg'):
+def get_bepi_positions_hourly(start, end, coord_sys:str, cadence, dist_unit='au', ang_unit='deg'):
     t = start
     positions = []
     while t < end:
-        position = get_bepi_pos(t)
+        position = get_bepi_pos(t, coord_sys)
         positions.append(position)
         t += timedelta(hours=cadence)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
@@ -179,11 +179,11 @@ def get_bepi_positions_hourly(start, end, cadence, dist_unit='au', ang_unit='deg
     return df_positions
 
 
-def get_bepi_positions_minute(start, end, cadence, dist_unit='au', ang_unit='deg'):
+def get_bepi_positions_minute(start, end, coord_sys:str, cadence, dist_unit='au', ang_unit='deg'):
     t = start
     positions = []
     while t < end:
-        position = get_bepi_pos(t)
+        position = get_bepi_pos(t, coord_sys)
         positions.append(position)
         t += timedelta(minutes=cadence)
     df_positions = pd.DataFrame(positions, columns=['time', 'x', 'y', 'z', 'r', 'lat', 'lon'])
