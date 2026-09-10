@@ -10,9 +10,14 @@ import os.path
 import pickle
 import glob
 import json
-
-import ialirt_data_access
 from functions_general import load_path
+
+try:
+    import ialirt_data_access
+except Exception as e:
+        print('ERROR:', e, "requires installation: https://github.com/IMAP-Science-Operations-Center/ialirt-data-access. Command line: pip install ialirt-data-access; ialirt-data-access -h")
+
+#requires installation: https://github.com/IMAP-Science-Operations-Center/ialirt-data-access. "pip install ialirt-data-access" "ialirt-data-access -h"
 
 
 """
